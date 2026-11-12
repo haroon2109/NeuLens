@@ -1,0 +1,536 @@
+import React, { useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  ClipboardCheck,
+  Eye,
+  FileText,
+  Info,
+  Mic,
+  Printer,
+  Smile,
+  TrendingUp
+} from 'lucide-react';
+import { HealthcareScene } from '../../../components/illustrations/HealthcareScene';
+import { MotionReveal } from '../../../components/motion/Reveal';
+import type { DoctorAssessment } from './useDoctorPatient';
+import {
+  domainObservations,
+  getQuality,
+  qualityLabel,
+  taskStatus,
+  useDoctorPatient
+} from './useDoctorPatient';
+import {
+  Card,
+  DoctorPageHeader,
+  EmptyState,
+  MetricTile,
+  Notice,
+  PatientWorkflowNav,
+  Pill,
+  ScoreDial,
+  TrendLine,
+  formatDate,
+  iconForDomain,
+  primaryButton,
+  secondaryButton
+} from './ui';
+
+const sortedAssessments = (assessments: DoctorAssessment[]) =>
+  [...assessments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+const OverviewLink: React.FC<{ patientId: string }> = ({ patientId }) => (
+  <Link to={`/doctor/patients/${patientId}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900">
+    <ArrowLeft className="h-3.5 w-3.5" /> Patient overview
+  </Link>
+);
+
+// ---------------------------------------------------------------------------
+// Screen 53 — Assessment Review
+// ---------------------------------------------------------------------------
+export const DoctorAssessmentReviewPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const { patient, assessments, changeSummary, isLoading } = useDoctorPatient(id);
+  const ordered = useMemo(() => sortedAssessments(assessments), [assessments]);
+  const requested = searchParams.get('assessment');
+  const initialIndex = Math.max(0, ordered.findIndex((assessment) => assessment.id === requested));
+  const [selectedIndex, setSelectedIndex] = useState(initialIndex);
+  const assessment = ordered[selectedIndex] || ordered[0];
+  const previous = ordered[selectedIndex + 1];
+  const quality = getQuality(assessment);
+  const tasks = taskStatus(assessment);
+  const missingTasks = tasks.filter((task) => !task.complete);
+  const observations = domainObservations(assessment);
+
+  const warnings: string[] = [];
+  if (!assessment) warnings.push('No completed assessment is available.');
+  if (assessment && !quality.comparable) warnings.push('Session marked as limited comparability. Avoid trend interpretation.');
+  if (quality.audio === 'POOR') warnings.push('Audio quality was poor; vocal measures may be unreliable.');
+  if (quality.video === 'POOR') warnings.push('Video quality was poor; ocular or facial measures may be unreliable.');
+  if (quality.completion === 'PARTIAL') warnings.push('Session was only partially completed.');
+  if (missingTasks.length > 0) warnings.push(`${missingTasks.length} of 5 task${missingTasks.length === 1 ? '' : 's'} did not record usable data.`);
+  if (quality.comprehension === 'UNCERTAIN') warnings.push('Task comprehension was recorded as uncertain.');
+  if (quality.interruptions > 0) warnings.push(`${quality.interruptions} interruption${quality.interruptions === 1 ? '' : 's'} occurred during the session.`);
+
+  const scoreDelta = assessment && previous ? Math.round(assessment.overallScore) - Math.round(previous.overallScore) : null;
+
+  if (isLoading) return <div className="p-12 text-center text-[12px] text-slate-500">Loading assessment…</div>;
+  if (!patient) return <div className="p-12 text-center text-[12px] text-slate-500">Patient not found.</div>;
+
+  return (
+    <div className="space-y-5">
+      <OverviewLink patientId={patient.patientId} />
+      <DoctorPageHeader
+        screen="Screen 53 · Assessment review"
+        title={assessment ? `Screening review · ${formatDate(assessment.date)}` : 'Assessment review'}
+        description={`Review the observed domains, task completion, and session quality for ${patient.name} before recording a clinical decision.`}
+        actions={
+          assessment ? (
+            <>
+              <Link to={`/doctor/reports/${assessment.id}`} className={secondaryButton}>
+                <FileText className="h-4 w-4" /> Clinical report
+              </Link>
+              <Link to={`/doctor/patients/${patient.patientId}/notes?assessment=${assessment.id}`} className={primaryButton}>
+                <ClipboardCheck className="h-4 w-4" /> Record findings
+              </Link>
+            </>
+          ) : undefined
+        }
+      />
+      <PatientWorkflowNav patientId={patient.patientId} />
+
+      <MotionReveal className="mx-auto w-full max-w-2xl">
+        <HealthcareScene
+          kind="clinicalReview"
+          className="w-full"
+          title="Dr. Rahman reviewing a screening report"
+        />
+      </MotionReveal>
+
+      {!assessment ? (
+        <EmptyState
+          scene="emptyAssessment"
+          icon={Activity}
+          title="No completed assessment"
+          detail="This patient has not completed a screening session. Start a session before clinical review."
+          action={<Link to={`/doctor/patients/${patient.patientId}/screen`} className={primaryButton}>Start screening</Link>}
+        />
+      ) : (
+        <>
+          {warnings.length > 0 && (
+            <Notice tone="warning" title="Interpret with caution">
+              <ul className="list-disc space-y-1 pl-4">
+                {warnings.map((warning) => <li key={warning}>{warning}</li>)}
+              </ul>
+            </Notice>
+          )}
+
+          <div className="grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
+            <Card>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-[13px] font-semibold text-slate-900">Session summary</h2>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {formatDate(assessment.date)} · {assessment.assessmentType || 'Full screening battery'}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Pill tone={assessment.riskLevel === 'HIGH' ? 'rose' : assessment.riskLevel === 'MODERATE' ? 'amber' : 'green'} dot>
+                      {assessment.riskLevel === 'HIGH' ? 'Higher concern tier' : assessment.riskLevel === 'MODERATE' ? 'Monitor tier' : 'Lower concern tier'}
+                    </Pill>
+                    <Pill tone={quality.comparable ? 'green' : 'amber'}>{quality.comparable ? 'Comparable session' : 'Limited comparability'}</Pill>
+                    <Pill tone="slate">{assessment.reviewStatus?.replace(/_/g, ' ').toLowerCase() || 'Not reviewed'}</Pill>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <ScoreDial value={assessment.overallScore} label="Composite" />
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Previous valid</p>
+                    <p className="mt-1 text-[16px] font-semibold text-slate-900">{previous ? Math.round(previous.overallScore) : '—'}</p>
+                    <p className={`mt-1 text-xs font-semibold ${scoreDelta === null ? 'text-slate-400' : scoreDelta < -3 ? 'text-amber-700' : scoreDelta > 3 ? 'text-emerald-700' : 'text-slate-500'}`}>
+                      {scoreDelta === null ? 'No previous session' : `${scoreDelta > 0 ? '+' : ''}${scoreDelta} vs previous`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <label htmlFor="review-session" className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">
+                  View another session
+                </label>
+                <select
+                  id="review-session"
+                  value={selectedIndex}
+                  onChange={(event) => setSelectedIndex(Number(event.target.value))}
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500"
+                >
+                  {ordered.map((item, index) => (
+                    <option key={item.id} value={index}>
+                      {formatDate(item.date)} · {Math.round(item.overallScore)} / 100 {index === 0 ? '(latest)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </Card>
+
+            <Card>
+              <h2 className="text-[13px] font-semibold text-slate-900">Task completion</h2>
+              <p className="mt-0.5 text-xs text-slate-500">Missing tasks limit interpretation.</p>
+              <ul className="mt-3 space-y-2">
+                {tasks.map((task) => (
+                  <li key={task.id} className="flex items-start gap-2 text-xs">
+                    {task.complete ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" /> : <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300" />}
+                    <span className={task.complete ? 'text-slate-700' : 'text-slate-400'}>{task.label}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 rounded-lg bg-slate-50 px-2.5 py-2 text-xs font-semibold text-slate-600">
+                {tasks.filter((task) => task.complete).length} of {tasks.length} tasks recorded
+              </p>
+            </Card>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricTile label="Comparable sessions" value={String(changeSummary?.cognitive.comparableAssessments ?? ordered.filter((item) => item.taskResponses?.quality?.comparable !== false).length)} detail="Used for baseline comparison" />
+            <MetricTile label="Observed baseline" value={changeSummary?.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not yet available'} detail="Within-person observed range" />
+            <MetricTile label="Previous score" value={previous ? `${Math.round(previous.overallScore)} / 100` : 'No prior session'} detail={previous ? formatDate(previous.date) : 'Establishing history'} />
+            <MetricTile label="Overall change cue" value={changeSummary?.status === 'REVIEW' ? 'Review suggested' : changeSummary?.status === 'NO_CHANGE' ? 'No current cue' : 'Insufficient data'} detail="Not a diagnostic conclusion" />
+          </div>
+
+          <Card>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-[13px] font-semibold text-slate-900">Domain observations</h2>
+                <p className="mt-0.5 text-xs text-slate-500">Raw and derived signals from this session. Missing values are shown explicitly.</p>
+              </div>
+              <Activity className="h-4 w-4 text-slate-400" />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {observations.map((domain) => {
+                const Icon = iconForDomain[domain.id] || Activity;
+                return (
+                  <div key={domain.id} className="rounded-xl border border-slate-200 p-3.5">
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+                      <Icon className="h-3.5 w-3.5 text-blue-700" /> {domain.domain}
+                    </p>
+                    <dl className="mt-2 space-y-1.5">
+                      {domain.values.map((value) => (
+                        <div key={value.label} className="flex items-start justify-between gap-2">
+                          <dt className="text-xs text-slate-500">{value.label}</dt>
+                          <dd className={`text-right text-xs font-semibold ${value.value === 'Missing' ? 'text-slate-400' : 'text-slate-800'}`}>{value.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <h2 className="text-[13px] font-semibold text-slate-900">Session quality</h2>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {[
+                  ['Audio', qualityLabel(quality.audio)],
+                  ['Video', qualityLabel(quality.video)],
+                  ['Completion', qualityLabel(quality.completion)],
+                  ['Comprehension', qualityLabel(quality.comprehension)]
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/60 p-2.5">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">{label}</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-800">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs leading-4 text-slate-500">
+                Interruptions: {quality.interruptions}. {quality.comparable ? 'The session met the comparability requirement.' : 'This session should not be used alone to infer change.'}
+              </p>
+            </Card>
+
+            <Card>
+              <h2 className="text-[13px] font-semibold text-slate-900">Baseline comparison</h2>
+              {changeSummary ? (
+                <dl className="mt-3 space-y-2 text-xs">
+                  <div className="flex justify-between gap-3 border-b border-slate-100 pb-2">
+                    <dt className="text-slate-500">Latest score</dt>
+                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.latestScore !== null ? `${changeSummary.cognitive.latestScore} / 100` : 'Unavailable'}</dd>
+                  </div>
+                  <div className="flex justify-between gap-3 border-b border-slate-100 pb-2">
+                    <dt className="text-slate-500">Previous score</dt>
+                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.previousScore !== null ? `${changeSummary.cognitive.previousScore} / 100` : 'Unavailable'}</dd>
+                  </div>
+                  <div className="flex justify-between gap-3 border-b border-slate-100 pb-2">
+                    <dt className="text-slate-500">Observed range</dt>
+                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not yet established'}</dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-slate-500">Outside observed baseline</dt>
+                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.outsideObservedBaseline ? 'Yes' : 'No'}</dd>
+                  </div>
+                </dl>
+              ) : (
+                <p className="mt-3 text-xs text-slate-500">Baseline comparison is unavailable for this record.</p>
+              )}
+              <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs leading-4 text-slate-500">
+                Comparison uses the patient’s own prior observations only. It does not establish a diagnosis or a universal cut-off.
+              </p>
+            </Card>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
+            <Link to={`/doctor/patients/${patient.patientId}/notes?assessment=${assessment.id}`} className={primaryButton}>
+              Continue to clinical notes <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Screen 54 — Longitudinal Clinical View
+// ---------------------------------------------------------------------------
+type TrendSeries = {
+  id: string;
+  title: string;
+  icon: typeof Eye;
+  unit: string;
+  color: string;
+  points: Array<{ label: string; value: number }>;
+};
+
+const getNumeric = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+
+export const DoctorLongitudinalPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const { patient, assessments, changeSummary, isLoading } = useDoctorPatient(id);
+  const chronological = useMemo(
+    () => [...assessments].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    [assessments]
+  );
+
+  const series: TrendSeries[] = [
+    {
+      id: 'cognitive',
+      title: 'Cognitive composite',
+      icon: Activity,
+      unit: ' / 100',
+      color: '#2563EB',
+      points: chronological
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.overallScore) }))
+        .filter((point): point is { label: string; value: number } => point.value !== null)
+    },
+    {
+      id: 'ocular',
+      title: 'Ocular · fixation hold',
+      icon: Eye,
+      unit: '%',
+      color: '#7C3AED',
+      points: chronological
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task1?.fixationHoldPct) }))
+        .filter((point): point is { label: string; value: number } => point.value !== null)
+    },
+    {
+      id: 'vocal',
+      title: 'Vocal · speech rate',
+      icon: Mic,
+      unit: ' wpm',
+      color: '#0E7490',
+      points: chronological
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task3?.wpm) }))
+        .filter((point): point is { label: string; value: number } => point.value !== null)
+    },
+    {
+      id: 'functional',
+      title: 'Functional · trail-making',
+      icon: TrendingUp,
+      unit: ' s',
+      color: '#B45309',
+      points: chronological
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task5?.trailBCompletionSec) }))
+        .filter((point): point is { label: string; value: number } => point.value !== null)
+    }
+  ];
+
+  const missing = series.filter((item) => item.points.length < chronological.length);
+  const latestOf = (item: TrendSeries) => item.points[item.points.length - 1]?.value ?? null;
+  const previousOf = (item: TrendSeries) => item.points.length > 1 ? item.points[item.points.length - 2].value : null;
+
+  const arraySessionsOutsideBaseline = useMemo(() => {
+    const range = changeSummary?.cognitive.baselineRange;
+    if (!range) return 0;
+    return chronological.slice(-3).filter((assessment) => {
+      if (assessment.taskResponses?.quality?.comparable === false) return false;
+      const score = getNumeric(assessment.overallScore);
+      return score !== null && (score < range.minimum || score > range.maximum);
+    }).length;
+  }, [changeSummary, chronological]);
+
+  if (isLoading) return <div className="p-12 text-center text-[12px] text-slate-500">Loading longitudinal record…</div>;
+  if (!patient) return <div className="p-12 text-center text-[12px] text-slate-500">Patient not found.</div>;
+
+  return (
+    <div className="space-y-5">
+      <OverviewLink patientId={patient.patientId} />
+      <DoctorPageHeader
+        screen="Screen 54 · Longitudinal clinical view"
+        title="Longitudinal view"
+        description={`Compare ${patient.name}’s cognitive, ocular, vocal, and functional observations across sessions. Trends are descriptive and depend on comparable data.`}
+        actions={
+          <Link to={`/doctor/reports?patient=${patient.patientId}`} className={secondaryButton}>
+            <Printer className="h-4 w-4" /> Longitudinal report
+          </Link>
+        }
+      />
+      <PatientWorkflowNav patientId={patient.patientId} />
+
+      {chronological.length < 2 ? (
+        <EmptyState
+          scene="emptyAssessment"
+          icon={TrendingUp}
+          title="More sessions are needed"
+          detail={`${chronological.length} completed session${chronological.length === 1 ? ' is' : 's are'} on file. At least two comparable sessions are needed before a trend can be shown.`}
+          action={<Link to={`/doctor/patients/${patient.patientId}/review`} className={primaryButton}>Review available session</Link>}
+        />
+      ) : (
+        <>
+          <Notice tone="warning" title="Trend interpretation">
+            A line connecting sessions does not show a diagnosis or prove decline. Look for persistence across comparable sessions and review health context, task completeness, and measurement quality.
+          </Notice>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricTile label="Sessions on file" value={String(assessments.length)} detail={`${chronological.filter((item) => item.taskResponses?.quality?.comparable !== false).length} comparable`} />
+            <MetricTile label="Baseline status" value={changeSummary?.cognitive.baselineRange ? 'Established' : 'Building'} detail={changeSummary?.cognitive.baselineRange ? `Observed ${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Needs more valid sessions'} />
+            <MetricTile label="Latest overall" value={`${Math.round(chronological[chronological.length - 1].overallScore)} / 100`} detail={formatDate(chronological[chronological.length - 1].date)} />
+            <MetricTile label="Persistence" value={changeSummary?.status === 'REVIEW' ? `${arraySessionsOutsideBaseline} of last 3` : 'No current cue'} detail="Sessions outside observed range" />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {series.map((item) => {
+              const Icon = item.icon;
+              const latest = latestOf(item);
+              const previous = previousOf(item);
+              const delta = latest !== null && previous !== null ? latest - previous : null;
+              return (
+                <Card key={item.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-900">
+                        <Icon className="h-3.5 w-3.5 text-blue-700" /> {item.title}
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {item.points.length} valid point{item.points.length === 1 ? '' : 's'} of {chronological.length} sessions
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[17px] font-semibold text-slate-900">{latest !== null ? `${Math.round(latest * 10) / 10}${item.unit}` : 'Missing'}</p>
+                      <p className={`text-xs font-semibold ${delta === null ? 'text-slate-400' : delta < 0 ? 'text-amber-700' : delta > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
+                        {delta === null ? 'No comparison' : `${delta > 0 ? '+' : ''}${Math.round(delta * 10) / 10}${item.unit} vs previous`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <TrendLine points={item.points} tone={item.color} valueSuffix={item.unit} />
+                  </div>
+                  {delta !== null && Math.abs(delta) >= 5 && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Direction of change shown for review; not a validated threshold for clinical significance.
+                    </p>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+            <Card>
+              <h2 className="text-[13px] font-semibold text-slate-900">Previous session comparison</h2>
+              <p className="mt-0.5 text-xs text-slate-500">Latest observation minus the preceding valid observation.</p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-xs font-bold uppercase tracking-[0.08em] text-slate-400">
+                      <th className="py-2">Domain</th>
+                      <th className="py-2">Latest</th>
+                      <th className="py-2">Previous</th>
+                      <th className="py-2 text-right">Direction</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {series.map((item) => {
+                      const latest = latestOf(item);
+                      const previous = previousOf(item);
+                      const delta = latest !== null && previous !== null ? latest - previous : null;
+                      return (
+                        <tr key={item.id}>
+                          <td className="py-2.5 font-medium text-slate-700">{item.title}</td>
+                          <td className="py-2.5 text-slate-700">{latest !== null ? `${Math.round(latest * 10) / 10}${item.unit}` : 'Missing'}</td>
+                          <td className="py-2.5 text-slate-500">{previous !== null ? `${Math.round(previous * 10) / 10}${item.unit}` : '—'}</td>
+                          <td className={`py-2.5 text-right font-semibold ${delta === null ? 'text-slate-400' : delta < 0 ? 'text-amber-700' : delta > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
+                            {delta === null ? 'No comparison' : `${delta > 0 ? '+' : ''}${Math.round(delta * 10) / 10}`}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            <div className="space-y-4">
+              <Card>
+                <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600" /> Missing data
+                </h2>
+                {missing.length === 0 ? (
+                  <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900">
+                    All four domains have a valid value in every session.
+                  </p>
+                ) : (
+                  <ul className="mt-3 space-y-2">
+                    {missing.map((item) => (
+                      <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-amber-100 bg-amber-50/60 px-2.5 py-2 text-xs">
+                        <span className="text-amber-950">{item.title}</span>
+                        <span className="font-semibold text-amber-800">{item.points.length} / {chronological.length}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-3 text-xs leading-4 text-slate-500">
+                  Gaps are not assumed to represent stability or improvement. They remain missing in summaries.
+                </p>
+              </Card>
+
+              <Card>
+                <h2 className="text-[13px] font-semibold text-slate-900">Change persistence</h2>
+                <p className="mt-2 text-xs leading-5 text-slate-600">
+                  {changeSummary?.status === 'REVIEW'
+                    ? `${arraySessionsOutsideBaseline} of the last three comparable sessions fall outside the observed baseline range. Persistence across sessions carries more weight than a single result.`
+                    : changeSummary?.status === 'NO_CHANGE'
+                      ? 'The current comparison does not flag a persistent change. Continue routine monitoring.'
+                      : 'Insufficient comparable history is available to assess persistence.'}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {changeSummary?.reviewReasons.map((reason) => (
+                    <Pill key={reason} tone="amber">
+                      {reason === 'OUTSIDE_OBSERVED_BASELINE' ? 'Score outside baseline' : reason === 'FUNCTIONAL_CHANGE' ? 'Functional change' : 'Context change'}
+                    </Pill>
+                  ))}
+                  {(!changeSummary || changeSummary.reviewReasons.length === 0) && <Pill tone="slate">No current cue</Pill>}
+                </div>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
