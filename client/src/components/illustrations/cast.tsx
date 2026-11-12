@@ -1,5 +1,11 @@
 import React from 'react';
 
+const prefersReducedMotion = (): boolean => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+};
+
+
 /* ---------------------------------------------------------------------------
  * The NeuLens cast.
  *
@@ -105,8 +111,7 @@ const RoundGlasses: React.FC<{ cy?: number }> = ({ cy = -99 }) => (
 );
 
 /* Gentle blink: lids stay hidden, then close briefly and open again. */
-const Blink: React.FC<{ y: number; skin: string; delay?: number }> = ({ y, skin, delay = 0 }) => (
-  <g className="nl-blink" fill={skin} style={{ animationDelay: `${delay}s` }}>
+const Blink: React.FC<{ y: number; skin: string; delay?: number }> = ({ y, skin, delay = 0 }) => (      <g className="nl-blink" fill={skin} style={{ animationDelay: `${delay}s`, animationPlayState: prefersReducedMotion() ? 'paused' : 'running' }}>
     <rect x="-8.2" y={y - 1.6} width="5.6" height="3.2" rx="1.6" />
     <rect x="2.6" y={y - 1.6} width="5.6" height="3.2" rx="1.6" />
   </g>
@@ -128,7 +133,7 @@ export const Margaret: React.FC<FigureProps> = (props) => {
     <g transform={transformFor(props)}>
       {/* contact shadow so the figure is anchored to the floor */}
       <ellipse cx={seated ? 14 : 0} cy="1" rx={seated ? 27 : 20} ry="3.6" fill={NL.shadow} opacity="0.18" />
-      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.19 + 0.15).toFixed(2)}s` }}>
+      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.19 + 0.15).toFixed(2)}s`, animationPlayState: prefersReducedMotion() ? 'paused' : 'running' }}>
       {/* legs */}
       {seated ? (
         <g>
@@ -229,7 +234,7 @@ export const Harold: React.FC<FigureProps> = (props) => {
   return (
     <g transform={transformFor(props)}>
       <ellipse cx={seated ? 14 : 0} cy="1" rx={seated ? 27 : 20} ry="3.6" fill={NL.shadow} opacity="0.18" />
-      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.23 + 0.4).toFixed(2)}s` }}>
+      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.23 + 0.4).toFixed(2)}s`, animationPlayState: prefersReducedMotion() ? 'paused' : 'running' }}>
       {seated ? (
         <g>
           <path d="M-16 -49c0-6 32-6 32 0l6 15c-14 5-30 5-44 0z" fill="#6E7A75" />
@@ -328,7 +333,7 @@ export const Doctor: React.FC<FigureProps & { badge?: boolean }> = (props) => {
   return (
     <g transform={transformFor({ ...props, facing: props.facing ?? 'left' })}>
       <ellipse cx={seated ? 14 : 0} cy="1" rx={seated ? 27 : 20} ry="3.6" fill={NL.shadow} opacity="0.18" />
-      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.17 + 0.6).toFixed(2)}s` }}>
+      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.17 + 0.6).toFixed(2)}s`, animationPlayState: prefersReducedMotion() ? 'paused' : 'running' }}>
       {seated ? (
         <g>
           <path d="M-15 -48c0-6 31-6 31 0l6 15c-14 5-29 5-43 0z" fill={NL.slate} />
@@ -414,7 +419,7 @@ export const Caregiver: React.FC<FigureProps> = (props) => {
   return (
     <g transform={transformFor(props)}>
       <ellipse cx="0" cy="1" rx="20" ry="3.6" fill={NL.shadow} opacity="0.18" />
-      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.21 + 0.3).toFixed(2)}s` }}>
+      <g className="nl-breathe" style={{ animationDelay: `${((props.x % 7) * 0.21 + 0.3).toFixed(2)}s`, animationPlayState: prefersReducedMotion() ? 'paused' : 'running' }}>
       <rect x="-12.5" y="-48" width="10" height="44" rx="4" fill="#66707C" />
       <rect x="2.5" y="-48" width="10" height="44" rx="4" fill="#66707C" />
       <Shoes tone="#3F474E" />
@@ -465,12 +470,12 @@ export const Caregiver: React.FC<FigureProps> = (props) => {
 const HeldTablet: React.FC<{ skin?: string }> = ({ skin = NL.skinMargaret }) => (
   <g transform="translate(4,-64) rotate(-8)" className="nl-tablet">
     <rect x="0" y="0" width="27" height="20" rx="3" fill={NL.forestDeep} />
-    <rect x="2" y="2" width="23" height="15" rx="2" fill={NL.mintSoft} />
-    <g className="nl-tablet-screen">
+    <rect x="2" y="2" width="23" height="15" rx="2" fill={NL.mintSoft} />      <g className="nl-tablet-screen" style={{ animationPlayState: prefersReducedMotion() ? 'paused' : 'running' }}>
       <rect x="5" y="5" width="10" height="2" rx="1" fill={NL.sageDark} opacity="0.7" />
       <rect x="5" y="9" width="16" height="1.8" rx="0.9" fill={NL.sage} opacity="0.55" />
       <rect x="5" y="12.4" width="12" height="1.8" rx="0.9" fill={NL.sage} opacity="0.45" />
     </g>
+
     {/* supporting hand sits over the tablet so the hold reads as connected */}
     <circle cx="14" cy="20" r="4.2" fill={skin} />
   </g>

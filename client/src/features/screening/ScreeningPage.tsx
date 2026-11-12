@@ -114,7 +114,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
     'Analyzing Speech...',
     'Analyzing Facial Dynamics...',
     'Combining Biomarkers...',
-    'Generating Risk Score...'
+    'Generating safety profile...'
   ];
 
   const submitAssessment = useCallback(async () => {

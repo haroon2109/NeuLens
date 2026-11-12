@@ -157,7 +157,6 @@
         transform: translateY(0);
       }
     }
-
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1238,25 +1237,23 @@
 .auth-password-toggle:hover {
   background: #eef3fb;
   color: #2563eb;
-}
+}  .auth-check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    color: #64758c;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    cursor: pointer;
+  }
 
-.auth-check-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  color: #64758c;
-  font-size: 0.72rem;
-  line-height: 1.6;
-  cursor: pointer;
-}
-
-.auth-check-row input {
-  width: 1.05rem;
-  height: 1.05rem;
-  flex: none;
-  margin-top: 0.12rem;
-  accent-color: #2563eb;
-}
+  .auth-check-row input {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex: none;
+    margin-top: 0.12rem;
+    accent-color: #2563eb; /* checkbox accent in NeuLens form controls (auth-check-row input) */
+  }
 
 .auth-check-row-compact {
   align-items: center;

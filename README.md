@@ -49,7 +49,7 @@ The MVP stores a prototype composite score and session telemetry for review. Its
 ---
 
 ### Key Features
-* **Zero-Install Client-Side Edge Inference**: Operates directly in standard web browsers using WebAssembly (Wasm) and WebGL GPU acceleration. Selected video and audio signals are processed locally in real-time on the device, reducing the need to transmit raw recordings.
+* **Zero-Install Client-Side Edge Inference**: Operates directly in standard web browsers using WebAssembly (Wasm) and WebGL GPU acceleration. Selected video and audio signals are processed locally in real-time on the device. Raw media is not recorded or uploaded; only derived measurements are sent to the backend.
 * **5 Exploratory Sensory & Cognitive Micro-Tasks** (not locally validated diagnostic instruments):
   * *Task 1: Focus Orbit* — Saccadic latency, smooth pursuit velocity, Eye Aspect Ratio (EAR), and fixation hold endurance.
   * *Task 2: Cortex Match* — Working memory recall, spatial pattern matching, and decision reaction latency.
@@ -152,7 +152,7 @@ deployment and guardrails, is in
 ### Architecture Style
 Neulens follows a **Decoupled Client-Server Architecture with Client-Side Edge Inference and Dedicated AI Speech Gateways**:
 
-1. **Client Tier (Presentation & Edge AI)**: A high-performance Single Page Application (SPA) executing video and acoustic telemetry processing on the user's hardware via WebAssembly and WebGL shaders. Selected signals are processed locally where supported, reducing the need to transmit raw recordings to the server.
+1. **Client Tier (Presentation & Edge AI)**: A high-performance Single Page Application (SPA) executing video and acoustic telemetry processing on the user's hardware via WebAssembly and WebGL shaders. Selected signals are processed locally where supported. Raw media is not recorded or uploaded; only derived measurements are forwarded to the backend.
 2. **Backend Tier (Application & AI Speech Proxy)**: A stateless Express REST API handling authentication, profile management, screening persistence, longitudinal analytics, and secure server-to-server Gnani AI speech orchestration.
 3. **Data Tier (Relational & Cache/Memory)**: Prisma ORM interfacing with PostgreSQL for long-term clinical data storage, with dynamic runtime fallback to in-memory transactional collections if the database is unreachable.
 
@@ -165,7 +165,7 @@ flowchart TD
     C --> D[Clinician-facing output]
 ```
 
-Selected video and audio signals are processed on the device where supported, reducing the need to transmit raw recordings. Only derived features — not raw recordings — are forwarded to the backend for clinical review.
+Video and audio signals are processed on the device. Raw media is not recorded or uploaded; only derived measurements are forwarded to the backend for clinical review.
 
 ---
 
@@ -436,7 +436,7 @@ The routing architecture is constructed using React Router v6 (`createBrowserRou
 * **`faceTrackingStore.ts`**: Maintains high-frequency computer vision telemetry (60 FPS) including iris coordinates, Eye Aspect Ratio (EAR), gaze quadrants, blink counter, 3D head pose (yaw/pitch/roll), facial stability standard deviations, and smile/jaw/eyebrow expression percentages.
 * **`VoiceInstructionEngine.ts`**: Implements the audio assistant state machine (`idle`, `speaking`, `listening`, `warning`, `transcribing`), subtitle rendering, contextual cue throttling (preventing prompt spamming via 12-second cooldowns), and voice-control keyword listener.
 * **`authStore.ts`**: Encapsulates user session tokens, user entity data, and persistent browser storage syncing (`localStorage`).
-* **`LanguageManager.ts`**: Houses active language state, native script labels, BCP-47 locale identifiers, and localized spoken translation dictionaries across all six supported tongues.
+* **`LanguageManager.ts`**: Houses active language state, native script labels, BCP-47 locale identifiers, and localized spoken translation dictionaries across the supported languages.
 
 ---
 
