@@ -98,6 +98,12 @@ export interface SignupPayload {
 }
 
 export const authApi = {
+  async demoStatus(): Promise<{ enabled: boolean }> {
+    const res = await fetch(`${API_ROOT}/auth/demo-status`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Unable to check demo access.');
+    return res.json();
+  },
+
   signup(payload: SignupPayload) {
     return authRequest('/auth/signup', {
       method: 'POST',

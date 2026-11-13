@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
 // Layouts and the landing page stay eager: they are the shell and the first
@@ -81,7 +81,7 @@ const HelpSupportPage = lazyPage(() => import('../features/patient/portal/Patien
 // Shared authentication views (screens 08–14)
 const RoleSelectPage = lazyPage(() => import('../features/auth/RoleSelectPage'), 'RoleSelectPage');
 const SignUpPage = lazyPage(() => import('../features/auth/SignUpPage'), 'SignUpPage');
-const LoginPage = lazyPage(() => import('../features/auth/LoginPage'), 'LoginPage');
+
 const VerifyOtpPage = lazyPage(() => import('../features/auth/VerifyOtpPage'), 'VerifyOtpPage');
 const ForgotPasswordPage = lazyPage(() => import('../features/auth/ForgotPasswordPage'), 'ForgotPasswordPage');
 const ResetPasswordPage = lazyPage(() => import('../features/auth/ResetPasswordPage'), 'ResetPasswordPage');
@@ -89,6 +89,7 @@ const PendingApprovalPage = lazyPage(() => import('../features/auth/PendingAppro
 const AccountSuspendedPage = lazyPage(() => import('../features/auth/AccountSuspendedPage'), 'AccountSuspendedPage');
 
 // Clinician workspace
+const DoctorLoginPage = lazyPage(() => import('../features/doctor/DoctorLoginPage'), 'DoctorLoginPage');
 const DoctorDashboardPage = lazyPage(() => import('../features/doctor/DoctorDashboardPage'), 'DoctorDashboardPage');
 const DoctorPatientsPage = lazyPage(() => import('../features/doctor/DoctorPatientsPage'), 'DoctorPatientsPage');
 const DoctorPatientProfilePage = lazyPage(() => import('../features/doctor/DoctorPatientProfilePage'), 'DoctorPatientProfilePage');
@@ -131,7 +132,7 @@ const DoctorProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, user, isClinician } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth/login?role=doctor" replace />;
+    return <Navigate to="/doctor/login" replace />;
   }
 
   if (user?.role === 'PATIENT') {
@@ -152,7 +153,7 @@ const ClinicianSetupRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, user } = useAuthStore();
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/auth/login?role=doctor" replace />;
+    return <Navigate to="/doctor/login" replace />;
   }
 
   if (user.role === 'PATIENT') {
@@ -167,7 +168,7 @@ const PatientProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, user } = useAuthStore();
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/auth/login?role=patient" replace />;
+    return <Navigate to="/patient/login" replace />;
   }
 
   if (user.role !== 'PATIENT') {
@@ -177,13 +178,16 @@ const PatientProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Auth Public Guard: redirects an already approved professional to their workspace
-const AuthPublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, user, isClinician } = useAuthStore();
-  if (isAuthenticated && isClinician() && user?.verificationStatus !== 'PENDING' && user?.verificationStatus !== 'REJECTED') {
-    return <Navigate to="/doctor/dashboard" replace />;
-  }
-  return <>{children}</>;
+// Old shared sign-in links now belong to one of the two dedicated portals.
+const LegacyLoginRedirect = () => {
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role');
+  return (
+    <Navigate
+      to={role === 'doctor' || role === 'institution' ? '/doctor/login' : '/patient/login'}
+      replace
+    />
+  );
 };
 
 export const router = createBrowserRouter([
@@ -316,11 +320,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'auth/login',
-        element: (
-          <AuthPublicRoute>
-            <LoginPage />
-          </AuthPublicRoute>
-        )
+        element: <LegacyLoginRedirect />
       },
       {
         path: 'auth/verify',
@@ -364,7 +364,7 @@ export const router = createBrowserRouter([
       // ----------------------------------------------------------------------
       {
         path: 'doctor/login',
-        element: <Navigate to="/auth/login?role=doctor" replace />
+        element: <DoctorLoginPage />
       },
       {
         path: 'doctor',

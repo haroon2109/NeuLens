@@ -43,7 +43,7 @@ export const PatientLanguagePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 py-10 px-6 flex flex-col justify-between selection:bg-medical-500 selection:text-white">
+    <div className="min-h-screen bg-[#FBF7EF] text-slate-800 py-10 px-6 flex flex-col justify-between selection:bg-medical-500 selection:text-white">
       
       {/* ------------------------------------------------------------- */}
       {/* TOP NAVIGATION                                                */}

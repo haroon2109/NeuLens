@@ -16,6 +16,7 @@ import {
 import { patientApi } from '../../services/portalApi';
 import { useAuthStore } from '../../store/authStore';
 import { useLanguageStore } from '../../services/language/LanguageManager';
+import { DemoAccessPanel } from '../auth/DemoAccessPanel';
 import { SupportedLanguage } from '../../services/language/types';
 import { NeulensLogoMark } from '../../components/NeulensLogoMark';
 import { NeulensWordmark } from '../../components/NeulensWordmark';
@@ -110,6 +111,8 @@ export const PatientLoginPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          <DemoAccessPanel mode="patient-id" roles={['patient']} onError={setErrorMsg} />
 
           <form onSubmit={handleSubmit(onSubmit)} className="portal-login-form" noValidate>
             <div className="portal-field">

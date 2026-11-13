@@ -19,7 +19,7 @@ const roles: RoleOption[] = [
     title: 'Patient or family member',
     detail: 'Create a personal brain-health profile, take guided screenings, and follow your progress over time.',
     tag: 'Immediate access after verification',
-    ring: 'bg-[#E8F0FF] text-[#2563EB]',
+    ring: 'bg-[#DFF3EA] text-[#2F5E4E]',
   },
   {
     role: 'doctor',
@@ -51,7 +51,8 @@ export const RoleSelectPage: React.FC = () => {
       backLabel="Back to NeuLens"
       footer={
         <p className="portal-login-switch">
-          Already have an account? <Link to="/auth/login">Sign in</Link>
+          Already have an account? <Link to="/patient/login">Patient sign in</Link> ·{' '}
+          <Link to="/doctor/login">Clinician sign in</Link>
         </p>
       }
     >

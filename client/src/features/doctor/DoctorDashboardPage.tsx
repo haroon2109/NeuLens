@@ -332,7 +332,7 @@ export const DoctorDashboardPage: React.FC = () => {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/20 text-white flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-cyan-300" />
+              <Sparkles className="w-3 h-3 text-[#DFF3EA]" />
               Neulens v2.5 Protocol
             </span>
             <span className="text-xs text-slate-300">Biometric & Speech Pipeline Active</span>

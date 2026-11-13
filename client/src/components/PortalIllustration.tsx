@@ -41,7 +41,7 @@ export const PortalIllustration: FC<PortalIllustrationProps> = ({ variant }) => 
 
   return (
     <section
-      className="flex min-h-[420px] flex-col justify-between rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/60 p-7 shadow-sm lg:min-h-[560px] lg:p-10"
+      className="flex min-h-[420px] flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/60 p-7 shadow-sm lg:min-h-[560px] lg:p-10"
       aria-label={content.eyebrow}
     >
       <div>

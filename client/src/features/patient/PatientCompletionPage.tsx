@@ -100,7 +100,7 @@ Department of Neurology & Cognitive Health
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col justify-between py-12 px-6 selection:bg-medical-500 selection:text-white">
+    <div className="min-h-screen bg-[#FBF7EF] text-slate-800 flex flex-col justify-between py-12 px-6 selection:bg-medical-500 selection:text-white">
       
       <main className="max-w-xl mx-auto w-full space-y-6">
         

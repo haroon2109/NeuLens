@@ -24,6 +24,7 @@ type VerifyState = {
   identifier?: string;
   name?: string;
   role?: string;
+  portal?: 'patient' | 'doctor';
   isPasswordReset?: boolean;
 };
 
@@ -32,6 +33,9 @@ export const VerifyOtpPage: React.FC = () => {
   const location = useLocation();
   const { login } = useAuthStore();
   const state = (location.state || {}) as VerifyState;
+  const isDoctorPortal =
+    state.portal === 'doctor' || state.role === 'CLINICIAN' || state.role === 'INSTITUTION';
+  const loginPath = isDoctorPortal ? '/doctor/login' : '/patient/login';
 
   const [challengeId, setChallengeId] = useState(state.challengeId || '');
   const [devOtp, setDevOtp] = useState(state.devOtp || '');
@@ -122,7 +126,7 @@ export const VerifyOtpPage: React.FC = () => {
           ? `We sent a 6-digit code to ${state.identifier}. Enter it below to activate your account.`
           : 'Enter the 6-digit code sent to your registered email or phone to activate your account.'
       }
-      backTo="/auth/login"
+      backTo={loginPath}
       backLabel="Back to sign in"
       footer={
         <p className="portal-login-switch">

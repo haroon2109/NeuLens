@@ -45,7 +45,7 @@ const OnboardingShell: React.FC<{
   children: React.ReactNode;
   backTo?: string;
 }> = ({ step, eyebrow, title, description, children, backTo }) => (
-  <div className="min-h-screen bg-[#f7f9fc] text-slate-800">
+  <div className="min-h-screen bg-[#FBF7EF] text-slate-800">
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex h-[68px] max-w-5xl items-center justify-between px-4 sm:px-6">
         <Link to="/patient/welcome" className="flex items-center gap-2.5" aria-label="NeuLens patient portal">

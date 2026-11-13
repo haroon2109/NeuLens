@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -18,6 +18,9 @@ import { forgotPasswordSchema, type ForgotPasswordFields } from './schemas';
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isDoctorPortal = searchParams.get('portal') === 'doctor';
+  const loginPath = isDoctorPortal ? '/doctor/login' : '/patient/login';
   const [errorMsg, setErrorMsg] = useState('');
   const [result, setResult] = useState<AuthResponse | null>(null);
 
@@ -49,9 +52,11 @@ export const ForgotPasswordPage: React.FC = () => {
   const continueToReset = () => {
     if (!result?.challengeId) return;
     const identifier = result.identifier || getValues('identifier').trim();
-    navigate(`/auth/reset-password?identifier=${encodeURIComponent(identifier)}`, {
+    const portalQuery = isDoctorPortal ? '&portal=doctor' : '';
+    navigate(`/auth/reset-password?identifier=${encodeURIComponent(identifier)}${portalQuery}`, {
       state: {
         identifier,
+        portal: isDoctorPortal ? 'doctor' : 'patient',
         challengeId: result.challengeId,
         devOtp: result.devOtp,
       },
@@ -60,7 +65,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
   return (
     <AuthShell
-      variant="patient"
+      variant={isDoctorPortal ? 'clinician' : 'patient'}
       icon={KeyRound}
       eyebrow="Account recovery"
       badge="Screen 12"
@@ -70,11 +75,11 @@ export const ForgotPasswordPage: React.FC = () => {
           ? 'If an account matches those details, a 6-digit reset code has been sent. Enter it on the next screen to choose a new password.'
           : 'Enter the email address or registered phone number on your account. We will send a 6-digit code to reset your password.'
       }
-      backTo="/auth/login"
+      backTo={loginPath}
       backLabel="Back to sign in"
       footer={
         <p className="portal-login-switch">
-          Remembered it? <Link to="/auth/login">Return to sign in</Link>
+          Remembered it? <Link to={loginPath}>Return to sign in</Link>
         </p>
       }
     >

@@ -76,7 +76,7 @@ export const PatientDashboardPage: React.FC = () => {
         }
       />
 
-      <MotionReveal><section className="overflow-hidden rounded-2xl border border-[#DFF3EA] bg-gradient-to-br from-[#F4FBF8] via-white to-[#EEF8F3] p-5 sm:p-6">
+      <MotionReveal><section className="overflow-hidden rounded-2xl border border-[#DFF3EA] bg-[#F4FBF8] p-5 sm:p-6">
         <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
           <div className="max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">

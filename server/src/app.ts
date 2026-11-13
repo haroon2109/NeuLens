@@ -8,6 +8,7 @@ import { prisma } from './config/db';
 import apiRouter from './routes/index';
 import { errorHandler } from './middleware/errorHandler';
 import { describeJwtSecretProblem } from './config/jwt';
+import { seedDemoAccess } from './services/demoAccess';
 
 // Ensure environmental variables are loaded
 dotenv.config();
@@ -177,6 +178,9 @@ app.use('*', (req, res) => {
 
 // Start listening if not in test suite environment
 if (process.env.NODE_ENV !== 'test') {
+  // Adds fictional, verified jury accounts. Disable with DEMO_ACCESS_ENABLED=false.
+  seedDemoAccess();
+
   app.listen(PORT, HOST, async () => {
     console.log(`[Neulens Server]: Running on http://${HOST}:${PORT}`);
     if (process.env.DATABASE_URL) {

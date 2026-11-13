@@ -21,7 +21,7 @@ import {
 export type AccountRole = 'PATIENT' | 'CLINICIAN' | 'INSTITUTION';
 export type VerificationStatus = 'VERIFIED' | 'PENDING' | 'REJECTED';
 
-interface AccountRecord {
+export interface AccountRecord {
   id: string;
   role: AccountRole;
   name: string;
@@ -89,9 +89,10 @@ const toPublicUser = (account: AccountRecord) => ({
  * User table until an administrator has verified their credentials. This keeps
  * unverified professionals out of patient-record APIs entirely.
  */
-// No demo accounts are seeded. Clinicians are provisioned explicitly with
-// `npm run clinician:create`; patients register or are created by clinic staff.
-const accounts: AccountRecord[] = [];
+// In-memory account store for the shared authentication flow. Demo accounts
+// are added at startup by services/demoAccess.ts when demo access is enabled;
+// real clinicians are provisioned with `npm run clinician:create`.
+export const accounts: AccountRecord[] = [];
 
 const otpChallenges: OtpChallenge[] = [];
 

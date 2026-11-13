@@ -242,7 +242,8 @@ export const SignUpPage: React.FC = () => {
       width="wide"
       footer={
         <p className="portal-login-switch">
-          Already registered? <Link to={`/auth/login?role=${role}`}>Sign in</Link>
+          Already registered?{' '}
+          <Link to={role === 'patient' ? '/patient/login' : '/doctor/login'}>Sign in</Link>
         </p>
       }
     >

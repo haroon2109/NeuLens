@@ -19,6 +19,7 @@ import { resetPasswordSchema, type ResetPasswordFields } from './schemas';
 
 type ResetState = {
   identifier?: string;
+  portal?: 'patient' | 'doctor';
   challengeId?: string;
   devOtp?: string;
 };
@@ -30,6 +31,10 @@ export const ResetPasswordPage: React.FC = () => {
 
   const identifier = state.identifier || searchParams.get('identifier') || '';
   const devOtp = state.devOtp || '';
+  const isDoctorPortal =
+    state.portal === 'doctor' || searchParams.get('portal') === 'doctor';
+  const loginPath = isDoctorPortal ? '/doctor/login' : '/patient/login';
+  const forgotPasswordPath = `/auth/forgot-password${isDoctorPortal ? '?portal=doctor' : ''}`;
 
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -46,7 +51,7 @@ export const ResetPasswordPage: React.FC = () => {
   });
 
   if (!identifier) {
-    return <Navigate to="/auth/forgot-password" replace />;
+    return <Navigate to={forgotPasswordPath} replace />;
   }
 
   const onSubmit = async (values: ResetPasswordFields) => {
@@ -69,7 +74,7 @@ export const ResetPasswordPage: React.FC = () => {
 
   return (
     <AuthShell
-      variant="patient"
+      variant={isDoctorPortal ? 'clinician' : 'patient'}
       icon={KeyRound}
       eyebrow="Account recovery"
       badge="Screen 13"
@@ -79,11 +84,11 @@ export const ResetPasswordPage: React.FC = () => {
           ? 'Your password has been changed. You can now sign in with your new credentials.'
           : `Enter the reset code sent to ${identifier} and choose a new password for your account.`
       }
-      backTo="/auth/login"
+      backTo={loginPath}
       backLabel="Back to sign in"
       footer={
         <p className="portal-login-switch">
-          Need a new code? <Link to="/auth/forgot-password">Start again</Link>
+          Need a new code? <Link to={forgotPasswordPath}>Start again</Link>
         </p>
       }
     >
@@ -107,7 +112,7 @@ export const ResetPasswordPage: React.FC = () => {
             </div>
           </div>
 
-          <Link to="/auth/login" className="portal-submit-button">
+          <Link to={loginPath} className="portal-submit-button">
             <span>Sign in with new password</span>
             <ArrowRight className="h-4 w-4" />
           </Link>

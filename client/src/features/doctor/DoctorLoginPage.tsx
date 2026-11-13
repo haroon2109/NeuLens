@@ -10,6 +10,10 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { doctorApi } from '../../services/portalApi';
+import { authApi, AuthRequestError } from '../../services/authApi';
+import { endSession } from '../../services/sessionApi';
+import { portalPathForUser } from '../auth/authRouting';
+import { DemoAccessPanel } from '../auth/DemoAccessPanel';
 import { useAuthStore } from '../../store/authStore';
 import { NeulensLogoMark } from '../../components/NeulensLogoMark';
 import { NeulensWordmark } from '../../components/NeulensWordmark';
@@ -36,11 +40,67 @@ export const DoctorLoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const res = await doctorApi.login(email.trim(), password);
-      login(res.doctor);
-      navigate('/doctor/dashboard');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Invalid clinician credentials.');
+      // Account-based clinicians (including the jury demo) sign in through the
+      // shared account service so verification and pending-review handling match.
+      const response = await authApi.signin({
+        identifier: email.trim(),
+        password,
+        rememberMe: true,
+      });
+
+      if (!response.user) {
+        setErrorMsg('The server did not return a session. Please try again.');
+        return;
+      }
+
+      if (
+        response.user.role !== 'CLINICIAN' &&
+        response.user.role !== 'ADMIN' &&
+        response.user.role !== 'INSTITUTION'
+      ) {
+        await endSession();
+        setErrorMsg('This is the clinician portal. Please use the patient portal to sign in.');
+        return;
+      }
+
+      login(response.user, true);
+      navigate(portalPathForUser(response.user), { replace: true });
+    } catch (err) {
+      if (err instanceof AuthRequestError) {
+        if (err.payload?.requiresVerification && err.payload.challengeId) {
+          navigate('/auth/verify', {
+            state: {
+              challengeId: err.payload.challengeId,
+              devOtp: err.payload.devOtp,
+              identifier: err.payload.account?.email || email.trim(),
+              name: err.payload.account?.name,
+              role: err.payload.account?.role,
+              portal: 'doctor',
+              isPasswordReset: false,
+            },
+          });
+          return;
+        }
+
+        if (err.status === 401) {
+          // Clinicians provisioned directly into the clinical user table keep
+          // using the dedicated clinician endpoint.
+          try {
+            const res = await doctorApi.login(email.trim(), password);
+            login(res.doctor, true);
+            navigate(portalPathForUser(res.doctor), { replace: true });
+            return;
+          } catch (clinicalError: any) {
+            setErrorMsg(clinicalError?.message || 'Invalid clinician credentials.');
+            return;
+          }
+        }
+
+        setErrorMsg(err.message);
+        return;
+      }
+
+      setErrorMsg('We could not sign you in. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +146,8 @@ export const DoctorLoginPage: React.FC = () => {
             </div>
           )}
 
+          <DemoAccessPanel mode="doctor" roles={['doctor']} onError={setErrorMsg} />
+
           <form onSubmit={handleSubmit} className="portal-login-form">
             <div className="portal-field">
               <label htmlFor="clinician-email">Hospital staff email</label>
@@ -107,7 +169,7 @@ export const DoctorLoginPage: React.FC = () => {
             <div className="portal-field">
               <div className="portal-label-row">
                 <label htmlFor="clinician-password">Password</label>
-                <Link to="/auth/forgot-password">Forgot password?</Link>
+                <Link to="/auth/forgot-password?portal=doctor">Forgot password?</Link>
               </div>
               <div className="portal-input-wrap">
                 <LockKeyhole className="portal-input-icon" />
@@ -139,7 +201,7 @@ export const DoctorLoginPage: React.FC = () => {
 
       <footer className="portal-login-footer">
         <span>NeuLens hospital neurological screening platform · Authorised staff only</span>
-        <Link to="/patient">Go to patient check-in</Link>
+        <Link to="/patient/login">Go to patient sign-in</Link>
       </footer>
     </div>
   );

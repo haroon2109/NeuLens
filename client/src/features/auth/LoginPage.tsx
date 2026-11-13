@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { AuthShell } from './AuthShell';
+import { DemoAccessPanel } from './DemoAccessPanel';
 import { AuthRequestError, authApi } from '../../services/authApi';
 import { useAuthStore } from '../../store/authStore';
 import { portalPathForUser } from './authRouting';
@@ -103,6 +104,8 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <DemoAccessPanel mode="shared" onError={setErrorMsg} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="portal-login-form" noValidate>
         <div className="portal-field">

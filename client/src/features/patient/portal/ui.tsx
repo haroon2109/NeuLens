@@ -170,7 +170,7 @@ export const TrendLine: FC<{
   tone?: string;
   height?: number;
   valueSuffix?: string;
-}> = ({ points, min, max, tone = '#2563EB', height = 150, valueSuffix = '' }) => {
+}> = ({ points, min, max, tone = '#2F5E4E', height = 150, valueSuffix = '' }) => {
   if (points.length < 2) {
     return (
       <div className="flex h-[150px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-500">
@@ -245,7 +245,7 @@ export const TrendLine: FC<{
 export const ScoreDial: FC<{ value: number; label: string; tone?: string }> = ({
   value,
   label,
-  tone = '#2563EB'
+  tone = '#2F5E4E'
 }) => {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;

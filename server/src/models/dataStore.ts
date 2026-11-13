@@ -241,7 +241,7 @@ export class HospitalDataStore {
   public static async findUserByEmail(email: string): Promise<UserRecord | null> {
     try {
       const user = await prisma.user.findUnique({ where: { email } });
-      return (user as unknown as UserRecord) || null;
+      if (user) return user as unknown as UserRecord;
     } catch (e) {
       if (!memoryFallbackAllowed()) throw e;
     }
@@ -255,7 +255,7 @@ export class HospitalDataStore {
       const user = await prisma.user.findFirst({
         where: { patientId: normalized }
       });
-      return (user as unknown as UserRecord) || null;
+      if (user) return user as unknown as UserRecord;
     } catch (e) {
       if (!memoryFallbackAllowed()) throw e;
     }
@@ -268,7 +268,7 @@ export class HospitalDataStore {
   public static async findUserById(id: string): Promise<UserRecord | null> {
     try {
       const user = await prisma.user.findUnique({ where: { id } });
-      return (user as unknown as UserRecord) || null;
+      if (user) return user as unknown as UserRecord;
     } catch (e) {
       if (!memoryFallbackAllowed()) throw e;
     }
@@ -387,25 +387,33 @@ export class HospitalDataStore {
     educationYears?: number;
     handedness?: string;
   }): Promise<{ user: UserRecord; patientId: string }> {
-    // Generate collision-resistant Patient ID
-    let patientId = generatePatientIdentifier();
-    let collision = await this.findUserByPatientId(patientId);
-    let attempts = 0;
-    while (collision && attempts < 10) {
+    // Generate collision-resistant Patient ID (database lookup is best-effort;
+    // if the DB is unavailable we skip collision checking and proceed with the
+    // generated ID — it is already collision-resistant by design).
+    let patientId: string | null = null;
+    try {
       patientId = generatePatientIdentifier();
-      collision = await this.findUserByPatientId(patientId);
-      attempts++;
+      let collision = await this.findUserByPatientId(patientId);
+      let attempts = 0;
+      while (collision && attempts < 10) {
+        patientId = generatePatientIdentifier();
+        collision = await this.findUserByPatientId(patientId);
+        attempts++;
+      }
+    } catch (e) {
+      console.warn('[HospitalDataStore]: Patient ID collision check skipped due to database error:', e instanceof Error ? e.message : e);
+      patientId = generatePatientIdentifier();
     }
 
     // The PIN is a patient credential: it is hashed, never stored or returned.
     const pinHash = data.pin ? bcrypt.hashSync(data.pin, 12) : null;
     // The internal patient email is not a login credential, so its password is random.
     const passwordHash = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 10);
-    const email = `patient-${patientId.toLowerCase().replace(/[^a-z0-9]/g, '')}@cognivision.hospital`;
+    const email = `patient-${patientId!.toLowerCase().replace(/[^a-z0-9]/g, '')}@cognivision.hospital`;
 
     const userPayload: UserRecord = {
       id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      patientId,
+      patientId: patientId!,
       name: data.name.trim(),
       email,
       passwordHash,
@@ -442,7 +450,7 @@ export class HospitalDataStore {
       });
       // Also cache in memory for instantaneous queries
       inMemoryUsers.push(created as unknown as UserRecord);
-      return { user: created as unknown as UserRecord, patientId };
+      return { user: created as unknown as UserRecord, patientId: patientId! };
     } catch (e) {
       console.error('[HospitalDataStore]: Database write failed on createPatient:', e instanceof Error ? e.message : e);
       if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {

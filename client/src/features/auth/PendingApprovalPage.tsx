@@ -47,14 +47,14 @@ export const PendingApprovalPage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!user) {
-    return <Navigate to="/auth/login" replace />;
+    return <Navigate to="/doctor/login" replace />;
   }
 
   const isInstitution = user.role === 'INSTITUTION';
 
   const handleCheckStatus = async () => {
     if (!isAuthenticated) {
-      navigate('/auth/login', { replace: true });
+      navigate('/doctor/login', { replace: true });
       return;
     }
 
@@ -86,7 +86,7 @@ export const PendingApprovalPage: React.FC = () => {
 
   const handleSignOut = () => {
     logout();
-    navigate('/auth/login', { replace: true });
+    navigate('/doctor/login', { replace: true });
   };
 
   return (

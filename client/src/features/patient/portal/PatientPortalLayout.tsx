@@ -105,7 +105,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
 
   const confirmLogout = () => {
     logout();
-    navigate('/auth/login', { replace: true });
+    navigate('/patient/login', { replace: true });
   };
 
   return (
@@ -245,7 +245,7 @@ export const PatientPortalLayout: React.FC = () => {
 
   return (
     <div
-      className={`patient-portal min-h-screen bg-[#f7f9fc] text-slate-800 ${
+      className={`patient-portal min-h-screen bg-[#FBF7EF] text-slate-800 ${
         accessibility.highContrast ? 'patient-contrast' : ''
       } ${textSizeClass[accessibility.textSize]}`}
     >

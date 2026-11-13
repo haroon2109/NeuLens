@@ -8,14 +8,15 @@ import { useAuthStore } from '../../store/authStore';
 export const AccountSuspendedPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const loginPath = user?.role === 'PATIENT' ? '/patient/login' : '/doctor/login';
 
   if (!user) {
-    return <Navigate to="/auth/login" replace />;
+    return <Navigate to="/patient/login" replace />;
   }
 
   const handleSignOut = () => {
     logout();
-    navigate('/auth/login', { replace: true });
+    navigate(loginPath, { replace: true });
   };
 
   return (

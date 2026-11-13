@@ -595,7 +595,7 @@ export const HelpSupportPage: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/auth/login', { replace: true });
+    navigate('/patient/login', { replace: true });
   };
 
   return (

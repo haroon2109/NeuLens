@@ -159,7 +159,7 @@ export const DoctorLayout: React.FC = () => {
   const currentPatientId = patientPathMatch && patientPathMatch[1] !== 'screen' ? patientPathMatch[1] : null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex text-slate-800">
+    <div className="min-h-screen bg-[#FBF7EF] flex text-slate-800">
       
       {/* ------------------------------------------------------------- */}
       {/* LEFT SIDEBAR (Doctor Navigation Shell)                        */}
@@ -343,7 +343,7 @@ export const DoctorLayout: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 h-18 flex items-center justify-between px-6 lg:px-10">
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 min-h-[72px] py-3 flex items-center justify-between px-6 lg:px-10">
           
           {/* Mobile Menu Toggle & Title */}
           <div className="flex items-center gap-4">

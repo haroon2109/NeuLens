@@ -21,7 +21,7 @@ const WITH_SESSION: RequestInit = { credentials: 'include' };
  * which is what a proxy returns when the API is not running. That message tells
  * the user nothing, so translate every non-JSON outcome into a real one.
  */
-async function readResponse(res: Response): Promise<any> {
+async function readResponse(res: Response, notifyOnUnauthorized = true): Promise<any> {
   let text: string;
   try {
     text = await res.text();
@@ -38,14 +38,19 @@ async function readResponse(res: Response): Promise<any> {
     }
   }
 
+  const serverMessage = json && (json.error || json.message);
+
   if (res.status === 401) {
     // Expired or revoked token: surface the sign-in prompt rather than a blank page.
-    notifySessionExpired();
-    throw new Error('Your session has expired. Please sign in again.');
+    // A rejected sign-in is not an expired session, so login calls opt out.
+    if (notifyOnUnauthorized) {
+      notifySessionExpired();
+      throw new Error('Your session has expired. Please sign in again.');
+    }
+    throw new Error(serverMessage || 'Invalid credentials.');
   }
 
   if (!res.ok) {
-    const serverMessage = json && (json.error || json.message);
     throw new Error(serverMessage || `Request failed (status ${res.status}).`);
   }
 
@@ -59,14 +64,18 @@ async function readResponse(res: Response): Promise<any> {
   return json;
 }
 
-async function apiRequest(path: string, init?: RequestInit): Promise<any> {
+async function apiRequest(
+  path: string,
+  init?: RequestInit,
+  options: { notifyOnUnauthorized?: boolean } = {}
+): Promise<any> {
   let res: Response;
   try {
     res = await fetch(`${API_ROOT}${path}`, { ...WITH_SESSION, ...init });
   } catch {
     throw new Error('Cannot reach the Neulens server. Please check that the API server is running and try again.');
   }
-  return readResponse(res);
+  return readResponse(res, options.notifyOnUnauthorized ?? true);
 }
 
 // ----------------------------------------------------------------------------
@@ -175,11 +184,15 @@ export interface DoctorDashboardStats {
 
 export const doctorApi = {
   async login(email: string, password: string) {
-    return apiRequest('/doctor/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    return apiRequest(
+      '/doctor/login',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      },
+      { notifyOnUnauthorized: false }
+    );
   },
 
   async getDashboard(): Promise<DoctorDashboardStats> {

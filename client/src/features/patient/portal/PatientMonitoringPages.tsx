@@ -420,7 +420,7 @@ export const LongitudinalTrendsPage: React.FC = () => {
             </Card>
             <Card>
               <SectionTitle title="Vocal trend" detail="Pause observation across sessions." action={<Waves className="h-4 w-4 text-slate-400" />} />
-              <TrendLine points={vocal} tone="#7C3AED" />
+              <TrendLine points={vocal} tone="#7FA692" />
               <p className="mt-2 text-xs leading-5 text-slate-500">Microphone placement and background noise can affect acoustic observations.</p>
             </Card>
             <Card>

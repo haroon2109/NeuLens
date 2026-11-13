@@ -67,7 +67,7 @@ The MVP stores a prototype composite score and session telemetry for review. Its
 * **Hospital Dual-Portal Architecture (Role-Separated)**:
   * **Patient Portal (`/patient`)**: Patient-facing platform experience designed for elderly users and people with low digital literacy, accessible from any browser. Follows a streamlined **7-Step Journey across 9 calm screens**:
     * **Step 1 (Screen 1 — Welcome Page `/patient`)**: Minimal, spacious homepage with Neulens branding and two large touch targets: "New Patient" and "Existing Patient".
-    * **Step 2 (Screen 2 — Registration `/patient/register` & Screen 3 — Login `/patient/login`)**: Simple registration with essential demographics issuing a collision-resistant Patient ID (`CV-2026-XXXXXX`), or 2-field login with Patient ID + PIN (the PIN is the only accepted factor; no test credentials are shipped).
+    * **Step 2 (Screen 2 — Registration `/patient/register` & Screen 3 — Login `/patient/login`)**: Simple registration with essential demographics issuing a collision-resistant Patient ID (`CV-2026-XXXXXX`), or 2-field login with Patient ID + PIN (the PIN is the only accepted factor; the fictional jury demo account is listed under [Jury demo access](#jury-demo-access)).
     * **Step 3 (Screen 4 — Language Selection `/patient/language`)**: High-contrast regional language selection (English, Tamil, Hindi, Telugu, Kannada, Malayalam) with native script and spoken audio previews powered by Gnani Timbre TTS.
     * **Step 4 (Screens 5–6 — Welcome & Screening Battery `/patient/assessment`)**: Calm "Let's Begin" welcome followed by exploratory tasks (*Focus Orbit*, *Cortex Match*, *Vocal Echo*, *Mimic Sync*, *Path Mapper*) with spoken voice guidance, repeat instruction button, and dynamic typography scaling (`A` / `A+` / `A++`). Live facial tracking and audio telemetry execute in the background without exposing raw biometric diagnostics (EAR, yaw/pitch/roll) to the patient.
     * **Step 5 (Screen 7 — Optional Daily-Function Check-in)**: Four large-touch questions about everyday activities, presented in the selected language. Responses can be skipped and are stored with the screening for within-person comparison.
@@ -852,19 +852,40 @@ npm test
 ---
 
 ### Demo & Quickstart Credentials
+
+### Jury demo access
+
+For prototype evaluation, the server seeds two fictional, verified accounts at startup. The portals are separate:
+
+- Patient portal: `/patient/login` (Patient ID + PIN, or the one-click patient demo)
+- Clinician portal: `/doctor/login` (email + password, or the one-click clinician demo)
+
+Each portal exposes only its own one-click **Jury demo access** account:
+
+| Role | Sign-in | Patient portal check-in |
+| --- | --- | --- |
+| Patient (Margaret Ellis, fictional) | `patient.demo@neulens.ai` / `DemoPatient2026!` | `CV-2026-DEMO01` / PIN `246810` |
+| Clinician (Dr. Amara Okafor, fictional) | `doctor.demo@neulens.ai` / `DemoDoctor2026!` | — |
+
+The demo patient also has four synthetic screening records so the clinician dashboard, review queue, and longitudinal view are populated. No real patient data is used.
+
+Demo seeding is on by default for local and jury use. Disable it before a real clinical deployment, and never enable it on an instance that contains real patient records:
+
+```bash
+DEMO_ACCESS_ENABLED=false
+```
+
 ### Evaluation (database-agnostic)
 
 The server runs either against PostgreSQL or an in-memory fallback, both exposed through the same `HospitalDataStore` interface, so an evaluator can run the platform without a live database.
 
 1. Start the backend (`npm --prefix server run dev`) and the frontend (`npm --prefix client run dev`).
-2. Create a clinician with the included script:
+2. Use the one-click demo accounts above, or create a real clinician with the included script:
    ```bash
    npx ts-node --project server/tsconfig.json server/scripts/clinician-create.ts
    ```
    The script prints the clinician email, PIN, and a one-time onboarding redirect — it does not write credentials into the UI.
-3. The demo patient account is **not** pre-built. A clinician registers real patients with `clinician:register-patient`, or a judge/participant registers their own via the patient portal.
-
-Demo patient data used by the screenshots in this document is synthetic sample data seeded only by those setup scripts; it is never shipped in the client bundle.
+3. Real patient registration remains available through the patient portal; the demo accounts are separate and clearly labelled as fictional.
 
 ---
 

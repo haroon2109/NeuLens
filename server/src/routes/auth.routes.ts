@@ -11,10 +11,14 @@ import {
   getVerificationStatus,
 } from '../controllers/account.controller';
 import { authenticateToken } from '../middleware/auth';
+import { demoAccessEnabled } from '../services/demoAccess';
 
 const router = Router();
 
 // Shared role-based authentication flow (screens 08–14)
+router.get('/demo-status', (_req, res) => {
+  res.json({ enabled: demoAccessEnabled() });
+});
 router.post('/signup', signup);
 router.post('/signin', accountLogin);
 router.post('/verify', verifyOtp);

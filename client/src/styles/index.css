@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,24 +7,24 @@
 @layer base {
   /* ─── NeuLens Design Tokens ─────────────────────────────────── */
   :root {
-    /* Primary */
-    --nl-navy:        #0B1220;  /* headings, dark text */
-    --nl-blue:        #2563EB;  /* primary action */
-    --nl-blue-hover:  #1D4ED8;  /* primary action hover */
-    --nl-blue-light:  #EFF6FF;  /* tinted background */
+    /* Primary — the sage / mint / forest palette of the public site */
+    --nl-navy:        #1B332B;  /* headings, dark text */
+    --nl-blue:        #2F5E4E;  /* primary action (forest) */
+    --nl-blue-hover:  #24493D;  /* primary action hover */
+    --nl-blue-light:  #DFF3EA;  /* tinted background (mint) */
 
     /* Text */
-    --nl-text-primary:   #0B1220;
-    --nl-text-secondary: #52627A;
-    --nl-text-muted:     #94A3B8;
+    --nl-text-primary:   #1B332B;
+    --nl-text-secondary: #4E5F58;
+    --nl-text-muted:     #63716B;
 
     /* Surfaces */
-    --nl-bg:       #F8FAFC;  /* page background */
+    --nl-bg:       #FBF7EF;  /* page background (warm white) */
     --nl-surface:  #FFFFFF;  /* card / panel */
 
     /* Borders */
-    --nl-border:   #E2E8F0;
-    --nl-border-strong: #CBD5E1;
+    --nl-border:   #E2E7DF;
+    --nl-border-strong: #CFD8CE;
 
     /* Semantic */
     --nl-success:  #059669;  /* healthcare green */
@@ -32,26 +32,29 @@
     --nl-error:    #DC2626;
 
     /* shadcn/ui tokens — mapped onto the NeuLens palette */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 40 60% 96%;
+    --foreground: 160 31% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 160 31% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 214 100% 97%;
-    --secondary-foreground: 221 83% 47%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 214 100% 97%;
-    --accent-foreground: 224 76% 40%;
+    --popover-foreground: 160 31% 15%;
+    --primary: 160 33% 28%;
+    --primary-foreground: 40 60% 96%;
+    --secondary: 153 45% 91%;
+    --secondary-foreground: 160 33% 28%;
+    --muted: 44 26% 93%;
+    --muted-foreground: 155 11% 40%;
+    --accent: 150 42% 95%;
+    --accent-foreground: 160 33% 28%;
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --destructive-foreground: 40 60% 96%;
+    --border: 98 14% 89%;
+    --input: 98 14% 89%;
+    --ring: 160 33% 28%;
     --radius: 0.75rem;
+
+    /* NeuLens typography — Manrope is the single typeface for the public site. */
+    --nl-font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   }
 
   .dark {
@@ -80,7 +83,47 @@
     @apply font-sans antialiased overflow-x-hidden;
     background-color: var(--nl-bg);
     color: var(--nl-text-primary);
+    font-family: var(--nl-font-sans);
     min-height: 100vh;
+  }
+
+  /* Same tight, editorial heading rhythm as the public site. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    letter-spacing: -0.035em;
+  }
+
+  .landing-page {
+    font-family: var(--nl-font-sans);
+  }
+
+  /* Landing-page typography: one Manrope type scale, no banned fonts, no italics.
+     Heading sizes are controlled by the named .lp-* styles in landingStyles.css. */
+  .landing-page p,
+  .landing-page li,
+  .landing-page td,
+  .landing-page th,
+  .landing-page caption {
+    font-family: var(--nl-font-sans);
+  }
+
+  .landing-page a,
+  .landing-page button,
+  .landing-page input,
+  .landing-page select,
+  .landing-page textarea {
+    font-family: inherit;
+  }
+
+  .landing-page em,
+  .landing-page i {
+    font-style: normal;
   }
 
   ::-webkit-scrollbar {
@@ -98,7 +141,7 @@
 @layer components {
   .landing-page a:focus-visible,
   .landing-page button:focus-visible {
-    outline: 3px solid #2563EB;
+    outline: 3px solid #2f5e4e;
     outline-offset: 3px;
   }
 
@@ -139,7 +182,7 @@
 
     .patient-action:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 24px -18px rgba(30, 64, 175, 0.42);
+      box-shadow: 0 10px 24px -18px rgba(36, 73, 61, 0.42);
     }
 
     @keyframes patient-page-appear {
@@ -261,7 +304,7 @@
     @apply px-5 py-2.5 font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2;
     background-color: var(--nl-blue-light);
     color: var(--nl-blue);
-    border: 1px solid rgba(37, 99, 235, 0.2);
+    border: 1px solid rgba(47, 94, 78, 0.2);
   }
 
   /* Status Indicators */
@@ -336,18 +379,16 @@
 }
 
 .portal-login-page {
-  --portal-blue: #2563eb;
-  --portal-blue-dark: #1d4ed8;
-  --portal-ink: #122541;
-  --portal-muted: #63748b;
-  --portal-border: #e2eaf5;
+  --portal-blue: #2f5e4e;
+  --portal-blue-dark: #24493d;
+  --portal-ink: #1b332b;
+  --portal-muted: #63716b;
+  --portal-border: #e2e7df;
   display: flex;
   min-height: 100vh;
   flex-direction: column;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 8% 30%, rgba(219, 234, 254, 0.44), transparent 36%),
-    #f7f9fc;
+  background-color: #fbf7ef;
   color: var(--portal-ink);
 }
 
@@ -360,7 +401,7 @@
   align-items: center;
   justify-content: space-between;
   margin: 0 auto;
-  border-bottom: 1px solid rgba(208, 220, 237, 0.64);
+  border-bottom: 1px solid rgba(207, 216, 206, 0.64);
 }
 
 .portal-brand {
@@ -376,10 +417,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0 0.9rem;
-  border: 1px solid #e0e7f0;
+  border: 1px solid #e2e7df;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.76);
-  color: #53647b;
+  color: #4e5f58;
   font-size: 0.78rem;
   font-weight: 600;
   text-decoration: none;
@@ -387,7 +428,7 @@
 }
 
 .portal-back-link:hover {
-  border-color: #b7ccef;
+  border-color: #a9c7b6;
   background: white;
   color: var(--portal-blue-dark);
 }
@@ -412,12 +453,10 @@
   justify-content: space-between;
   overflow: hidden;
   padding: clamp(2rem, 4vw, 3.5rem);
-  border: 1px solid rgba(195, 214, 242, 0.74);
+  border: 1px solid rgba(169, 199, 182, 0.74);
   border-radius: 2rem;
-  background:
-    radial-gradient(circle at 90% 8%, rgba(128, 174, 245, 0.35), transparent 28%),
-    linear-gradient(145deg, #173b70 0%, #17458b 52%, #1d4ed8 100%);
-  box-shadow: 0 28px 80px -58px rgba(20, 54, 105, 0.6);
+  background-color: #2f5e4e;
+  box-shadow: 0 28px 80px -58px rgba(27, 51, 43, 0.6);
 }
 
 .portal-illustration::before,
@@ -453,28 +492,26 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  color: #c9dcf9;
+  color: #dff3ea;
   font-size: 0.71rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.portal-illustration-copy h2 {
-  max-width: 500px;
-  margin: 1.2rem 0 0;
-  color: white;
-  font-family: Outfit, Inter, sans-serif;
-  font-size: clamp(2rem, 3.5vw, 3.2rem);
-  font-weight: 600;
-  letter-spacing: -0.055em;
-  line-height: 1.06;
-}
+}  .portal-illustration-copy h2 {
+    max-width: 500px;
+    margin: 1.2rem 0 0;
+    color: white;
+    font-family: var(--nl-font-sans);
+    font-size: clamp(2rem, 3.5vw, 3.2rem);
+    font-weight: 600;
+    letter-spacing: -0.055em;
+    line-height: 1.06;
+  }
 
 .portal-illustration-copy p {
   max-width: 390px;
   margin: 1rem 0 0;
-  color: #d3e2f8;
+  color: #e5f1ea;
   font-size: 0.94rem;
   line-height: 1.7;
 }
@@ -486,7 +523,7 @@
   max-width: 650px;
   align-self: center;
   margin: 1.5rem -0.75rem 1rem;
-  filter: drop-shadow(0 26px 30px rgba(4, 25, 55, 0.17));
+  filter: drop-shadow(0 26px 30px rgba(20, 42, 35, 0.17));
 }
 
 .portal-illustration-art svg {
@@ -499,7 +536,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  color: #d5e4fa;
+  color: #e5f1ea;
   font-size: 0.75rem;
   font-weight: 500;
 }
@@ -509,10 +546,10 @@
   max-width: 520px;
   justify-self: center;
   padding: clamp(1.5rem, 3vw, 2.5rem);
-  border: 1px solid rgba(220, 230, 243, 0.9);
+  border: 1px solid rgba(226, 231, 223, 0.9);
   border-radius: 1.75rem;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 24px 70px -48px rgba(17, 44, 80, 0.28), 0 2px 8px rgba(17, 44, 80, 0.035);
+  box-shadow: 0 24px 70px -48px rgba(27, 51, 43, 0.28), 0 2px 8px rgba(27, 51, 43, 0.035);
 }
 
 .portal-form-step {
@@ -520,7 +557,7 @@
   min-height: 34px;
   align-items: center;
   gap: 0.55rem;
-  color: #526782;
+  color: #4e5f58;
   font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 0.025em;
@@ -533,17 +570,17 @@
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  background: #eaf1ff;
+  background: #eef8f3;
   color: var(--portal-blue);
 }
 
 .portal-form-step-count {
   margin-left: auto;
   padding: 0.38rem 0.65rem;
-  border: 1px solid #e5ebf5;
+  border: 1px solid #e2e7df;
   border-radius: 999px;
-  background: #fbfcfe;
-  color: #718198;
+  background: #fbf9f4;
+  color: #63716b;
   font-size: 0.62rem;
   font-weight: 600;
   white-space: nowrap;
@@ -551,17 +588,15 @@
 
 .portal-form-heading {
   margin: 1.35rem 0 1.65rem;
-}
-
-.portal-form-heading h1 {
-  margin: 0;
-  color: #122541;
-  font-family: Outfit, Inter, sans-serif;
-  font-size: clamp(1.85rem, 3vw, 2.35rem);
-  font-weight: 600;
-  letter-spacing: -0.055em;
-  line-height: 1.1;
-}
+}  .portal-form-heading h1 {
+    margin: 0;
+    color: #1b332b;
+    font-family: var(--nl-font-sans);
+    font-size: clamp(1.85rem, 3vw, 2.35rem);
+    font-weight: 600;
+    letter-spacing: -0.055em;
+    line-height: 1.1;
+  }
 
 .portal-form-heading p {
   margin: 0.65rem 0 0;
@@ -603,7 +638,7 @@
 .portal-field label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #334860;
+  color: #2a3d35;
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -638,34 +673,32 @@
   left: 1rem;
   width: 1rem;
   height: 1rem;
-  color: #8a9ab0;
+  color: #63716b;
   pointer-events: none;
   transform: translateY(-50%);
-}
-
-.portal-input {
-  display: block;
-  width: 100%;
-  min-height: 3.2rem;
-  padding: 0.8rem 1rem 0.8rem 2.85rem;
-  border: 1px solid #dfe7f1;
-  border-radius: 0.9rem;
-  outline: none;
-  background: #fbfcfe;
-  color: #162a43;
-  font-family: Inter, sans-serif;
-  font-size: 0.85rem;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
+}  .portal-input {
+    display: block;
+    width: 100%;
+    min-height: 3.2rem;
+    padding: 0.8rem 1rem 0.8rem 2.85rem;
+    border: 1px solid #cfd8ce;
+    border-radius: 0.9rem;
+    outline: none;
+    background: #fbf9f4;
+    color: #1b332b;
+    font-family: var(--nl-font-sans);
+    font-size: 0.85rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  }
 
 .portal-input::placeholder {
-  color: #9aa8ba;
+  color: #8d9c94;
 }
 
 .portal-input:focus {
   border-color: #5a8eeb;
   background: white;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.11);
+  box-shadow: 0 0 0 4px rgba(47, 94, 78, 0.11);
 }
 
 .portal-input-mono {
@@ -679,7 +712,7 @@
   align-items: flex-start;
   gap: 0.4rem;
   margin: 0.5rem 0 0;
-  color: #8290a3;
+  color: #63716b;
   font-size: 0.67rem;
   line-height: 1.55;
 }
@@ -687,33 +720,32 @@
 .portal-field-hint svg {
   flex: none;
   margin-top: 0.06rem;
-  color: #8498b3;
-}
-
-.portal-submit-button {
-  display: flex;
-  width: 100%;
-  min-height: 3.25rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  margin-top: 0.2rem;
-  padding: 0.75rem 1rem;
-  border: 0;
-  border-radius: 0.95rem;
-  background: linear-gradient(105deg, #2563eb, #1d4ed8);
-  box-shadow: 0 10px 24px -14px rgba(37, 99, 235, 0.75);
-  color: white;
-  cursor: pointer;
-  font-family: Inter, sans-serif;
-  font-size: 0.82rem;
-  font-weight: 700;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
+  color: #63716b;
+}  .portal-submit-button {
+    display: flex;
+    width: 100%;
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: 0.95rem;
+    background: #2f5e4e;
+    border-color: #2f5e4e;
+    box-shadow: 0 10px 24px -14px rgba(47, 94, 78, 0.75);
+    color: white;
+    cursor: pointer;
+    font-family: var(--nl-font-sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  }
 
 .portal-submit-button:hover:not(:disabled) {
-  background: linear-gradient(105deg, #1d4ed8, #1e40af);
-  box-shadow: 0 14px 28px -14px rgba(37, 99, 235, 0.72);
+  background: #24493d;
+  box-shadow: 0 14px 28px -14px rgba(47, 94, 78, 0.72);
   transform: translateY(-1px);
 }
 
@@ -725,20 +757,20 @@
 .portal-demo-section {
   margin-top: 1.45rem;
   padding-top: 1.15rem;
-  border-top: 1px solid #edf1f6;
+  border-top: 1px solid #eceee6;
 }
 
 .portal-demo-heading {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  color: #64758c;
+  color: #4e5f58;
   font-size: 0.67rem;
   font-weight: 700;
 }
 
 .portal-demo-heading svg {
-  color: #4380e1;
+  color: #46715e;
 }
 
 .portal-demo-grid {
@@ -756,10 +788,10 @@
   align-items: center;
   gap: 0.7rem;
   padding: 0.55rem 0.75rem;
-  border: 1px solid #e4eaf3;
+  border: 1px solid #e2e7df;
   border-radius: 0.9rem;
-  background: #fbfcfe;
-  color: #263c57;
+  background: #fbf9f4;
+  color: #2a3d35;
   cursor: pointer;
   text-align: left;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
@@ -768,8 +800,8 @@
 .portal-demo-patient:hover,
 .portal-demo-clinician:hover {
   transform: translateY(-1px);
-  border-color: #bfd2f1;
-  background: #f4f8ff;
+  border-color: #a9c7b6;
+  background: #eef8f3;
 }
 
 .portal-demo-avatar,
@@ -781,15 +813,15 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: #e8efff;
-  color: #315eae;
+  background: #dff3ea;
+  color: #46715e;
   font-size: 0.66rem;
   font-weight: 800;
 }
 
 .portal-demo-avatar-blue {
-  background: #edf0fc;
-  color: #6565b4;
+  background: #eef8f3;
+  color: #46715e;
 }
 
 .portal-demo-patient > span:nth-child(2),
@@ -804,7 +836,7 @@
 .portal-demo-patient strong,
 .portal-demo-clinician strong {
   overflow: hidden;
-  color: #314760;
+  color: #2a3d35;
   font-size: 0.72rem;
   font-weight: 700;
   text-overflow: ellipsis;
@@ -814,7 +846,7 @@
 .portal-demo-patient > span:nth-child(2) > span,
 .portal-demo-clinician > span:nth-child(2) > span {
   overflow: hidden;
-  color: #8290a3;
+  color: #63716b;
   font-family: Inter, sans-serif;
   font-size: 0.62rem;
   text-overflow: ellipsis;
@@ -825,12 +857,12 @@
   width: 0.9rem;
   height: 0.9rem;
   flex: none;
-  color: #8b9bb1;
+  color: #63716b;
 }
 
 .portal-demo-description {
   margin: 0.5rem 0 0;
-  color: #8290a3;
+  color: #63716b;
   font-size: 0.68rem;
   line-height: 1.55;
 }
@@ -839,13 +871,73 @@
   margin-top: 0.8rem;
 }
 
+.portal-demo-grid .portal-demo-clinician {
+  margin-top: 0;
+}
+
+.portal-demo-patient:disabled,
+.portal-demo-clinician:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  transform: none;
+}
+
+.portal-demo-patient:focus-visible,
+.portal-demo-clinician:focus-visible,
+.portal-demo-credentials summary:focus-visible {
+  outline: 2px solid #2f5e4e;
+  outline-offset: 2px;
+}
+
+.portal-demo-credentials {
+  margin-top: 0.8rem;
+  color: #63716b;
+  font-size: 0.63rem;
+  line-height: 1.55;
+}
+
+.portal-demo-credentials summary {
+  width: fit-content;
+  color: #4e5f58;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.portal-demo-credentials summary:hover {
+  color: #46715e;
+}
+
+.portal-demo-credential-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+}
+
+.portal-demo-credential-row svg {
+  flex: none;
+  margin-top: 0.12rem;
+  color: #63716b;
+}
+
+.portal-demo-credential-row code {
+  padding: 0.06rem 0.26rem;
+  border: 1px solid #e2e7df;
+  border-radius: 0.3rem;
+  background: #f7f5ef;
+  color: #2a3d35;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.61rem;
+  overflow-wrap: anywhere;
+}
+
 .portal-clinician-avatar {
-  background: #e5efff;
+  background: #dff3ea;
 }
 
 .portal-login-switch {
   margin: 1rem 0 0;
-  color: #738198;
+  color: #63716b;
   font-size: 0.7rem;
   text-align: center;
 }
@@ -867,15 +959,15 @@
   gap: 0.45rem;
   margin-top: 1.15rem;
   padding-top: 1rem;
-  border-top: 1px solid #edf1f6;
-  color: #7d8ca0;
+  border-top: 1px solid #eceee6;
+  color: #63716b;
   font-size: 0.64rem;
   line-height: 1.5;
   text-align: center;
 }
 
 .portal-secure-note svg {
-  color: #3974c4;
+  color: #46715e;
 }
 
 .portal-login-footer {
@@ -886,13 +978,13 @@
   justify-content: space-between;
   gap: 1rem;
   margin: 0 auto;
-  border-top: 1px solid rgba(208, 220, 237, 0.64);
-  color: #8290a3;
+  border-top: 1px solid rgba(207, 216, 206, 0.64);
+  color: #63716b;
   font-size: 0.66rem;
 }
 
 .portal-login-footer a {
-  color: #5f7189;
+  color: #4e5f58;
   font-weight: 600;
   text-decoration: none;
 }
@@ -1035,7 +1127,7 @@
 
 .portal-login-page a:focus-visible,
 .portal-login-page button:focus-visible {
-  outline: 3px solid #8bb5ff;
+  outline: 3px solid #a9c7b6;
   outline-offset: 3px;
 }
 
@@ -1069,7 +1161,7 @@
 
 .portal-registration-field-note {
   margin-bottom: 0.5rem;
-  color: #8290a3;
+  color: #63716b;
   font-size: 0.64rem;
   white-space: nowrap;
 }
@@ -1081,7 +1173,7 @@
 }
 
 .portal-registration-footer-note svg {
-  color: #3974c4;
+  color: #46715e;
 }
 
 @media (max-width: 639px) {
@@ -1109,33 +1201,32 @@
   gap: 0.4rem;
   margin-bottom: 1.25rem;
   padding: 0.3rem;
-  border: 1px solid #e5ebf5;
+  border: 1px solid #e2e7df;
   border-radius: 0.9rem;
-  background: #f7f9fd;
-}
-
-.auth-role-tab {
-  display: inline-flex;
-  min-height: 2.35rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  border-radius: 0.65rem;
-  color: #64758c;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
-}
+  background: #f6f4ee;
+}  .auth-role-tab {
+    display: inline-flex;
+    min-height: 2.35rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 0.65rem;
+    color: #4e5f58;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    font-family: var(--nl-font-sans);
+  }
 
 .auth-role-tab:hover {
-  color: #1d4ed8;
+  color: #24493d;
 }
 
 .auth-role-tab.is-active {
   background: white;
-  box-shadow: 0 2px 8px -2px rgba(17, 44, 80, 0.18);
-  color: #1d4ed8;
+  box-shadow: 0 2px 8px -2px rgba(27, 51, 43, 0.18);
+  color: #24493d;
 }
 
 .auth-role-list {
@@ -1151,29 +1242,28 @@
   align-items: flex-start;
   gap: 0.85rem;
   padding: 1rem;
-  border: 1px solid #e2eaf5;
+  border: 1px solid #e2e7df;
   border-radius: 1rem;
-  background: #fbfcfe;
+  background: #fbf9f4;
   text-decoration: none;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
-}
+}  .auth-role-option:hover {
+    transform: translateY(-2px);
+    border-color: #a9c7b6;
+    background: #f1f8f4;
+    box-shadow: 0 14px 30px -26px rgba(27, 51, 43, 0.5);
+  }
 
-.auth-role-option:hover {
-  transform: translateY(-2px);
-  border-color: #b9cdf0;
-  background: #f6f9ff;
-  box-shadow: 0 14px 30px -26px rgba(20, 54, 105, 0.5);
-}
-
-.auth-role-icon {
-  display: flex;
-  width: 44px;
-  height: 44px;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.9rem;
-}
+  .auth-role-icon {
+    display: flex;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.9rem;
+    font-family: var(--nl-font-sans);
+  }
 
 .auth-role-copy {
   display: flex;
@@ -1181,40 +1271,41 @@
   flex: 1;
   flex-direction: column;
   gap: 0.22rem;
-}
+}  .auth-role-copy strong {
+    color: #1b332b;
+    font-size: 0.86rem;
+    font-weight: 700;
+    font-family: var(--nl-font-sans);
+  }
 
-.auth-role-copy strong {
-  color: #172b45;
-  font-size: 0.86rem;
-  font-weight: 700;
-}
+  .auth-role-copy > span {
+    color: #4e5f58;
+    font-size: 0.74rem;
+    line-height: 1.55;
+    font-family: var(--nl-font-sans);
+  }
 
-.auth-role-copy > span {
-  color: #64758c;
-  font-size: 0.74rem;
-  line-height: 1.55;
-}
-
-.auth-role-copy em {
-  margin-top: 0.15rem;
-  color: #8290a3;
-  font-size: 0.62rem;
-  font-style: normal;
-  font-weight: 700;
-  letter-spacing: 0.045em;
-  text-transform: uppercase;
-}
+  .auth-role-copy em {
+    margin-top: 0.15rem;
+    color: #63716b;
+    font-size: 0.62rem;
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+    font-family: var(--nl-font-sans);
+  }
 
 .auth-role-arrow {
   align-self: center;
-  color: #8b9bb1;
+  color: #63716b;
   font-size: 1rem;
   transition: transform 160ms ease, color 160ms ease;
 }
 
 .auth-role-option:hover .auth-role-arrow {
   transform: translateX(3px);
-  color: #2563eb;
+  color: #2f5e4e;
 }
 
 .auth-password-toggle {
@@ -1229,19 +1320,19 @@
   border: 0;
   border-radius: 0.5rem;
   background: transparent;
-  color: #8494a9;
+  color: #63716b;
   cursor: pointer;
   transform: translateY(-50%);
 }
 
 .auth-password-toggle:hover {
-  background: #eef3fb;
-  color: #2563eb;
+  background: #f2f0e9;
+  color: #2f5e4e;
 }  .auth-check-row {
     display: flex;
     align-items: flex-start;
     gap: 0.65rem;
-    color: #64758c;
+    color: #4e5f58;
     font-size: 0.72rem;
     line-height: 1.6;
     cursor: pointer;
@@ -1252,12 +1343,12 @@
     height: 1.05rem;
     flex: none;
     margin-top: 0.12rem;
-    accent-color: #2563eb; /* checkbox accent in NeuLens form controls (auth-check-row input) */
+    accent-color: #2f5e4e; /* checkbox accent in NeuLens form controls (auth-check-row input) */
   }
 
 .auth-check-row-compact {
   align-items: center;
-  color: #526782;
+  color: #4e5f58;
   font-weight: 600;
 }
 
@@ -1271,10 +1362,10 @@
   gap: 0.6rem;
   margin-top: 1.15rem;
   padding: 0.85rem 0.95rem;
-  border: 1px solid #e3ecf8;
+  border: 1px solid #e2e7df;
   border-radius: 1rem;
-  background: #f7faff;
-  color: #5d7089;
+  background: #f1f8f4;
+  color: #4e5f58;
   font-size: 0.69rem;
   line-height: 1.6;
 }
@@ -1282,7 +1373,7 @@
 .auth-notice svg {
   margin-top: 0.08rem;
   flex: none;
-  color: #3b76c9;
+  color: #46715e;
 }
 
 .auth-identity-chip {
@@ -1291,16 +1382,16 @@
   gap: 0.45rem;
   margin-bottom: 1.1rem;
   padding: 0.5rem 0.7rem;
-  border: 1px solid #e1eaf6;
+  border: 1px solid #e2e7df;
   border-radius: 999px;
-  background: #f7faff;
-  color: #50647d;
+  background: #f1f8f4;
+  color: #4e5f58;
   font-size: 0.7rem;
   font-weight: 650;
 }
 
 .auth-identity-chip svg {
-  color: #2563eb;
+  color: #2f5e4e;
 }
 
 .auth-success-inline {
@@ -1331,16 +1422,16 @@
 .auth-demo-code {
   margin-top: 1rem;
   padding: 0.8rem 0.9rem;
-  border: 1px dashed #b9cdf0;
+  border: 1px dashed #a9c7b6;
   border-radius: 0.9rem;
-  background: #f5f9ff;
+  background: #f1f8f4;
 }
 
 .auth-demo-code-label {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: #6d7f96;
+  color: #63716b;
   font-size: 0.61rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -1348,7 +1439,7 @@
 }
 
 .auth-demo-code-label svg {
-  color: #2563eb;
+  color: #2f5e4e;
 }
 
 .auth-demo-code-value {
@@ -1361,27 +1452,25 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #173b70;
+  color: #1b332b;
   cursor: pointer;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 0.22em;
-}
-
-.auth-demo-code-value span {
-  color: #2563eb;
-  font-family: Inter, sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-decoration: underline;
-}
+}  .auth-demo-code-value span {
+    color: #2f5e4e;
+    font-family: var(--nl-font-sans);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-decoration: underline;
+  }
 
 .auth-demo-code-static {
   display: block;
   margin-top: 0.35rem;
-  color: #173b70;
+  color: #1b332b;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 1.15rem;
   font-weight: 700;
@@ -1394,7 +1483,7 @@
   justify-content: space-between;
   gap: 1rem;
   margin-top: 1.1rem;
-  color: #718198;
+  color: #63716b;
   font-size: 0.7rem;
 }
 
@@ -1405,14 +1494,14 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #2563eb;
+  color: #2f5e4e;
   cursor: pointer;
   font-size: 0.7rem;
   font-weight: 700;
 }
 
 .auth-resend-row button:disabled {
-  color: #93a2b6;
+  color: #7a8b83;
   cursor: default;
 }
 
@@ -1456,7 +1545,7 @@
   padding: 0.2rem;
   border: 0;
   background: transparent;
-  color: #2563eb;
+  color: #2f5e4e;
   cursor: pointer;
   font-size: 0.7rem;
   font-weight: 700;
@@ -1523,7 +1612,7 @@
   bottom: 0;
   left: 0.95rem;
   width: 1px;
-  background: #e3ebf6;
+  background: #e2e7df;
   content: "";
 }
 
@@ -1538,10 +1627,10 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e1e9f4;
+  border: 1px solid #e2e7df;
   border-radius: 999px;
-  background: #f8fafd;
-  color: #9aa8ba;
+  background: #fbf9f4;
+  color: #8d9c94;
 }
 
 .auth-timeline-item.is-done .auth-timeline-icon {
@@ -1559,7 +1648,7 @@
 .auth-timeline-item strong {
   display: block;
   margin-top: 0.28rem;
-  color: #334860;
+  color: #2a3d35;
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -1567,7 +1656,7 @@
 .auth-timeline-item span span {
   display: block;
   margin-top: 0.15rem;
-  color: #7d8ca0;
+  color: #63716b;
   font-size: 0.69rem;
   line-height: 1.55;
 }
@@ -1575,14 +1664,14 @@
 .auth-detail-card {
   margin-top: 0.35rem;
   padding: 0.95rem 1rem;
-  border: 1px solid #e5ebf5;
+  border: 1px solid #e2e7df;
   border-radius: 1rem;
-  background: #fbfcfe;
+  background: #fbf9f4;
 }
 
 .auth-detail-card h2 {
   margin: 0 0 0.55rem;
-  color: #526782;
+  color: #4e5f58;
   font-size: 0.63rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1603,13 +1692,13 @@
 }
 
 .auth-detail-card dt {
-  color: #8290a3;
+  color: #63716b;
   font-size: 0.68rem;
 }
 
 .auth-detail-card dd {
   margin: 0;
-  color: #334860;
+  color: #2a3d35;
   font-size: 0.7rem;
   font-weight: 650;
   text-align: right;
@@ -1619,30 +1708,28 @@
   display: grid;
   gap: 0.6rem;
   margin-top: 1.15rem;
-}
-
-.auth-secondary-button {
-  display: flex;
-  width: 100%;
-  min-height: 2.9rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 1px solid #e0e7f0;
-  border-radius: 0.9rem;
-  background: white;
-  color: #526782;
-  cursor: pointer;
-  font-family: Inter, sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
-}
+}  .auth-secondary-button {
+    display: flex;
+    width: 100%;
+    min-height: 2.9rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid #e2e7df;
+    border-radius: 0.9rem;
+    background: white;
+    color: #4e5f58;
+    cursor: pointer;
+    font-family: var(--nl-font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+  }
 
 .auth-secondary-button:hover {
-  border-color: #b9cdf0;
-  background: #f7faff;
-  color: #1d4ed8;
+  border-color: #a9c7b6;
+  background: #f1f8f4;
+  color: #24493d;
 }
 
 .auth-inline-error {
@@ -1713,50 +1800,50 @@
 .patient-contrast {
   --tw-text-opacity: 1;
   background-color: #ffffff !important;
-  color: #0f172a;
+  color: #132520;
 }
 
 .patient-contrast .text-slate-400,
 .patient-contrast .text-slate-500 {
-  color: #334155 !important;
+  color: #2a3d35 !important;
 }
 
 .patient-contrast .text-slate-600 {
-  color: #1e293b !important;
+  color: #1b332b !important;
 }
 
 .patient-contrast .text-slate-800,
 .patient-contrast .text-slate-900,
 .patient-contrast .text-slate-950 {
-  color: #020617 !important;
+  color: #132520 !important;
 }
 
 .patient-contrast .text-blue-700,
 .patient-contrast .text-blue-800 {
-  color: #1e40af !important;
+  color: #24493d !important;
 }
 
 .patient-contrast .bg-slate-50,
 .patient-contrast .bg-slate-50\/60,
 .patient-contrast .bg-slate-50\/70 {
-  background-color: #f1f5f9 !important;
+  background-color: #f2f0e9 !important;
 }
 
 .patient-contrast .border-slate-100,
 .patient-contrast .border-slate-200 {
-  border-color: #64748b !important;
+  border-color: #63716b !important;
 }
 
 .patient-contrast .border-slate-300 {
-  border-color: #475569 !important;
+  border-color: #2a3d35 !important;
 }
 
 .patient-contrast input,
 .patient-contrast select,
 .patient-contrast textarea {
-  border-color: #475569 !important;
+  border-color: #2a3d35 !important;
   background-color: #ffffff !important;
-  color: #020617 !important;
+  color: #132520 !important;
 }
 
 .patient-contrast a:focus-visible,
@@ -1764,12 +1851,12 @@
 .patient-contrast input:focus-visible,
 .patient-contrast select:focus-visible,
 .patient-contrast textarea:focus-visible {
-  outline: 3px solid #1d4ed8 !important;
+  outline: 3px solid #24493d !important;
   outline-offset: 2px;
 }
 
 .patient-contrast .bg-blue-700 {
-  background-color: #1e3a8a !important;
+  background-color: #142a23 !important;
 }
 
 /* Elder care mascot animations (decorative, subtle) */

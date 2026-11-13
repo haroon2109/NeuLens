@@ -21,11 +21,10 @@ export const AppLayout: React.FC = () => {
   const handleSignInAgain = (nextPath: string) => {
     const role = useAuthStore.getState().role;
     logout();
-    const roleParam = role === 'PATIENT' ? 'patient' : role ? 'doctor' : '';
+    const loginPath = role === 'PATIENT' ? '/patient/login' : '/doctor/login';
     const query = new URLSearchParams();
-    if (roleParam) query.set('role', roleParam);
     if (nextPath && nextPath !== '/' && !nextPath.startsWith('/auth/')) query.set('next', nextPath);
-    navigate(`/auth/login${query.toString() ? `?${query.toString()}` : ''}`, { replace: true });
+    navigate(`${loginPath}${query.toString() ? `?${query.toString()}` : ''}`, { replace: true });
   };
 
   return (

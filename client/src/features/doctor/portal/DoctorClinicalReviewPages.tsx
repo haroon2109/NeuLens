@@ -323,7 +323,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
       title: 'Cognitive composite',
       icon: Activity,
       unit: ' / 100',
-      color: '#2563EB',
+      color: '#2F5E4E',
       points: chronological
         .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.overallScore) }))
         .filter((point): point is { label: string; value: number } => point.value !== null)
@@ -333,7 +333,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
       title: 'Ocular · fixation hold',
       icon: Eye,
       unit: '%',
-      color: '#7C3AED',
+      color: '#7FA692',
       points: chronological
         .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task1?.fixationHoldPct) }))
         .filter((point): point is { label: string; value: number } => point.value !== null)

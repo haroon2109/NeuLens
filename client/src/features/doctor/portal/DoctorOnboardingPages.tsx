@@ -47,7 +47,7 @@ const DoctorOnboardingShell: React.FC<{
   const isVerified = user?.verificationStatus === 'VERIFIED';
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#f7f9fc] text-slate-800">
+    <div className="min-h-[calc(100vh-64px)] bg-[#FBF7EF] text-slate-800">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link to="/" className="flex items-center gap-2.5">
