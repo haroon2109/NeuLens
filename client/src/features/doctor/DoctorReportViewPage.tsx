@@ -159,20 +159,20 @@ export const DoctorReportViewPage: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto py-24 text-center space-y-4">
         <div className="w-10 h-10 border-3 border-medical-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Generating Confidential Clinical Report...</p>
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">Generating Confidential Clinical Report...</p>
       </div>
     );
   }
 
   if (error || !reportData) {
     return (
-      <div className="max-w-lg mx-auto py-16 text-center space-y-4 bg-white p-8 rounded-3xl border border-slate-200">
+      <div className="max-w-lg mx-auto py-16 text-center space-y-4 bg-white p-8 rounded-2xl border border-line">
         <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-900">Report Unavailable</h2>
-        <p className="text-xs text-slate-500">{error || 'Could not locate the requested screening record.'}</p>
+        <h2 className="text-xl font-bold text-ink">Report Unavailable</h2>
+        <p className="text-xs text-muted">{error || 'Could not locate the requested screening record.'}</p>
         <Link
           to="/doctor/dashboard"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-warm hover:bg-slate-200 text-body rounded-xl text-xs font-bold"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Overview
@@ -224,7 +224,7 @@ export const DoctorReportViewPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <Link
           to="/doctor/dashboard"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-ink transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Doctor Dashboard
@@ -233,7 +233,7 @@ export const DoctorReportViewPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <Link
             to={`/doctor/patients/${patient.patientId}`}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-line text-body hover:bg-warm text-xs font-bold shadow-card"
           >
             <User className="w-3.5 h-3.5 text-medical-600" />
             Patient Profile
@@ -241,7 +241,7 @@ export const DoctorReportViewPage: React.FC = () => {
 
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-bold transition-all shadow-md shadow-medical-600/20"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-bold transition-all shadow-card shadow-medical-600/20"
           >
             <Printer className="w-3.5 h-3.5" />
             Print / Export PDF
@@ -252,66 +252,66 @@ export const DoctorReportViewPage: React.FC = () => {
       {/* ---------------------------------------------------------------- */}
       {/* CONFIDENTIAL CLINICAL REPORT CONTAINER (Printable)               */}
       {/* ---------------------------------------------------------------- */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 sm:p-10 space-y-8 print:border-none print:shadow-none print:p-0">
+      <div className="bg-white rounded-2xl border border-line shadow-card overflow-hidden p-6 sm:p-10 space-y-8 print:border-none print:shadow-none print:p-0">
         
         {/* Hospital Header Banner */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-line">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-medical-600 text-white flex items-center justify-center shadow-md">
+            <div className="w-14 h-14 rounded-2xl bg-medical-600 text-white flex items-center justify-center shadow-card">
               <Brain className="w-8 h-8" />
             </div>
             <div>
-              <span className="text-xs font-bold text-medical-700 uppercase tracking-widest block font-display">
+              <span className="text-xs font-bold text-medical-700 uppercase tracking-[0.14em] block font-display">
                 Neulens Clinical Screening Report
               </span>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
+              <h1 className="text-xl sm:text-2xl font-semibold text-ink font-display">
                 Neurocognitive Multimodal Assessment
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-muted mt-0.5">
                 Hospital Clinical Screening Center • Protocol Version 2.5
               </p>
             </div>
           </div>
 
           <div className="text-left md:text-right space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-warm text-body">
               <ShieldCheck className="w-3.5 h-3.5 text-medical-600" />
               CONFIDENTIAL MEDICAL RECORD
             </div>
-            <div className="text-xs text-slate-400 font-mono">
-              Ref: <span className="font-bold text-slate-700">{assessment.id}</span>
+            <div className="text-xs text-muted font-mono">
+              Ref: <span className="font-bold text-body">{assessment.id}</span>
             </div>
-            <div className="text-xs text-slate-400">
-              Assessed: <span className="font-semibold text-slate-700">{new Date(assessment.date).toLocaleString()}</span>
+            <div className="text-xs text-muted">
+              Assessed: <span className="font-semibold text-body">{new Date(assessment.date).toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         {/* Patient Demographics Strip */}
-        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/60 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="bg-warm p-5 rounded-2xl border border-line/60 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Patient ID</span>
-            <span className="font-mono text-sm font-black text-medical-700">{patient.patientId}</span>
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Patient ID</span>
+            <span className="font-mono text-sm font-semibold text-medical-700">{patient.patientId}</span>
           </div>
           <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Full Name</span>
-            <span className="text-sm font-bold text-slate-900">{patient.name}</span>
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Full Name</span>
+            <span className="text-sm font-bold text-ink">{patient.name}</span>
           </div>
           <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Age & Gender</span>
-            <span className="text-sm font-bold text-slate-900">{patient.age} yrs • {patient.gender}</span>
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Age & Gender</span>
+            <span className="text-sm font-bold text-ink">{patient.age} yrs • {patient.gender}</span>
           </div>
           <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Language</span>
-            <span className="text-sm font-bold text-slate-900 uppercase">{patient.language}</span>
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Language</span>
+            <span className="text-sm font-bold text-ink uppercase">{patient.language}</span>
           </div>
           <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Handedness</span>
-            <span className="text-sm font-bold text-slate-900 capitalize">{patient.handedness || 'Right'}</span>
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Handedness</span>
+            <span className="text-sm font-bold text-ink capitalize">{patient.handedness || 'Right'}</span>
           </div>
           <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Education</span>
-            <span className="text-sm font-bold text-slate-900">{patient.educationYears || 12} yrs</span>
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Education</span>
+            <span className="text-sm font-bold text-ink">{patient.educationYears || 12} yrs</span>
           </div>
         </div>
 
@@ -319,21 +319,21 @@ export const DoctorReportViewPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
           
           {/* Overall Composite Score Box */}
-          <div className="md:col-span-5 bg-gradient-to-br from-slate-900 to-medical-950 p-7 rounded-3xl text-white space-y-6 shadow-md">
+          <div className="md:col-span-5 bg-gradient-to-br from-slate-900 to-medical-950 p-7 rounded-2xl text-white space-y-6 shadow-card">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-medical-300 block mb-1">
+              <span className="text-xs font-bold uppercase tracking-[0.12em] text-medical-300 block mb-1">
                 Neurocognitive Composite Index
               </span>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black font-display text-white">{overallScore}</span>
-                <span className="text-lg text-slate-400 font-bold">/ 100</span>
+                <span className="text-5xl font-semibold font-display text-white">{overallScore}</span>
+                <span className="text-lg text-muted font-bold">/ 100</span>
               </div>
             </div>
 
             <div className="pt-2 border-t border-white/10 space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-300">Stratification Tier:</span>
-                <span className={`px-3 py-1 rounded-full font-bold uppercase tracking-wider text-xs ${
+                <span className={`px-3 py-1 rounded-full font-bold uppercase tracking-[0.12em] text-xs ${
                   risk === 'HIGH'
                     ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                     : risk === 'MODERATE'
@@ -346,7 +346,7 @@ export const DoctorReportViewPage: React.FC = () => {
 
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-300">Clinical Review:</span>
-                <span className="font-bold text-white uppercase tracking-wider">
+                <span className="font-bold text-white uppercase tracking-[0.12em]">
                   {reviewStatus.replace('_', ' ')}
                 </span>
               </div>
@@ -396,7 +396,7 @@ export const DoctorReportViewPage: React.FC = () => {
 
         {/* Multimodal AI Telemetry Grid */}
         <div className="space-y-3">
-          <h2 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+          <h2 className="text-base font-bold text-ink font-display flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-medical-600" />
             Multimodal AI Sensor Telemetry
           </h2>
@@ -404,45 +404,45 @@ export const DoctorReportViewPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
             {/* Oculomotor */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-2">
+            <div className="bg-warm p-4 rounded-2xl border border-line/60 space-y-2">
               <div className="flex items-center gap-2 text-indigo-700 font-bold text-xs">
                 <Eye className="w-4 h-4" />
                 Oculomotor Tracking
               </div>
-              <div className="text-xs space-y-1 text-slate-600">
+              <div className="text-xs space-y-1 text-body">
                 <div className="flex justify-between">
                   <span>Saccadic Latency:</span>
-                  <span className="font-bold text-slate-900">{assessment.eyeMetrics?.reactionTime || 240} ms</span>
+                  <span className="font-bold text-ink">{assessment.eyeMetrics?.reactionTime || 240} ms</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Fixation Stability:</span>
-                  <span className="font-bold text-slate-900">{assessment.eyeMetrics?.fixationScore || 90}%</span>
+                  <span className="font-bold text-ink">{assessment.eyeMetrics?.fixationScore || 90}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Blink Frequency:</span>
-                  <span className="font-bold text-slate-900">{assessment.eyeMetrics?.blinkRate || 14}/min</span>
+                  <span className="font-bold text-ink">{assessment.eyeMetrics?.blinkRate || 14}/min</span>
                 </div>
               </div>
             </div>
 
             {/* Vocal Acoustics (Gnani AI) */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-2">
+            <div className="bg-warm p-4 rounded-2xl border border-line/60 space-y-2">
               <div className="flex items-center gap-2 text-rose-700 font-bold text-xs">
                 <Mic className="w-4 h-4" />
                 Gnani AI Vocal Acoustics
               </div>
-              <div className="text-xs space-y-1 text-slate-600">
+              <div className="text-xs space-y-1 text-body">
                 <div className="flex justify-between">
                   <span>Speech Rate:</span>
-                  <span className="font-bold text-slate-900">{assessment.voiceMetrics?.speechRate || 135} WPM</span>
+                  <span className="font-bold text-ink">{assessment.voiceMetrics?.speechRate || 135} WPM</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Pause Integrity:</span>
-                  <span className="font-bold text-slate-900">{assessment.voiceMetrics?.pauseScore || 88}%</span>
+                  <span className="font-bold text-ink">{assessment.voiceMetrics?.pauseScore || 88}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Jitter / Shimmer:</span>
-                  <span className="font-bold text-slate-900">
+                  <span className="font-bold text-ink">
                     {assessment.voiceMetrics?.jitter || 0.12}% / {assessment.voiceMetrics?.shimmer || 1.2}%
                   </span>
                 </div>
@@ -450,23 +450,23 @@ export const DoctorReportViewPage: React.FC = () => {
             </div>
 
             {/* Neuromuscular Facial */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 space-y-2">
+            <div className="bg-warm p-4 rounded-2xl border border-line/60 space-y-2">
               <div className="flex items-center gap-2 text-teal-700 font-bold text-xs">
                 <Smile className="w-4 h-4" />
                 Facial Landmarks & Tremor
               </div>
-              <div className="text-xs space-y-1 text-slate-600">
+              <div className="text-xs space-y-1 text-body">
                 <div className="flex justify-between">
                   <span>Bilateral Symmetry:</span>
-                  <span className="font-bold text-slate-900">{assessment.faceMetrics?.symmetry || 95}%</span>
+                  <span className="font-bold text-ink">{assessment.faceMetrics?.symmetry || 95}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tremor Score:</span>
-                  <span className="font-bold text-slate-900">{assessment.faceMetrics?.tremorScore || 6.5}</span>
+                  <span className="font-bold text-ink">{assessment.faceMetrics?.tremorScore || 6.5}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Stability Index:</span>
-                  <span className="font-bold text-slate-900">92%</span>
+                  <span className="font-bold text-ink">92%</span>
                 </div>
               </div>
             </div>
@@ -476,30 +476,30 @@ export const DoctorReportViewPage: React.FC = () => {
 
         {/* Task Responses Breakdown */}
         <div className="space-y-3">
-          <h2 className="text-base font-bold text-slate-900 font-display">
+          <h2 className="text-base font-bold text-ink font-display">
             Screening Battery Task Responses
           </h2>
 
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/60 space-y-3 text-xs">
+          <div className="bg-warm p-5 rounded-2xl border border-line/60 space-y-3 text-xs">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <span className="font-bold text-slate-800 block mb-0.5">Focus Orbit & Cortex Match:</span>
-                <p className="text-slate-600">
+                <p className="text-body">
                   Target latency: {taskData.task1?.saccadicLatencyMs || 230}ms • Memory matched pairs: {taskData.task2?.matchedPairs || 6} (errors: {taskData.task2?.mismatches || 1})
                 </p>
               </div>
 
               <div>
                 <span className="font-bold text-slate-800 block mb-0.5">Path Mapper Trail-Making:</span>
-                <p className="text-slate-600">
+                <p className="text-body">
                   Trail B completed in {taskData.task5?.trailBCompletionSec || 42.1}s with {taskData.task5?.sequencingErrors || 0} sequencing errors.
                 </p>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-200">
+            <div className="pt-2 border-t border-line">
               <span className="font-bold text-slate-800 block mb-0.5">Gnani Prisma v2.5 Speech Transcription:</span>
-              <p className="text-slate-700 italic">
+              <p className="text-body italic">
                 "{taskData.task3?.transcript || 'Today is a bright sunny day and we are walking in the park.'}"
               </p>
             </div>
@@ -508,7 +508,7 @@ export const DoctorReportViewPage: React.FC = () => {
 
         {/* Automated Clinical Recommendation */}
         <div className="p-5 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2">
-          <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+          <h3 className="text-xs font-bold text-blue-900 uppercase tracking-[0.12em] flex items-center gap-1.5">
             <Brain className="w-3.5 h-3.5 text-medical-600" />
             AI Algorithmic Screening Impression
           </h3>
@@ -521,14 +521,14 @@ export const DoctorReportViewPage: React.FC = () => {
         {/* ------------------------------------------------------------- */}
         {/* CONSTRAINED EXPLANATION DRAFT (CLINICIAN REVIEW REQUIRED)      */}
         {/* ------------------------------------------------------------- */}
-        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 print:hidden">
+        <div className="p-5 rounded-2xl bg-warm border border-line space-y-3 print:hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+              <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-medical-600" />
                 Plain-language explanation draft
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted">
                 Drafted only from the deterministic scores above. Clinician review is required before anything is shared.
               </p>
             </div>
@@ -537,7 +537,7 @@ export const DoctorReportViewPage: React.FC = () => {
               <select
                 value={explanationAudience}
                 onChange={(e) => setExplanationAudience(e.target.value as 'patient' | 'clinician')}
-                className="text-xs font-bold bg-white border border-slate-200 rounded-xl px-3 py-2"
+                className="text-xs font-bold bg-white border border-line rounded-xl px-3 py-2"
               >
                 <option value="clinician">Clinician audience</option>
                 <option value="patient">Patient audience</option>
@@ -546,7 +546,7 @@ export const DoctorReportViewPage: React.FC = () => {
                 type="button"
                 onClick={handleGenerateExplanation}
                 disabled={generatingExplanation}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-bold transition-all shadow-md shadow-medical-600/20 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-bold transition-all shadow-card shadow-medical-600/20 disabled:opacity-50"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 {generatingExplanation ? 'Drafting...' : 'Generate draft'}
@@ -561,16 +561,16 @@ export const DoctorReportViewPage: React.FC = () => {
           )}
 
           {explanationMeta && (
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-              <span className="px-2 py-1 rounded-lg bg-white border border-slate-200">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+              <span className="px-2 py-1 rounded-lg bg-white border border-line">
                 Provider: {explanationMeta.provider}
               </span>
               {explanationMeta.model && (
-                <span className="px-2 py-1 rounded-lg bg-white border border-slate-200">
+                <span className="px-2 py-1 rounded-lg bg-white border border-line">
                   Model: {explanationMeta.model}
                 </span>
               )}
-              <span className="px-2 py-1 rounded-lg bg-white border border-slate-200">
+              <span className="px-2 py-1 rounded-lg bg-white border border-line">
                 Guardrail: {explanationMeta.guardrail}
               </span>
               {explanationMeta.review_required && (
@@ -586,11 +586,11 @@ export const DoctorReportViewPage: React.FC = () => {
             value={explanationDraft}
             onChange={(e) => setExplanationDraft(e.target.value)}
             placeholder="Generated draft will appear here. It is editable; nothing is saved until you sign off below."
-            className="w-full p-3.5 rounded-2xl text-xs bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 leading-relaxed font-sans"
+            className="w-full p-3.5 rounded-2xl text-xs bg-white border border-line focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 leading-relaxed font-sans"
           />
 
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted">
               Drafts are auxiliary text, not a clinical result. Edit or discard before sharing.
             </span>
             <button
@@ -607,15 +607,15 @@ export const DoctorReportViewPage: React.FC = () => {
         {/* ------------------------------------------------------------- */}
         {/* DOCTOR'S INTERACTIVE REVIEW & SIGN-OFF FORM                   */}
         {/* ------------------------------------------------------------- */}
-        <form onSubmit={handleSaveReview} className="space-y-4 pt-4 border-t border-slate-200">
+        <form onSubmit={handleSaveReview} className="space-y-4 pt-4 border-t border-line">
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+              <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
                 <Stethoscope className="w-4 h-4 text-medical-600" />
                 Attending Neurologist Review & Verification
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted">
                 Assign clinical review status and provide physician's diagnostic impressions.
               </p>
             </div>
@@ -634,8 +634,8 @@ export const DoctorReportViewPage: React.FC = () => {
                 key={status}
                 className={`flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
                   reviewStatus === status
-                    ? 'bg-blue-50/70 border-medical-500 shadow-xs ring-2 ring-medical-500/10'
-                    : 'bg-slate-50 border-slate-200 hover:bg-white'
+                    ? 'bg-blue-50/70 border-medical-500 shadow-card ring-2 ring-medical-500/10'
+                    : 'bg-warm border-line hover:bg-white'
                 }`}
               >
                 <input
@@ -647,12 +647,12 @@ export const DoctorReportViewPage: React.FC = () => {
                   className="w-4 h-4 text-medical-600 focus:ring-medical-500"
                 />
                 <div>
-                  <span className="text-xs font-bold text-slate-900 block">
+                  <span className="text-xs font-bold text-ink block">
                     {status === 'PENDING_REVIEW' && 'Pending Review'}
                     {status === 'REVIEWED' && 'Reviewed / Verified'}
                     {status === 'FOLLOWUP_REQUIRED' && 'Follow-up Required'}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-muted">
                     {status === 'PENDING_REVIEW' && 'Awaiting doctor assessment'}
                     {status === 'REVIEWED' && 'Screening confirmed normal'}
                     {status === 'FOLLOWUP_REQUIRED' && 'Schedule clinical consult'}
@@ -663,7 +663,7 @@ export const DoctorReportViewPage: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 block">
+            <label className="text-xs font-bold text-body block">
               Physician's Clinical Impression & Notes:
             </label>
             <textarea
@@ -671,19 +671,19 @@ export const DoctorReportViewPage: React.FC = () => {
               value={doctorNotes}
               onChange={(e) => setDoctorNotes(e.target.value)}
               placeholder="Enter clinical observations, differential diagnoses, or instructions for follow-up care..."
-              className="w-full p-3.5 rounded-2xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 leading-relaxed font-sans"
+              className="w-full p-3.5 rounded-2xl text-xs bg-warm border border-line focus:bg-white focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 leading-relaxed font-sans"
             />
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-slate-400">
-              Reviewed by: <strong className="text-slate-700">{assessment.reviewedBy || 'Dr. Sarah Sharma'}</strong>
+            <span className="text-xs text-muted">
+              Reviewed by: <strong className="text-body">{assessment.reviewedBy || 'Dr. Sarah Sharma'}</strong>
             </span>
 
             <button
               type="submit"
               disabled={savingReview}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-bold transition-all shadow-md shadow-medical-600/20 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-bold transition-all shadow-card shadow-medical-600/20 disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {savingReview ? 'Saving Verification...' : 'Save & Sign Off Review'}

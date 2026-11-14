@@ -7,29 +7,225 @@ import { doctorApi } from '../services/portalApi';
 import { NeulensLogoMark } from '../components/NeulensLogoMark';
 import { NeulensWordmark } from '../components/NeulensWordmark';
 import { ClinicalIllustration } from '../components/ClinicalIllustration';
-import { 
+import {
   BarChart3,
+  Brain,
   CheckCircle2,
   ClipboardList,
-  LayoutDashboard, 
-  Users, 
-  Settings, 
+  LayoutDashboard,
+  Users,
+  Settings,
   Activity,
   CalendarDays,
   FileText,
   Send,
-  LogOut, 
-  Search, 
-  Sparkles, 
-  Menu, 
-  X, 
+  LogOut,
+  Search,
+  Sparkles,
+  Menu,
+  X,
   ChevronRight,
   ExternalLink,
-  ChevronLeft,
   Stethoscope,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  type LucideIcon
 } from 'lucide-react';
+
+type NavItem = { path: string; label: string; icon: LucideIcon };
+type NavGroup = { label: string; items: NavItem[] };
+
+// Care workflow: overview → review queue → patients → change review → approvals
+// → referrals → appointments → quality/evidence. Grouping keeps a long clinical
+// navigation predictable without hiding any existing destination.
+const navGroups: NavGroup[] = [
+  {
+    label: 'Care',
+    items: [
+      { path: '/doctor/dashboard', label: 'Overview', icon: LayoutDashboard },
+      { path: '/doctor/review-queue', label: 'Clinical Review Queue', icon: ClipboardList },
+      { path: '/doctor/patients', label: 'Patients', icon: Users }
+    ]
+  },
+  {
+    label: 'Clinical review',
+    items: [
+      { path: '/doctor/reports', label: 'Reports', icon: FileText },
+      { path: '/doctor/cognitive', label: 'Cognitive assessment', icon: Brain },
+      { path: '/doctor/change-detection', label: 'Longitudinal / Change Review', icon: Activity },
+      { path: '/doctor/clinical-approval', label: 'Clinical Approval', icon: CheckCircle2 }
+    ]
+  },
+  {
+    label: 'Coordination',
+    items: [
+      { path: '/doctor/referrals', label: 'Referral & Care Coordination', icon: Send },
+      { path: '/doctor/appointments', label: 'Appointments', icon: CalendarDays }
+    ]
+  },
+  {
+    label: 'Insights',
+    items: [
+      { path: '/doctor/evidence-quality', label: 'Evidence & Data Quality', icon: Search },
+      { path: '/doctor/quality-equity', label: 'Quality & Equity', icon: BarChart3 }
+    ]
+  },
+  {
+    label: 'Account',
+    items: [{ path: '/doctor/settings', label: 'Settings', icon: Settings }]
+  }
+];
+
+const navItems = navGroups.flatMap((group) => group.items);
+
+const SidebarContent: React.FC<{
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  onNavigate?: () => void;
+  pathname: string;
+  clinicianName: string;
+  clinicianRole: string;
+  clinicianInitials: string;
+  onLogout: () => void;
+}> = ({
+  collapsed,
+  onToggleCollapse,
+  onNavigate,
+  pathname,
+  clinicianName,
+  clinicianRole,
+  clinicianInitials,
+  onLogout
+}) => (
+  <div className="flex h-full min-h-0 flex-col">
+    {/* Brand */}
+    <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+      <Link to="/doctor/dashboard" className="flex items-center gap-2.5" onClick={onNavigate}>
+        <NeulensLogoMark className="h-9 w-9" />
+        {!collapsed && (
+          <span className="flex flex-col">
+            <NeulensWordmark size="small" />
+            <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
+              Clinical workspace
+            </span>
+          </span>
+        )}
+      </Link>
+      {!collapsed && !onNavigate && (
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          title="Collapse sidebar"
+          aria-label="Collapse sidebar"
+          className="rounded-lg p-1.5 text-sage-deep transition hover:bg-mint"
+        >
+          <PanelLeftClose className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+
+    {collapsed && (
+      <div className="pb-2 text-center">
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          title="Expand sidebar"
+          aria-label="Expand sidebar"
+          className="mx-auto rounded-lg p-2 text-sage-deep transition hover:bg-mint"
+        >
+          <PanelLeftOpen className="h-4 w-4" />
+        </button>
+      </div>
+    )}
+
+    {/* Navigation */}
+    <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4" aria-label="Clinical workspace navigation">
+      {navGroups.map((group) => (
+        <div key={group.label} className="mb-4">
+          {!collapsed && (
+            <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+              {group.label}
+            </p>
+          )}
+          <ul className="space-y-0.5">
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                pathname === item.path ||
+                (item.path !== '/doctor/dashboard' && pathname.startsWith(item.path));
+              return (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    onClick={onNavigate}
+                    title={collapsed ? item.label : undefined}
+                    className={`flex items-center rounded-lg text-[13px] font-medium transition-colors ${
+                      collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2'
+                    } ${
+                      isActive
+                        ? 'bg-mint font-semibold text-forest'
+                        : 'text-body hover:bg-warm hover:text-ink'
+                    }`}
+                  >
+                    <Icon
+                      className={`h-4 w-4 shrink-0 stroke-[1.8] ${isActive ? 'text-forest' : 'text-sage-deep'}`}
+                      aria-hidden="true"
+                    />
+                    {!collapsed && <span className="flex-1">{item.label}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </nav>
+
+    {/* Footer: portal switch + clinician identity + sign out */}
+    <div className="space-y-2 border-t border-line p-3">
+      <Link
+        to="/patient"
+        title="Open Patient Portal"
+        onClick={onNavigate}
+        className={`flex items-center rounded-lg border border-line bg-warm/70 text-body transition hover:border-sage-dark hover:text-ink ${
+          collapsed ? 'justify-center px-2 py-2.5' : 'justify-between gap-2 px-3 py-2'
+        }`}
+      >
+        <span className="flex items-center gap-2.5">
+          <ExternalLink className="h-4 w-4 shrink-0 text-sage-deep" aria-hidden="true" />
+          {!collapsed && <span className="text-[12px] font-semibold">Patient Portal</span>}
+        </span>
+        {!collapsed && <ChevronRight className="h-3.5 w-3.5 text-sage-deep" aria-hidden="true" />}
+      </Link>
+
+      <div className={`flex items-center gap-2.5 rounded-xl border border-line bg-warm/70 p-2.5 ${collapsed ? 'justify-center' : ''}`}>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-forest text-[11px] font-bold text-white">
+          {clinicianInitials}
+        </span>
+        {!collapsed && (
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[12px] font-semibold text-ink" title={clinicianName}>
+              {clinicianName}
+            </span>
+            <span className="mt-0.5 block truncate text-[11px] text-muted">{clinicianRole}</span>
+          </span>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onLogout}
+        title="Sign out of the clinical workspace"
+        className={`flex w-full items-center rounded-lg text-[13px] font-semibold text-body transition hover:bg-rose-50 hover:text-rose-700 ${
+          collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2'
+        }`}
+      >
+        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {!collapsed && <span>Sign out</span>}
+      </button>
+    </div>
+  </div>
+);
 
 export const DoctorLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -42,6 +238,7 @@ export const DoctorLayout: React.FC = () => {
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const setAppointments = useDoctorPortalStore((state) => state.setAppointments);
   const setReferrals = useDoctorPortalStore((state) => state.setReferrals);
+  const hydratePatients = useDoctorPortalStore((state) => state.hydratePatients);
 
   // Appointments are persisted server-side; the store copy is a display cache.
   useEffect(() => {
@@ -70,6 +267,18 @@ export const DoctorLayout: React.FC = () => {
         // Keep cached records when the API is unavailable; pages surface errors on write.
       });
 
+    // The server is the patient directory. Mirror it into the local cache so
+    // report, referral and appointment selectors are populated after a refresh.
+    doctorApi
+      .getPatients()
+      .then((rows: any[]) => {
+        if (cancelled || !Array.isArray(rows)) return;
+        hydratePatients(rows);
+      })
+      .catch(() => {
+        // Pages still show their own error/empty states if the directory fails.
+      });
+
     doctorApi
       .getReferrals()
       .then((rows: any[]) => {
@@ -95,7 +304,7 @@ export const DoctorLayout: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, setAppointments, setReferrals]);
+  }, [user?.id, setAppointments, setReferrals, hydratePatients]);
 
   const confirmLogout = () => {
     logout();
@@ -110,21 +319,6 @@ export const DoctorLayout: React.FC = () => {
     return <Navigate to="/account-suspended" replace />;
   }
 
-  // Care workflow: overview → review queue → patients → change review → approvals → referrals → appointments → quality/evidence
-  const navItems = [
-    { path: '/doctor/dashboard', label: 'Overview', icon: LayoutDashboard },
-    { path: '/doctor/review-queue', label: 'Clinical Review Queue', icon: ClipboardList },
-    { path: '/doctor/patients', label: 'Patients', icon: Users },
-    { path: '/doctor/reports', label: 'Reports', icon: FileText },
-    { path: '/doctor/change-detection', label: 'Longitudinal / Change Review', icon: Activity },
-    { path: '/doctor/clinical-approval', label: 'Clinical Approval', icon: CheckCircle2 },
-    { path: '/doctor/referrals', label: 'Referral & Care Coordination', icon: Send },
-    { path: '/doctor/appointments', label: 'Appointments', icon: CalendarDays },
-    { path: '/doctor/evidence-quality', label: 'Evidence & Data Quality', icon: Search },
-    { path: '/doctor/quality-equity', label: 'Quality & Equity', icon: BarChart3 },
-    { path: '/doctor/settings', label: 'Settings', icon: Settings },
-  ];
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -133,7 +327,7 @@ export const DoctorLayout: React.FC = () => {
   };
 
   // Clinician profile details from authenticated user session
-  const clinicianName = user?.name 
+  const clinicianName = user?.name
     ? (user.name.startsWith('Dr.') ? user.name : `Dr. ${user.name}`)
     : user?.firstName || user?.lastName
     ? `Dr. ${`${user.firstName || ''} ${user.lastName || ''}`.trim()}`
@@ -141,8 +335,8 @@ export const DoctorLayout: React.FC = () => {
     ? `Dr. ${user.email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase())}`
     : 'Clinician';
 
-  const clinicianRole = user?.role === 'ADMIN' 
-    ? 'Chief Neurologist' 
+  const clinicianRole = user?.role === 'ADMIN'
+    ? 'Chief Neurologist'
     : 'Attending Clinician';
 
   const clinicianInitials = clinicianName
@@ -157,297 +351,128 @@ export const DoctorLayout: React.FC = () => {
   // Check if viewing a patient record to bind screening directly
   const patientPathMatch = location.pathname.match(/\/doctor\/patients\/([^\/]+)/);
   const currentPatientId = patientPathMatch && patientPathMatch[1] !== 'screen' ? patientPathMatch[1] : null;
+  const activeLabel =
+    navItems.find(
+      (item) =>
+        location.pathname === item.path ||
+        (item.path !== '/doctor/dashboard' && location.pathname.startsWith(item.path))
+    )?.label || 'Overview';
+
+  const sidebarProps = {
+    pathname: location.pathname,
+    clinicianName,
+    clinicianRole,
+    clinicianInitials,
+    onLogout: handleLogout
+  };
 
   return (
-    <div className="min-h-screen bg-[#FBF7EF] flex text-slate-800">
-      
-      {/* ------------------------------------------------------------- */}
-      {/* LEFT SIDEBAR (Doctor Navigation Shell)                        */}
-      {/* ------------------------------------------------------------- */}
-      <aside 
-        className={`hidden lg:flex ${
-          isCollapsed ? 'w-20 p-4' : 'w-68 p-6'
-        } bg-white border-r border-slate-200/80 flex-col justify-between z-30 sticky top-0 h-screen transition-all duration-200 select-none`}
+    <div className="doctor-portal min-h-screen bg-warm text-ink">
+      {/* Skip link */}
+      <a
+        href="#doctor-main"
+        className="sr-only z-50 rounded-lg bg-forest px-4 py-2 text-white text-sm font-semibold focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50"
       >
-        
-        <div className="space-y-6">
-          
-          {/* Logo / Brand Header & Collapse Toggle */}
-          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-            <Link to="/doctor/dashboard" className="flex items-center gap-3 group">
-              <NeulensLogoMark className="group-hover:scale-105 transition-transform" />
-              {!isCollapsed && (
-                <div className="overflow-hidden">
-                  <NeulensWordmark size="small" className="block" />
-                  <span className="text-xs font-bold text-medical-600 uppercase tracking-widest block font-display">
-                    Doctor Portal
-                  </span>
-                </div>
-              )}
-            </Link>
+        Skip to content
+      </a>
 
-            {!isCollapsed && (
-              <button
-                type="button"
-                onClick={() => setIsCollapsed(true)}
-                title="Collapse sidebar"
-                aria-label="Collapse sidebar"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer"
-              >
-                <PanelLeftClose className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Expand toggle when collapsed */}
-          {isCollapsed && (
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => setIsCollapsed(false)}
-                title="Expand sidebar"
-                aria-label="Expand sidebar"
-                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all cursor-pointer mx-auto"
-              >
-                <PanelLeftOpen className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {/* Navigation Items (Overview, Patients, Settings) */}
-          <nav className="space-y-1.5">
-            {!isCollapsed && (
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 px-3 mb-2 block">
-                Workspace
-              </span>
-            )}
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path || 
-                (item.path !== '/doctor/dashboard' && location.pathname.startsWith(item.path));
-
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  title={isCollapsed ? item.label : undefined}
-                  className={`flex items-center ${
-                    isCollapsed ? 'justify-center px-2 py-3' : 'gap-3 px-3.5 py-3'
-                  } rounded-2xl text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-blue-50 text-medical-700 font-bold shadow-xs ring-1 ring-medical-500/10'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-medical-600 stroke-[2.4]' : 'text-slate-400'}`} />
-                  {!isCollapsed && <span>{item.label}</span>}
-                </Link>
-              );
-            })}
-          </nav>
-
-        </div>
-
-        {/* ------------------------------------------------------------- */}
-        {/* BOTTOM SECTION: PATIENT PORTAL LINK & CLINICIAN PROFILE      */}
-        {/* ------------------------------------------------------------- */}
-        <div className="space-y-3 pt-4 border-t border-slate-100">
-          
-          {/* Separate Patient Portal Shortcut */}
-          {!isCollapsed ? (
-            <Link
-              to="/patient"
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/80 flex items-center justify-between transition-all shadow-2xs group"
-            >
-              <span className="flex items-center gap-2.5">
-                <ExternalLink className="w-4 h-4 text-medical-600 group-hover:scale-110 transition-transform" />
-                <span>Patient Portal</span>
-              </span>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600" />
-            </Link>
-          ) : (
-            <Link
-              to="/patient"
-              title="Open Patient Portal"
-              aria-label="Open Patient Portal"
-              className="w-10 h-10 mx-auto rounded-xl bg-slate-50 hover:bg-slate-100 text-medical-600 border border-slate-200 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </Link>
-          )}
-
-          {/* Clinician Profile Panel */}
-          {!isCollapsed ? (
-            <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3">
-              
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-medical-600 text-white flex items-center justify-center font-display font-black text-xs shrink-0 shadow-sm shadow-medical-600/20">
-                  {clinicianInitials}
-                </div>
-                <div className="overflow-hidden min-w-0 flex-1">
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 block truncate leading-tight" title={clinicianName}>
-                    {clinicianName}
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium block truncate mt-0.5">
-                    {clinicianRole}
-                  </span>
-                </div>
-              </div>
-
-              {/* Dedicated, visually distinct Sign Out button */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLogout();
-                }}
-                title="Sign Out of Doctor Portal"
-                aria-label="Sign Out"
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-all cursor-pointer shadow-2xs"
-              >
-                <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                <span>Sign Out</span>
-              </button>
-
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 pt-1">
-              <div 
-                className="w-10 h-10 rounded-xl bg-medical-600 text-white flex items-center justify-center font-display font-black text-xs shadow-sm cursor-default"
-                title={`${clinicianName} (${clinicianRole})`}
-              >
-                {clinicianInitials}
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLogout();
-                }}
-                title="Sign Out"
-                aria-label="Sign Out"
-                className="w-10 h-10 rounded-xl text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 flex items-center justify-center transition-all cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-        </div>
-
+      {/* Sidebar — desktop */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 hidden border-r border-line bg-white transition-[width] duration-200 lg:block ${
+          isCollapsed ? 'w-[76px]' : 'w-[272px]'
+        }`}
+      >
+        <SidebarContent
+          {...sidebarProps}
+          collapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed((value) => !value)}
+        />
       </aside>
 
-      {/* ------------------------------------------------------------- */}
-      {/* MAIN CONTENT AREA                                             */}
-      {/* ------------------------------------------------------------- */}
-      <div className="flex-1 flex flex-col min-w-0">
-        
-        {/* Top Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 min-h-[72px] py-3 flex items-center justify-between px-6 lg:px-10">
-          
-          {/* Mobile Menu Toggle & Title */}
-          <div className="flex items-center gap-4">
+      {/* Mobile overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close navigation"
+            className="absolute inset-0 bg-ink/40"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-[min(292px,88vw)] flex-col overflow-hidden border-r border-line bg-white shadow-2xl">
+            <SidebarContent
+              {...sidebarProps}
+              collapsed={false}
+              onToggleCollapse={() => undefined}
+              onNavigate={() => setIsMobileMenuOpen(false)}
+            />
+          </aside>
+        </div>
+      )}
+
+      <div className={`transition-[padding] duration-200 ${isCollapsed ? 'lg:pl-[76px]' : 'lg:pl-[272px]'}`}>
+        {/* Top header */}
+        <header className="sticky top-0 z-30 border-b border-line/80 bg-white/95 backdrop-blur">
+          <div className="flex min-h-[68px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <button
               type="button"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-body lg:hidden"
+              aria-label="Open navigation"
+              aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
 
-            <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
-                Hospital Medical Center &bull; Neurology Dept
-              </span>
-              <span className="font-display font-bold text-base sm:text-lg text-slate-900 leading-tight">
-                Clinical Screening & Patient Telemetry
-              </span>
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sage-deep">
+                <Stethoscope className="h-3 w-3" aria-hidden="true" />
+                Neurology &amp; Cognitive Health
+              </p>
+              <p className="truncate text-[13px] font-semibold text-ink">{activeLabel}</p>
             </div>
-          </div>
 
-          {/* Quick Search & Actions */}
-          <div className="flex items-center gap-3">
-            {!currentPatientId && (
-              <ClinicalIllustration variant="clinical" size="micro" className="hidden xl:block" />
-            )}
-            
-            {/* Quick Search */}
-            <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search patient ID or name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 bg-slate-100 hover:bg-slate-150 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 transition-all w-56"
-              />
+            <form onSubmit={handleSearchSubmit} className="hidden items-center md:flex" role="search">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sage-deep" aria-hidden="true" />
+                <input
+                  type="search"
+                  placeholder="Search patient ID or name…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Search patients"
+                  className="h-9 w-56 rounded-lg border border-line bg-warm/60 pl-8 pr-3 text-[12px] text-ink placeholder:text-muted transition focus:border-forest focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest/15"
+                />
+              </div>
             </form>
 
-            {/* AI Engine Status */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-bold text-emerald-700">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Gnani Speech Engine Active</span>
+            <div className="hidden items-center gap-2 rounded-full border border-line bg-warm/70 px-3 py-1.5 text-[11px] font-semibold text-body sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]" />
+              Clinical pipeline active
             </div>
 
-            {/* Launch Screening Button */}
             <Link
               to={currentPatientId ? `/doctor/patients/${currentPatientId}/screen` : '/doctor/patients?select=true'}
-              title={currentPatientId ? 'Start Screening for current patient' : 'Select a patient to screen'}
-              className="btn-primary text-xs font-bold px-4 py-2 rounded-2xl shadow-pill flex items-center gap-1.5 cursor-pointer"
+              title={currentPatientId ? 'Start screening for the open patient' : 'Select a patient to screen'}
+              className="pp-btn pp-btn-primary pp-btn-sm"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Launch Screening Battery</span>
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Launch screening</span>
               <span className="sm:hidden">Screen</span>
             </Link>
-
           </div>
-
         </header>
 
-        {/* Mobile Navigation Drawer */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-slate-200 p-4 space-y-2 z-30">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100"
-              >
-                <item.icon className="w-4 h-4 text-medical-600" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
-            
-            <div className="pt-3 border-t border-slate-100 space-y-2">
-              <Link
-                to="/patient"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-2 text-xs font-semibold text-medical-600 py-1"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Open Patient Portal</span>
-              </Link>
-
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-xs font-bold text-slate-700">{clinicianName}</span>
-                <button 
-                  type="button" 
-                  onClick={handleLogout} 
-                  className="text-xs text-rose-600 font-bold px-3 py-1 rounded-lg bg-rose-50"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Page Content Render Outlet */}
-        <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
+        {/* Page content */}
+        <main id="doctor-main" className="mx-auto w-full max-w-[1360px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <Outlet />
         </main>
 
+        <footer className="border-t border-line bg-white">
+          <div className="mx-auto flex max-w-[1360px] flex-col gap-1.5 px-4 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <span>Neulens General Hospital · Neurology &amp; Cognitive Health</span>
+            <span>Screening support, not a diagnosis. Clinician review guides next steps.</span>
+          </div>
+        </footer>
       </div>
 
       <ConfirmDialog

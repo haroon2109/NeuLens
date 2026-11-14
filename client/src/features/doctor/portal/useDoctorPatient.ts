@@ -95,6 +95,16 @@ export const doctorPatientQueryKey = (patientId?: string) => ['doctor', 'patient
  * demo patient when the API does not know the id yet.
  */
 const fetchPatientDetail = async (patientId: string): Promise<DoctorPatientDetail> => {
+  // Locally registered patients do not exist on the server yet. Resolve them
+  // first so opening a fresh registration does not produce a 404 in console.
+  const localRecord = useDoctorPortalStore
+    .getState()
+    .registeredPatients.find((item) => item.patientId === patientId || item.id === patientId);
+  if (localRecord?.id.startsWith('local-patient-')) {
+    const local = synthesizeLocalPatient(patientId);
+    if (local) return local;
+  }
+
   try {
     const data = await doctorApi.getPatientProfile(patientId);
     return {

@@ -107,16 +107,16 @@ Department of Neurology & Cognitive Health
         {/* ------------------------------------------------------------- */}
         {/* SUCCESS CARD                                                  */}
         {/* ------------------------------------------------------------- */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-10 shadow-sm text-center space-y-6">
+        <div className="bg-white border border-line rounded-2xl p-8 sm:p-10 shadow-card text-center space-y-6">
           
           <ClinicalIllustration variant="complete" size="compact" className="mx-auto" />
 
           {/* Heading & Friendly Message */}
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-black font-display text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-black font-display text-ink">
               Assessment Completed
             </h1>
-            <p className="text-base text-slate-600 max-w-md mx-auto leading-relaxed">
+            <p className="text-base text-body max-w-md mx-auto leading-relaxed">
               Thank you. You have completed your screening activities.
             </p>
           </div>
@@ -124,14 +124,14 @@ Department of Neurology & Cognitive Health
           {/* ----------------------------------------------------------- */}
           {/* CONFIRMATION ID DISPLAY (Printable)                         */}
           {/* ----------------------------------------------------------- */}
-          <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-6 text-left space-y-4 print:border-slate-800 print:bg-white">
+          <div className="bg-warm border-2 border-line rounded-2xl p-6 text-left space-y-4 print:border-slate-800 print:bg-white">
             
-            <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+            <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
                 <NeulensLogoMark className="h-8 w-8 rounded-lg" />
                 <div>
                   <NeulensWordmark size="small" className="block" />
-                  <span className="text-xs text-slate-500 font-medium">Hospital Patient ID Confirmation</span>
+                  <span className="text-xs text-muted font-medium">Hospital Patient ID Confirmation</span>
                 </div>
               </div>
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
@@ -141,7 +141,7 @@ Department of Neurology & Cognitive Health
 
             {/* Big Patient ID */}
             <div className="space-y-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-muted uppercase tracking-wider block">
                 Your Patient Identifier
               </span>
               <div className="font-mono text-3xl sm:text-4xl font-black text-medical-700 tracking-wider">
@@ -149,18 +149,18 @@ Department of Neurology & Cognitive Health
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-200/80">
+            <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-line">
               <div>
-                <span className="text-slate-400 font-medium block">Patient Name</span>
+                <span className="text-muted font-medium block">Patient Name</span>
                 <span className="font-bold text-slate-800">{displayName}</span>
               </div>
               <div>
-                <span className="text-slate-400 font-medium block">Completed On</span>
+                <span className="text-muted font-medium block">Completed On</span>
                 <span className="font-bold text-slate-800">{completionDate}</span>
               </div>
             </div>
 
-            <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-600 leading-relaxed flex items-start gap-2">
+            <div className="p-3 bg-white border border-line rounded-xl text-xs text-body leading-relaxed flex items-start gap-2">
               <Lock className="w-4 h-4 text-medical-600 shrink-0 mt-0.5" />
               <span>
                 Please keep this Patient ID safe for future reference. When returning to the clinic or speaking with your doctor, provide this ID number.
@@ -179,18 +179,18 @@ Department of Neurology & Cognitive Health
               <button
                 type="button"
                 onClick={handleDownloadConfirmation}
-                className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+                className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-card"
               >
-                <Download className="w-4 h-4 text-slate-600" />
+                <Download className="w-4 h-4 text-body" />
                 <span>{downloadSuccess ? 'Downloaded!' : 'Download Slip (.txt)'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handlePrintSlip}
-                className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+                className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-card"
               >
-                <Printer className="w-4 h-4 text-slate-600" />
+                <Printer className="w-4 h-4 text-body" />
                 <span>Print Confirmation</span>
               </button>
             </div>
@@ -206,7 +206,7 @@ Department of Neurology & Cognitive Health
             </button>
           </div>
 
-          <div className="text-xs text-slate-400 flex items-center justify-center gap-1.5 pt-2">
+          <div className="text-xs text-muted flex items-center justify-center gap-1.5 pt-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>Confidential clinical record &bull; Session safely closes on return</span>
           </div>
@@ -216,7 +216,7 @@ Department of Neurology & Cognitive Health
       </main>
 
       {/* Footer */}
-      <footer className="text-center text-xs text-slate-400 mt-8">
+      <footer className="text-center text-xs text-muted mt-8">
         Neulens Hospital Medical Center &bull; Department of Neurology & Cognitive Health
       </footer>
 

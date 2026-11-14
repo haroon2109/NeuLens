@@ -71,7 +71,7 @@ const reasonLabel: Record<string, string> = {
 };
 
 const BackToPatient: React.FC<{ patientId: string }> = ({ patientId }) => (
-  <Link to={`/doctor/patients/${patientId}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900">
+  <Link to={`/doctor/patients/${patientId}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink">
     <ArrowLeft className="h-3.5 w-3.5" /> Patient overview
   </Link>
 );
@@ -114,12 +114,12 @@ const ChangeStatusHero: React.FC<{ status: 'REVIEW' | 'NO_CHANGE' | 'INSUFFICIEN
     );
   }
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-2xl border border-line bg-warm p-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500"><Clock3 className="h-5 w-5" /></span>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-muted"><Clock3 className="h-5 w-5" /></span>
         <div>
-          <h2 className="text-[15px] font-semibold text-slate-900">More comparable data needed</h2>
-          <p className="mt-1 text-xs leading-5 text-slate-600">
+          <h2 className="text-[15px] font-semibold text-ink">More comparable data needed</h2>
+          <p className="mt-1 text-xs leading-5 text-body">
             A change check requires comparable prior sessions and a completed functional check-in. The absence of a flag does not mean stability.
           </p>
         </div>
@@ -139,8 +139,8 @@ export const DoctorChangeDetectionPage: React.FC = () => {
   const patientAcks = changeAcknowledgements.filter((item) => item.patientId === patient?.patientId);
   const latestAck = patientAcks[0];
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-slate-500">Loading change review…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-slate-500">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading change review…</div>;
+  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
 
   const status = changeSummary?.status || 'INSUFFICIENT_DATA';
   const quality = getQuality(latest);
@@ -175,8 +175,8 @@ export const DoctorChangeDetectionPage: React.FC = () => {
       <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Evidence</h2>
-            <p className="mt-0.5 text-xs text-slate-500">What triggered or did not trigger a review prompt.</p>
+            <h2 className="text-[13px] font-semibold text-ink">Evidence</h2>
+            <p className="mt-0.5 text-xs text-muted">What triggered or did not trigger a review prompt.</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <MetricTile label="Cognitive change" value={changeSummary?.cognitive.change != null ? `${changeSummary.cognitive.change > 0 ? '+' : ''}${changeSummary.cognitive.change} pts` : 'Unavailable'} detail="Latest vs previous comparable" />
               <MetricTile label="Observed range" value={changeSummary?.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not established'} detail={`${comparable} comparable sessions`} />
@@ -192,7 +192,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-4 text-slate-500">
+              <p className="mt-3 rounded-lg border border-line bg-warm px-3 py-2 text-xs leading-4 text-muted">
                 No review reasons are currently recorded. Review the source session before concluding that nothing changed.
               </p>
             )}
@@ -200,9 +200,9 @@ export const DoctorChangeDetectionPage: React.FC = () => {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>
-              <h2 className="text-[13px] font-semibold text-slate-900">Confidence & uncertainty</h2>
+              <h2 className="text-[13px] font-semibold text-ink">Confidence & uncertainty</h2>
               <p className="mt-2 text-xs font-semibold text-slate-800">{confidenceLabel}</p>
-              <ul className="mt-2 space-y-1.5 text-xs leading-4 text-slate-600">
+              <ul className="mt-2 space-y-1.5 text-xs leading-4 text-body">
                 <li>• Comparison uses {comparable} comparable session{comparable === 1 ? '' : 's'}.</li>
                 <li>• {quality.comparable ? 'Latest session meets comparability criteria.' : 'Latest session has limited comparability.'}</li>
                 <li>• A single out-of-range observation is not proof of persistent change.</li>
@@ -211,7 +211,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="text-[13px] font-semibold text-slate-900">Quality warnings</h2>
+              <h2 className="text-[13px] font-semibold text-ink">Quality warnings</h2>
               {quality.comparable && quality.completion === 'FULL' ? (
                 <p className="mt-2 flex items-start gap-1.5 text-xs leading-4 text-emerald-800">
                   <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" /> No session-quality warning is recorded for the latest assessment.
@@ -228,11 +228,11 @@ export const DoctorChangeDetectionPage: React.FC = () => {
           </div>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Contextual contributors</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Context can explain a change but does not establish cause.</p>
+            <h2 className="text-[13px] font-semibold text-ink">Contextual contributors</h2>
+            <p className="mt-0.5 text-xs text-muted">Context can explain a change but does not establish cause.</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Reported functional changes</p>
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Reported functional changes</p>
                 {functionalChanges.length ? (
                   <ul className="mt-2 space-y-1.5">
                     {functionalChanges.map((activity) => (
@@ -242,11 +242,11 @@ export const DoctorChangeDetectionPage: React.FC = () => {
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-xs text-slate-500">No functional change reported in the current check-in.</p>
+                  <p className="mt-2 text-xs text-muted">No functional change reported in the current check-in.</p>
                 )}
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Changed health-context factors</p>
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Changed health-context factors</p>
                 {changedFactors.length ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {changedFactors.map((factor) => (
@@ -254,7 +254,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-2 text-xs text-slate-500">No context-factor change is currently flagged.</p>
+                  <p className="mt-2 text-xs text-muted">No context-factor change is currently flagged.</p>
                 )}
                 <Link to={`/doctor/patients/${patient.patientId}/context`} className="mt-3 inline-block text-xs font-semibold text-blue-700">
                   Review full health context
@@ -266,8 +266,8 @@ export const DoctorChangeDetectionPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Acknowledge review</h2>
-            <p className="mt-0.5 text-xs leading-4 text-slate-500">
+            <h2 className="text-[13px] font-semibold text-ink">Acknowledge review</h2>
+            <p className="mt-0.5 text-xs leading-4 text-muted">
               Record that you reviewed this prompt. Acknowledgement does not change the underlying assessment data.
             </p>
             {saved && <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-xs font-semibold text-emerald-800">Review acknowledgement saved.</div>}
@@ -281,7 +281,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="ack-note" className={labelClass}>Review note <span className="font-normal text-slate-400">(optional)</span></label>
+                <label htmlFor="ack-note" className={labelClass}>Review note <span className="font-normal text-muted">(optional)</span></label>
                 <textarea id="ack-note" rows={3} value={note} onChange={(event) => setNote(event.target.value)} className={fieldClass} placeholder="What did you consider? Any next step?" />
               </div>
               <button type="submit" className={`${primaryButton} w-full`}>
@@ -291,17 +291,17 @@ export const DoctorChangeDetectionPage: React.FC = () => {
           </Card>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Review history</h2>
+            <h2 className="text-[13px] font-semibold text-ink">Review history</h2>
             {latestAck ? (
-              <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="mt-2 rounded-xl border border-line bg-warm p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-semibold text-slate-800">{latestAck.status.toLowerCase()}</p>
-                  <span className="text-xs text-slate-400">{formatDateTime(latestAck.acknowledgedAt)}</span>
+                  <span className="text-xs text-muted">{formatDateTime(latestAck.acknowledgedAt)}</span>
                 </div>
-                {latestAck.note && <p className="mt-1 text-xs leading-4 text-slate-600">{latestAck.note}</p>}
+                {latestAck.note && <p className="mt-1 text-xs leading-4 text-body">{latestAck.note}</p>}
               </div>
             ) : (
-              <p className="mt-2 text-xs leading-4 text-slate-500">No acknowledgement has been recorded for this patient.</p>
+              <p className="mt-2 text-xs leading-4 text-muted">No acknowledgement has been recorded for this patient.</p>
             )}
             <div className="mt-3 flex flex-wrap gap-2">
               <Link to={`/doctor/patients/${patient.patientId}/review`} className={secondaryButton}><FileText className="h-3.5 w-3.5" /> Assessment</Link>
@@ -310,15 +310,15 @@ export const DoctorChangeDetectionPage: React.FC = () => {
           </Card>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Related notes</h2>
+            <h2 className="text-[13px] font-semibold text-ink">Related notes</h2>
             {notes.filter((item) => item.patientId === patient.patientId).length === 0 ? (
-              <p className="mt-2 text-xs text-slate-500">No notes recorded.</p>
+              <p className="mt-2 text-xs text-muted">No notes recorded.</p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {notes.filter((item) => item.patientId === patient.patientId).slice(0, 3).map((item) => (
-                  <li key={item.id} className="rounded-lg border border-slate-100 p-2.5">
+                  <li key={item.id} className="rounded-lg border border-line p-2.5">
                     <p className="text-xs font-semibold text-slate-800">{item.decision.replace(/_/g, ' ').toLowerCase()}</p>
-                    <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-slate-500">{item.observations}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-muted">{item.observations}</p>
                   </li>
                 ))}
               </ul>
@@ -368,20 +368,20 @@ export const ChangeDetectionQueuePage: React.FC = () => {
       {error && <Notice tone="warning" title="Queue unavailable">{error}</Notice>}
       <Card padded={false}>
         {loading ? (
-          <p className="p-10 text-center text-xs text-slate-500">Loading change queue…</p>
+          <p className="p-10 text-center text-xs text-muted">Loading change queue…</p>
         ) : queue.length === 0 ? (
           <div className="p-6">
             <EmptyState scene="emptyNotifications" icon={CheckCircle2} title="No open change reviews" detail="Review prompts appear here when comparable sessions and functional context produce a within-person signal." />
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-line">
             {queue.map((item) => (
               <li key={item.patientId} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <Link to={`/doctor/patients/${item.patientId}/change-detection`} className="text-[12px] font-semibold text-slate-900 hover:text-blue-700">
+                  <Link to={`/doctor/patients/${item.patientId}/change-detection`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
                     {item.patientName}
                   </Link>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                  <p className="mt-0.5 text-xs text-muted">
                     {item.patientId} · latest {formatDate(item.latestAssessmentDate)}
                   </p>
                   <p className="mt-1 text-xs text-amber-800">
@@ -412,8 +412,8 @@ export const DoctorHealthContextPage: React.FC = () => {
   const stored = patient ? clinicalContexts[patient.patientId] : undefined;
   const sharedContext = latest?.taskResponses?.healthContext || latest?.taskResponses?.functionalCheckIn?.context || null;
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-slate-500">Loading health context…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-slate-500">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading health context…</div>;
+  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
 
   const sleepHours = stored?.sleepHours ?? sharedContext?.sleepHours ?? null;
   const sleepQuality = stored?.sleepQuality ?? sharedContext?.sleepQuality ?? null;
@@ -449,7 +449,7 @@ export const DoctorHealthContextPage: React.FC = () => {
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900"><Moon className="h-3.5 w-3.5 text-blue-700" /> Sleep & lifestyle</h2>
+              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Moon className="h-3.5 w-3.5 text-blue-700" /> Sleep & lifestyle</h2>
               <dl className="mt-2">
                 <InfoRow label="Typical sleep" value={sleepHours != null ? `${sleepHours} hours` : 'Not shared'} />
                 <InfoRow label="Sleep quality" value={sleepQuality != null ? `${sleepQuality} / 5` : 'Not shared'} />
@@ -459,24 +459,24 @@ export const DoctorHealthContextPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900"><Users className="h-3.5 w-3.5 text-blue-700" /> Mental wellbeing</h2>
+              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Users className="h-3.5 w-3.5 text-blue-700" /> Mental wellbeing</h2>
               <dl className="mt-2">
                 <InfoRow label="Stress level" value={stressLevel != null ? `${stressLevel} / 5` : 'Not shared'} />
                 <InfoRow label="Mood" value={mood != null ? `${mood} / 5` : 'Not shared'} />
                 <InfoRow label="Source" value={stored ? 'Patient check-in' : 'Session context'} />
               </dl>
-              <p className="mt-2 text-xs leading-4 text-slate-500">Brief context only; not a validated mood or anxiety instrument.</p>
+              <p className="mt-2 text-xs leading-4 text-muted">Brief context only; not a validated mood or anxiety instrument.</p>
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900"><Droplets className="h-3.5 w-3.5 text-blue-700" /> Metabolic</h2>
-              <p className="mt-2 text-xs leading-5 text-slate-600">
+              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Droplets className="h-3.5 w-3.5 text-blue-700" /> Metabolic</h2>
+              <p className="mt-2 text-xs leading-5 text-body">
                 {stored?.metabolic || 'No recent metabolic information is available in the shared record.'}
               </p>
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900"><Stethoscope className="h-3.5 w-3.5 text-blue-700" /> Medical history</h2>
+              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Stethoscope className="h-3.5 w-3.5 text-blue-700" /> Medical history</h2>
               <dl className="mt-2">
                 <InfoRow label="Conditions" value={stored?.conditions?.length ? stored.conditions.join(', ') : 'None recorded'} />
                 <InfoRow label="Medications" value={stored?.medications?.length ? stored.medications.join(', ') : 'None recorded'} />
@@ -485,26 +485,26 @@ export const DoctorHealthContextPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900"><Users className="h-3.5 w-3.5 text-blue-700" /> Family history</h2>
-              <p className="mt-2 text-xs leading-5 text-slate-600">
+              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Users className="h-3.5 w-3.5 text-blue-700" /> Family history</h2>
+              <p className="mt-2 text-xs leading-5 text-body">
                 {stored?.familyHistory || 'No family history has been shared.'}
               </p>
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900"><Database className="h-3.5 w-3.5 text-blue-700" /> Imported sources</h2>
+              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Database className="h-3.5 w-3.5 text-blue-700" /> Imported sources</h2>
               {stored?.sources?.length ? (
                 <ul className="mt-2 space-y-2">
                   {stored.sources.map((source) => (
-                    <li key={source} className="flex items-start gap-2 rounded-lg bg-slate-50 px-2.5 py-2 text-xs text-slate-600">
-                      <Database className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" /> {source}
+                    <li key={source} className="flex items-start gap-2 rounded-lg bg-warm px-2.5 py-2 text-xs text-body">
+                      <Database className="mt-0.5 h-3 w-3 shrink-0 text-muted" /> {source}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-xs leading-4 text-slate-500">No external sources are connected. Only self-reported context is available.</p>
+                <p className="mt-2 text-xs leading-4 text-muted">No external sources are connected. Only self-reported context is available.</p>
               )}
-              <p className="mt-2 text-xs leading-4 text-slate-400">Imported values remain read-only and do not overwrite clinician records.</p>
+              <p className="mt-2 text-xs leading-4 text-muted">Imported values remain read-only and do not overwrite clinician records.</p>
             </Card>
           </div>
 
@@ -512,8 +512,8 @@ export const DoctorHealthContextPage: React.FC = () => {
             <div className="flex items-start gap-3">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
               <div>
-                <h2 className="text-[12px] font-semibold text-slate-900">Limitations of this context view</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <h2 className="text-[12px] font-semibold text-ink">Limitations of this context view</h2>
+                <p className="mt-1 text-xs leading-5 text-muted">
                   Self-report can be incomplete or affected by recall. Imported device and EHR values depend on external data quality and consent. This view does not establish causality or replace a clinical history.
                 </p>
               </div>
@@ -557,8 +557,8 @@ export const DoctorClinicalNotesPage: React.FC = () => {
     if (!assessmentId && ordered[0]?.id) setAssessmentId(ordered[0].id);
   }, [assessmentId, ordered]);
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-slate-500">Loading clinical notes…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-slate-500">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading clinical notes…</div>;
+  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
 
   const patientId = patient.patientId;
   const patientNotes = notes.filter((item) => item.patientId === patientId);
@@ -608,8 +608,8 @@ export const DoctorClinicalNotesPage: React.FC = () => {
             <div className="flex items-start gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><ClipboardCheck className="h-4 w-4" /></span>
               <div>
-                <h2 className="text-[14px] font-semibold text-slate-900">New finding</h2>
-                <p className="mt-0.5 text-xs text-slate-500">Use objective language and explicitly separate observation from interpretation.</p>
+                <h2 className="text-[14px] font-semibold text-ink">New finding</h2>
+                <p className="mt-0.5 text-xs text-muted">Use objective language and explicitly separate observation from interpretation.</p>
               </div>
             </div>
 
@@ -649,15 +649,15 @@ export const DoctorClinicalNotesPage: React.FC = () => {
               </div>
               <div>
                 <label htmlFor="note-followup-date" className={labelClass}>Follow-up date</label>
-                <input id="note-followup-date" type="date" value={followUpDate} disabled={!followUpRequired} onChange={(event) => setFollowUpDate(event.target.value)} className={`${fieldClass} disabled:bg-slate-50 disabled:text-slate-400`} />
+                <input id="note-followup-date" type="date" value={followUpDate} disabled={!followUpRequired} onChange={(event) => setFollowUpDate(event.target.value)} className={`${fieldClass} disabled:bg-warm disabled:text-muted`} />
               </div>
             </div>
-            <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 p-3">
-              <input type="checkbox" checked={followUpRequired} onChange={(event) => setFollowUpRequired(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-700 focus:ring-blue-500" />
-              <span className="text-xs text-slate-700">Follow-up is required for this finding</span>
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-line p-3">
+              <input type="checkbox" checked={followUpRequired} onChange={(event) => setFollowUpRequired(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-line-strong text-blue-700 focus:ring-blue-500" />
+              <span className="text-xs text-body">Follow-up is required for this finding</span>
             </label>
 
-            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-2 border-t border-line pt-3 sm:flex-row sm:justify-end">
               <Link to={`/doctor/patients/${patientId}/care-plan`} className={secondaryButton}>Skip to care plan</Link>
               <button type="submit" className={primaryButton}>Save finding</button>
             </div>
@@ -666,37 +666,37 @@ export const DoctorClinicalNotesPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Finding summary</h2>
+            <h2 className="text-[13px] font-semibold text-ink">Finding summary</h2>
             <dl className="mt-2">
               <InfoRow label="Patient" value={patient.name} />
               <InfoRow label="Latest assessment" value={ordered[0] ? formatDate(ordered[0].date) : 'None'} />
               <InfoRow label="Latest review" value={<ReviewPill status={ordered[0]?.reviewStatus} />} />
               <InfoRow label="Notes on file" value={String(patientNotes.length)} />
             </dl>
-            <p className="mt-3 text-xs leading-4 text-slate-500">
+            <p className="mt-3 text-xs leading-4 text-muted">
               Notes are clinical working records in this browser workspace. The printable report should be used for formal documentation.
             </p>
           </Card>
 
           <Card>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-[13px] font-semibold text-slate-900">Notes history</h2>
-              <span className="text-xs text-slate-400">{patientNotes.length} total</span>
+              <h2 className="text-[13px] font-semibold text-ink">Notes history</h2>
+              <span className="text-xs text-muted">{patientNotes.length} total</span>
             </div>
             {patientNotes.length === 0 ? (
-              <p className="mt-2 text-xs leading-4 text-slate-500">No clinical notes have been saved for this patient.</p>
+              <p className="mt-2 text-xs leading-4 text-muted">No clinical notes have been saved for this patient.</p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {patientNotes.map((item) => (
-                  <li key={item.id} className="rounded-xl border border-slate-200 p-3">
+                  <li key={item.id} className="rounded-xl border border-line p-3">
                     <div className="flex items-start justify-between gap-2">
                       <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-800">{item.decision.replace(/_/g, ' ').toLowerCase()}</span>
-                      <span className="text-xs text-slate-400">{formatDateTime(item.createdAt)}</span>
+                      <span className="text-xs text-muted">{formatDateTime(item.createdAt)}</span>
                     </div>
-                    <p className="mt-2 text-xs leading-4 text-slate-600">{item.observations}</p>
-                    {item.interpretation && <p className="mt-1.5 text-xs leading-4 text-slate-500"><span className="font-semibold text-slate-700">Interpretation:</span> {item.interpretation}</p>}
+                    <p className="mt-2 text-xs leading-4 text-body">{item.observations}</p>
+                    {item.interpretation && <p className="mt-1.5 text-xs leading-4 text-muted"><span className="font-semibold text-body">Interpretation:</span> {item.interpretation}</p>}
                     {item.followUpRequired && <p className="mt-1.5 text-xs font-semibold text-amber-700">Follow-up: {item.followUpDate ? formatDate(item.followUpDate) : 'required'}</p>}
-                    <p className="mt-1.5 text-xs text-slate-400">{item.author}</p>
+                    <p className="mt-1.5 text-xs text-muted">{item.author}</p>
                   </li>
                 ))}
               </ul>

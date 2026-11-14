@@ -7,9 +7,8 @@ export const getBrainHealthProfile = async (req: AuthenticatedRequest, res: Resp
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
 
     const profile = await HospitalDataStore.getBrainHealthProfile(req.user.id);
-    if (!profile) return res.status(404).json({ error: 'No brain health profile generated yet' });
-
-    return res.status(200).json({ profile });
+    // A missing profile is an empty state; the portal renders its own guidance.
+    return res.status(200).json({ profile: profile || null });
   } catch (err) {
     next(err);
   }

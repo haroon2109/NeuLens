@@ -16,29 +16,71 @@ export const formatDateTime = (value?: string | Date | null) => {
   return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
 };
 
-export type Tone = 'blue' | 'green' | 'amber' | 'rose' | 'slate' | 'violet';
+/**
+ * NeuLens pill tones map onto the landing page palette:
+ *   forest  — primary action / "awating review" state (sage-deep-ish forest)
+ *   mint    — subtle highlight / "in progress"
+ *   amber   — warning / follow-up suggested
+ *   rose    — attention / error
+ *   sage    — neutral secondary (replaces old "slate")
+ *   ink     — dark text pill (replaces old "violet")
+ */
+export type Tone = 'forest' | 'forestSoft' | 'mint' | 'amber' | 'rose' | 'sage' | 'ink';
 
-const toneClasses: Record<Tone, string> = {
-  blue: 'border-blue-200 bg-blue-50 text-blue-800',
-  green: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  amber: 'border-amber-200 bg-amber-50 text-amber-800',
-  rose: 'border-rose-200 bg-rose-50 text-rose-800',
-  slate: 'border-slate-200 bg-slate-50 text-slate-700',
-  violet: 'border-violet-200 bg-violet-50 text-violet-800'
+/**
+ * Older screens still pass the pre-design-system tone names. They are folded
+ * into the sage/forest palette here so no page drifts back to blue or slate.
+ */
+type LegacyTone = 'green' | 'blue' | 'slate' | 'violet';
+export type AnyTone = Tone | LegacyTone;
+
+const legacyToneMap: Record<LegacyTone, Tone> = {
+  green: 'forestSoft',
+  blue: 'mint',
+  slate: 'sage',
+  violet: 'ink'
 };
 
-export const Pill: FC<{ children: ReactNode; tone?: Tone; dot?: boolean }> = ({
+const toneClasses: Record<Tone, string> = {
+  forest: 'border-forest/40 bg-forest text-white', // solid forest for primary emphasis
+  forestSoft: 'border-forest bg-mint text-forest',
+  mint: 'border-mint/70 bg-mint/60 text-forest',
+  amber: 'border-amber/60 bg-amber/10 text-amber-900',
+  rose: 'border-rose/60 bg-rose/10 text-rose-900',
+  sage: 'border-line bg-white text-sage-deep',
+  ink: 'border-line bg-white text-ink'
+};
+
+const dotForTone: Record<Tone, string> = {
+  forest: 'bg-current shadow-[0_0_6px_rgba(47,94,78,0.6)]',
+  forestSoft: 'bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]',
+  mint: 'bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]',
+  amber: 'bg-amber-600 shadow-[0_0_6px_rgba(217,119,6,0.5)]',
+  rose: 'bg-rose-600 shadow-[0_0_6px_rgba(180,35,50,0.5)]',
+  sage: 'bg-sage-deep shadow-[0_0_6px_rgba(70,113,94,0.5)]',
+  ink: 'bg-ink shadow-[0_0_6px_rgba(27,51,43,0.5)]'
+};
+
+const resolveTone = (tone: AnyTone): Tone =>
+  tone in legacyToneMap ? legacyToneMap[tone as LegacyTone] : (tone as Tone);
+
+export const Pill: FC<{ children: ReactNode; tone?: AnyTone; dot?: boolean }> = ({
   children,
-  tone = 'slate',
+  tone = 'sage',
   dot = false
-}) => (
+}) => {
+  const resolved = resolveTone(tone);
+  return (
   <span
-    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${toneClasses[tone]}`}
+    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${
+      toneClasses[resolved]
+    }`}
   >
-    {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
+    {dot && <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotForTone[resolved]}`} />}
     {children}
   </span>
-);
+  );
+};
 
 export const PortalPageHeader: FC<{
   eyebrow?: string;
@@ -47,27 +89,35 @@ export const PortalPageHeader: FC<{
   actions?: ReactNode;
   icon?: LucideIcon;
 }> = ({ eyebrow, title, description, actions, icon: Icon }) => (
-  <header className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
+  <header className="flex flex-col gap-4 border-b border-line/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
     <div className="min-w-0">
       {eyebrow && (
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-blue-700">
-          {Icon && <Icon className="h-3.5 w-3.5" />}
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+          {Icon && <Icon className="h-3.5 w-3.5 text-sage-deep" aria-hidden="true" />}
           {eyebrow}
         </div>
       )}
-      <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.035em] text-slate-950 sm:text-[30px]">
+      <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.035em] text-ink sm:text-[30px]">
         {title}
       </h1>
       {description && (
-        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-slate-600">{description}</p>
+        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-body">{description}</p>
       )}
     </div>
     {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
   </header>
 );
 
-export const Card: FC<{ children: ReactNode; className?: string; padded?: boolean }> = ({ children, className = '', padded = true }) => (
-  <section className={`rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_-28px_rgba(15,23,42,0.35)] ${padded ? 'p-5' : ''} ${className}`}>
+/**
+ * Card — white surface with soft NeuLens shadow and 1.5rem radius (matches lp-card).
+ * Padding is opt-in to keep nested layouts flexible.
+ */
+export const Card: FC<{ children: ReactNode; className?: string; padded?: boolean }> = ({
+  children,
+  className = '',
+  padded = true
+}) => (
+  <section className={`min-w-0 rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(27,51,43,0.03),0_24px_60px_-58px_rgba(27,51,43,0.45)] ${padded ? 'p-5' : ''} ${className}`}>
     {children}
   </section>
 );
@@ -79,36 +129,46 @@ export const SectionTitle: FC<{ title: string; detail?: string; action?: ReactNo
 }) => (
   <div className="mb-4 flex items-start justify-between gap-4">
     <div>
-      <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
-      {detail && <p className="mt-1 text-[12px] leading-5 text-slate-500">{detail}</p>}
+      <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
+      {detail && <p className="mt-1 text-[12px] leading-5 text-muted">{detail}</p>}
     </div>
     {action}
   </div>
 );
 
+/**
+ * StatCard — sage-tinted label strip, large ink value, subtle icon chip.
+ */
 export const StatCard: FC<{
   label: string;
   value: string;
   detail?: string;
   icon: LucideIcon;
-  tone?: Tone;
-}> = ({ label, value, detail, icon: Icon, tone = 'blue' }) => (
-  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</span>
-      <span className={`flex h-8 w-8 items-center justify-center rounded-lg border ${toneClasses[tone]}`}>
-        <Icon className="h-4 w-4" strokeWidth={1.8} />
-      </span>
+  tone?: AnyTone;
+}> = ({ label, value, detail, icon: Icon, tone = 'forest' }) => {
+  const resolvedTone = resolveTone(tone);
+  const chipTone: Tone =
+    resolvedTone === 'ink' || resolvedTone === 'sage' || resolvedTone === 'mint' || resolvedTone === 'amber'
+      ? resolvedTone
+      : 'forestSoft';
+  return (
+    <div className="rounded-2xl border border-line bg-white p-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
+        <span className={`flex h-8 w-8 items-center justify-center rounded-lg border ${toneClasses[chipTone]}`}>
+          <Icon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
+        </span>
+      </div>
+      <p className="mt-3 text-[21px] font-semibold tracking-[-0.03em] text-ink">{value}</p>
+      {detail && <p className="mt-1 text-[11px] leading-5 text-muted">{detail}</p>}
     </div>
-    <p className="mt-3 text-[21px] font-semibold tracking-[-0.03em] text-slate-950">{value}</p>
-    {detail && <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>}
-  </div>
-);
+  );
+};
 
 export const InfoRow: FC<{ label: string; value: ReactNode }> = ({ label, value }) => (
-  <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-2.5 last:border-0">
-    <dt className="text-[12px] text-slate-500">{label}</dt>
-    <dd className="max-w-[60%] text-right text-[12px] font-semibold text-slate-800">{value}</dd>
+  <div className="flex items-start justify-between gap-4 border-b border-line py-2.5 last:border-0">
+    <dt className="text-[12px] text-muted">{label}</dt>
+    <dd className="max-w-[60%] text-right text-[12px] font-semibold text-ink">{value}</dd>
   </div>
 );
 
@@ -117,19 +177,18 @@ export const EmptyState: FC<{
   title: string;
   detail: string;
   action?: ReactNode;
-  /** Optional scene from the NeuLens cast; shown instead of the icon. */
   scene?: SceneKind;
 }> = ({ icon: Icon, title, detail, action, scene }) => (
-  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-6 py-10 text-center">
+  <div className="rounded-2xl border border-dashed border-line bg-warm/70 px-6 py-10 text-center">
     {scene ? (
       <HealthcareScene kind={scene} className="mx-auto mb-1 w-full max-w-[240px]" />
     ) : (
-      <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm">
-        <Icon className="h-5 w-5" />
+      <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-mint text-forest shadow-xs">
+        <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
     )}
-    <p className="mt-3 text-[14px] font-semibold text-slate-800">{title}</p>
-    <p className="mx-auto mt-1 max-w-md text-[12px] leading-5 text-slate-500">{detail}</p>
+    <p className="mt-3 text-[14px] font-semibold text-ink">{title}</p>
+    <p className="mx-auto mt-1 max-w-md text-[12px] leading-5 text-muted">{detail}</p>
     {action && <div className="mt-4 flex justify-center">{action}</div>}
   </div>
 );
@@ -141,13 +200,19 @@ export const Toggle: FC<{
   onChange: (value: boolean) => void;
   disabled?: boolean;
 }> = ({ label, detail, checked, onChange, disabled }) => (
-  <label className={`flex items-start justify-between gap-4 rounded-xl border border-slate-200 p-3.5 ${disabled ? 'opacity-70' : 'cursor-pointer hover:border-slate-300'}`}>
+  <label
+    className={`flex items-start justify-between gap-4 rounded-xl border border-line p-3.5 ${
+      disabled ? 'opacity-70' : 'cursor-pointer hover:border-sage-dark/60'
+    }`}
+  >
     <span>
-      <span className="block text-[12px] font-semibold text-slate-800">{label}</span>
-      {detail && <span className="mt-1 block text-xs leading-5 text-slate-500">{detail}</span>}
+      <span className="block text-[12px] font-semibold text-ink">{label}</span>
+      {detail && <span className="mt-1 block text-[11px] leading-5 text-muted">{detail}</span>}
     </span>
     <span
-      className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${checked ? 'bg-blue-600' : 'bg-slate-300'}`}
+      className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+        checked ? 'bg-forest' : 'bg-slate-300'
+      }`}
     >
       <input
         type="checkbox"
@@ -157,7 +222,9 @@ export const Toggle: FC<{
         onChange={(event) => onChange(event.target.checked)}
       />
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${checked ? 'translate-x-6' : 'translate-x-1'}`}
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
       />
     </span>
   </label>
@@ -170,10 +237,10 @@ export const TrendLine: FC<{
   tone?: string;
   height?: number;
   valueSuffix?: string;
-}> = ({ points, min, max, tone = '#2F5E4E', height = 150, valueSuffix = '' }) => {
+}> = ({ points, min, max, tone = '#2f5e4e', height = 150, valueSuffix = '' }) => {
   if (points.length < 2) {
     return (
-      <div className="flex h-[150px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs text-slate-500">
+      <div className="flex h-[150px] items-center justify-center rounded-xl border border-dashed border-line bg-warm text-[11px] text-muted">
         More valid sessions are needed to show a trend.
       </div>
     );
@@ -207,7 +274,7 @@ export const TrendLine: FC<{
             x2={width - padding.right}
             y1={y}
             y2={y}
-            stroke="#E2E8F0"
+            stroke="#e2e7df"
             strokeDasharray="3 5"
           />
         );
@@ -233,7 +300,7 @@ export const TrendLine: FC<{
           y={height - 6}
           textAnchor="middle"
           fontSize="8.5"
-          fill="#94A3B8"
+          fill="#63716b"
         >
           {point.label}
         </text>
@@ -245,7 +312,7 @@ export const TrendLine: FC<{
 export const ScoreDial: FC<{ value: number; label: string; tone?: string }> = ({
   value,
   label,
-  tone = '#2F5E4E'
+  tone = '#2f5e4e'
 }) => {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
@@ -254,8 +321,8 @@ export const ScoreDial: FC<{ value: number; label: string; tone?: string }> = ({
 
   return (
     <div className="relative flex h-[116px] w-[116px] shrink-0 items-center justify-center">
-      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" aria-hidden="true">
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="#E2E8F0" strokeWidth="7" />
+      <svg viewBox="0 0 100 100" className="-rotate-90 h-full w-full" aria-hidden="true">
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="#e2e7df" strokeWidth="7" />
         <circle
           cx="50"
           cy="50"
@@ -269,8 +336,8 @@ export const ScoreDial: FC<{ value: number; label: string; tone?: string }> = ({
         />
       </svg>
       <div className="absolute text-center">
-        <span className="block text-[22px] font-semibold leading-none text-slate-900">{Math.round(clamped)}</span>
-        <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</span>
+        <span className="block text-[22px] font-semibold leading-none text-ink">{Math.round(clamped)}</span>
+        <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
       </div>
     </div>
   );
@@ -280,8 +347,8 @@ export const AssessmentStatusPill: FC<{ reviewStatus: string; status?: string }>
   reviewStatus,
   status = 'COMPLETED'
 }) => {
-  if (status !== 'COMPLETED') return <Pill tone="amber" dot>In progress</Pill>;
-  if (reviewStatus === 'REVIEWED') return <Pill tone="green" dot>Reviewed</Pill>;
+  if (status !== 'COMPLETED') return <Pill tone="mint" dot>In progress</Pill>;
+  if (reviewStatus === 'REVIEWED') return <Pill tone="forest" dot>Reviewed</Pill>;
   if (reviewStatus === 'FOLLOWUP_REQUIRED') return <Pill tone="amber" dot>Follow-up suggested</Pill>;
-  return <Pill tone="blue" dot>Awaiting review</Pill>;
+  return <Pill tone="forestSoft" dot>Awaiting review</Pill>;
 };

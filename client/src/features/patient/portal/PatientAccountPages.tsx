@@ -37,12 +37,12 @@ import { ConsentWithdrawnState } from '../../../components/systemStates';
 const primaryButton =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 text-[12px] font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40';
 const secondaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-50';
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-[12px] font-semibold text-body transition hover:bg-warm';
 const dangerButton =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-[12px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40';
 const fieldClass =
-  'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[13px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100';
-const labelClass = 'mb-1.5 block text-[12px] font-semibold text-slate-700';
+  'w-full rounded-xl border border-line bg-warm px-3.5 py-2.5 text-[13px] text-slate-800 outline-none transition placeholder:text-muted focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100';
+const labelClass = 'mb-1.5 block text-[12px] font-semibold text-body';
 
 // ---------------------------------------------------------------------------
 // Screen 42 — My Profile
@@ -86,14 +86,14 @@ export const MyProfilePage: React.FC = () => {
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-line bg-white p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3.5">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-[17px] font-bold text-blue-800">{initials}</span>
             <div>
-              <p className="text-[16px] font-semibold text-slate-950">{displayName}</p>
-              <p className="mt-0.5 text-xs text-slate-500">{user?.email || personal.email || 'No email on record'}</p>
-              <p className="mt-1 font-mono text-xs text-slate-400">{user?.patientId || 'CV-2026-ACTIVE'}</p>
+              <p className="text-[16px] font-semibold text-ink">{displayName}</p>
+              <p className="mt-0.5 text-xs text-muted">{user?.email || personal.email || 'No email on record'}</p>
+              <p className="mt-1 font-mono text-xs text-muted">{user?.patientId || 'CV-2026-ACTIVE'}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -145,12 +145,12 @@ export const MyProfilePage: React.FC = () => {
             <div className="sm:col-span-2">
               <label className={labelClass} htmlFor="profile-email">Email address</label>
               <input id="profile-email" type="email" className={fieldClass} value={personal.email} onChange={(event) => setPersonal({ email: event.target.value })} autoComplete="email" />
-              <p className="mt-1.5 text-xs leading-5 text-slate-500">Changing your sign-in email requires identity verification. Contact the clinic from Help &amp; Support.</p>
+              <p className="mt-1.5 text-xs leading-5 text-muted">Changing your sign-in email requires identity verification. Contact the clinic from Help &amp; Support.</p>
             </div>
           </div>
 
-          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
-            <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Emergency contact</p>
+          <div className="mt-5 rounded-xl border border-line bg-warm/70 p-3.5">
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Emergency contact</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div>
                 <label className={labelClass} htmlFor="profile-emergency-name">Contact name</label>
@@ -171,8 +171,8 @@ export const MyProfilePage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Care team" />
-            <p className="text-[12px] font-semibold text-slate-900">{treatmentTeam.doctor}</p>
-            <p className="text-xs text-slate-500">{treatmentTeam.role}</p>
+            <p className="text-[12px] font-semibold text-ink">{treatmentTeam.doctor}</p>
+            <p className="text-xs text-muted">{treatmentTeam.role}</p>
             <dl className="mt-3">
               <InfoRow label="Hospital" value={treatmentTeam.institution} />
               <InfoRow label="Department" value={treatmentTeam.department} />
@@ -184,8 +184,8 @@ export const MyProfilePage: React.FC = () => {
             </Link>
           </Card>
 
-          <div id="profile-accessibility" className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-[12px] font-semibold text-slate-900">Accessibility at a glance</p>
+          <div id="profile-accessibility" className="rounded-2xl border border-line bg-white p-4">
+            <p className="text-[12px] font-semibold text-ink">Accessibility at a glance</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Pill tone="slate">{personal.language === 'en' ? 'English' : 'Preferred language set'}</Pill>
               <Pill tone="blue">{health.sensory.length ? health.sensory.join(', ') : 'No sensory needs noted'}</Pill>
@@ -228,20 +228,20 @@ export const AccountSettingsPage: React.FC = () => {
         <Card>
           <SectionTitle title="Sign-in & security" />
           <div className="space-y-3">
-            <div className="rounded-xl border border-slate-200 p-3.5">
+            <div className="rounded-xl border border-line p-3.5">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-800">Email address</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{user?.email || 'No email on record'}</p>
+                  <p className="mt-0.5 text-xs text-muted">{user?.email || 'No email on record'}</p>
                 </div>
                 <Pill tone="green" dot>Verified</Pill>
               </div>
             </div>
-            <div className="rounded-xl border border-slate-200 p-3.5">
+            <div className="rounded-xl border border-line p-3.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-xs font-semibold text-slate-800">Password</p>
-                  <p className="mt-0.5 text-xs text-slate-500">Last changed when your account was created.</p>
+                  <p className="mt-0.5 text-xs text-muted">Last changed when your account was created.</p>
                 </div>
                 <Link to="/auth/forgot-password" className={secondaryButton}><Lock className="h-3.5 w-3.5" /> Change password</Link>
               </div>
@@ -256,13 +256,13 @@ export const AccountSettingsPage: React.FC = () => {
                 window.setTimeout(() => setSaved(false), 2000);
               }}
             />
-            <div className="rounded-xl border border-slate-200 p-3.5">
+            <div className="rounded-xl border border-line p-3.5">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <Laptop className="h-4 w-4 text-slate-500" />
+                  <Laptop className="h-4 w-4 text-muted" />
                   <div>
                     <p className="text-xs font-semibold text-slate-800">This browser</p>
-                    <p className="text-xs text-slate-500">Chrome on desktop · Active now</p>
+                    <p className="text-xs text-muted">Chrome on desktop · Active now</p>
                   </div>
                 </div>
                 <Pill tone="green" dot>Current</Pill>
@@ -295,7 +295,7 @@ export const AccountSettingsPage: React.FC = () => {
               checked={account.smsReminders}
               onChange={(value) => setAccount({ smsReminders: value })}
             />
-            <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+            <div className="rounded-lg bg-warm px-3 py-2 text-xs leading-5 text-muted">
               <Info className="mr-1 inline h-3 w-3" />
               Urgent account or safety notices cannot be switched off.
             </div>
@@ -322,14 +322,14 @@ export const AccountSettingsPage: React.FC = () => {
             <option value="kn">Kannada</option>
             <option value="ml">Malayalam</option>
           </select>
-          <p className="mt-2 text-xs leading-5 text-slate-500">
+          <p className="mt-2 text-xs leading-5 text-muted">
             Changing language affects new sessions. Previously completed sessions stay in their original language for comparability.
           </p>
         </Card>
 
         <Card>
-          <SectionTitle title="Display & accessibility" action={<Accessibility className="h-4 w-4 text-slate-400" />} />
-          <p className="mb-2 text-xs font-semibold text-slate-700"><Type className="mr-1 inline h-3.5 w-3.5" /> Text size</p>
+          <SectionTitle title="Display & accessibility" action={<Accessibility className="h-4 w-4 text-muted" />} />
+          <p className="mb-2 text-xs font-semibold text-body"><Type className="mr-1 inline h-3.5 w-3.5" /> Text size</p>
           <div className="grid grid-cols-3 gap-2">
             {[
               { value: 'normal' as const, label: 'Standard' },
@@ -344,7 +344,7 @@ export const AccountSettingsPage: React.FC = () => {
                 className={`rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
                   accessibility.textSize === option.value
                     ? 'border-blue-300 bg-blue-50 text-blue-800'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    : 'border-line bg-white text-body hover:border-slate-300'
                 }`}
               >
                 {option.label}
@@ -406,16 +406,16 @@ export const PrivacyDataPage: React.FC = () => {
                 ['Access by my care team', consent.clinicianAccess, true],
                 ['Optional research and data sharing', consent.optionalSharing, false]
               ].map(([label, granted, required]) => (
-                <div key={String(label)} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2">
-                  <span className="text-xs text-slate-700">{label}</span>
+                <div key={String(label)} className="flex items-center justify-between gap-3 rounded-lg border border-line px-3 py-2">
+                  <span className="text-xs text-body">{label}</span>
                   <span className="flex shrink-0 items-center gap-1.5">
-                    {!required && <span className="text-xs text-slate-400">optional</span>}
+                    {!required && <span className="text-xs text-muted">optional</span>}
                     <Pill tone={granted ? 'green' : 'slate'}>{granted ? 'Granted' : 'Not granted'}</Pill>
                   </span>
                 </div>
               ))}
             </div>
-            <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-slate-500">
+            <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-muted">
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Required consent cannot be withdrawn while using the screening service. You may request account closure below.
             </p>
@@ -429,7 +429,7 @@ export const PrivacyDataPage: React.FC = () => {
               checked={privacy.optionalSharing}
               onChange={setSharing}
             />
-            <p className="mt-2 text-xs leading-5 text-slate-500">
+            <p className="mt-2 text-xs leading-5 text-muted">
               Turning this off stops future research use. It does not remove data already included in a completed, de-identified dataset.
             </p>
             {!privacy.optionalSharing && (
@@ -448,15 +448,15 @@ export const PrivacyDataPage: React.FC = () => {
             {consent.history.length ? (
               <ul className="space-y-2">
                 {[...consent.history].reverse().map((entry, index) => (
-                  <li key={`${entry.at}-${index}`} className="rounded-lg border border-slate-200 px-3 py-2">
+                  <li key={`${entry.at}-${index}`} className="rounded-lg border border-line px-3 py-2">
                     <p className="text-xs font-semibold text-slate-800">{entry.action}</p>
-                    <p className="mt-0.5 text-xs leading-5 text-slate-500">{entry.detail}</p>
-                    <p className="mt-0.5 text-xs text-slate-400">{formatDateTime(entry.at)}</p>
+                    <p className="mt-0.5 text-xs leading-5 text-muted">{entry.detail}</p>
+                    <p className="mt-0.5 text-xs text-muted">{formatDateTime(entry.at)}</p>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-xs leading-5 text-slate-500">No consent activity recorded yet.</p>
+              <p className="text-xs leading-5 text-muted">No consent activity recorded yet.</p>
             )}
           </Card>
         </div>
@@ -468,12 +468,12 @@ export const PrivacyDataPage: React.FC = () => {
               {privacy.connectedDevices.map((device) => {
                 const Icon = deviceIcon(device.id);
                 return (
-                  <li key={device.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2.5">
+                  <li key={device.id} className="flex items-center justify-between gap-2 rounded-lg border border-line px-3 py-2.5">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <Icon className="h-4 w-4 shrink-0 text-slate-500" />
+                      <Icon className="h-4 w-4 shrink-0 text-muted" />
                       <div className="min-w-0">
                         <p className="truncate text-xs font-semibold text-slate-800">{device.label}</p>
-                        <p className="text-xs text-slate-500">{device.lastActive}</p>
+                        <p className="text-xs text-muted">{device.lastActive}</p>
                       </div>
                     </div>
                     {device.id === 'dev-1' ? (
@@ -494,19 +494,19 @@ export const PrivacyDataPage: React.FC = () => {
             {privacy.requests.length ? (
               <ul className="space-y-2">
                 {privacy.requests.map((request) => (
-                  <li key={request.id} className="rounded-lg border border-slate-200 px-3 py-2.5">
+                  <li key={request.id} className="rounded-lg border border-line px-3 py-2.5">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-semibold text-slate-800">{request.type}</p>
                       <Pill tone={request.status.startsWith('Submitted') ? 'amber' : 'green'}>{request.status.startsWith('Submitted') ? 'Submitted' : 'Completed'}</Pill>
                     </div>
-                    <p className="mt-0.5 text-xs text-slate-500">{formatDate(request.date)} · {request.status}</p>
+                    <p className="mt-0.5 text-xs text-muted">{formatDate(request.date)} · {request.status}</p>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-slate-500">No requests on record.</p>
+              <p className="text-xs text-muted">No requests on record.</p>
             )}
-            <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+            <div className="mt-3 rounded-lg bg-warm px-3 py-2 text-xs leading-5 text-muted">
               <Download className="mr-1 inline h-3 w-3" />
               To request a portable copy of your records, use the request option below or contact the clinic. Identity verification is required.
             </div>
@@ -623,9 +623,9 @@ export const HelpSupportPage: React.FC = () => {
                       className="flex w-full items-center justify-between gap-3 py-3 text-left"
                     >
                       <span className="text-[12px] font-semibold text-slate-800">{faq.question}</span>
-                      <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition ${open ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-muted transition ${open ? 'rotate-180' : ''}`} />
                     </button>
-                    {open && <p className="pb-3 text-xs leading-5 text-slate-600">{faq.answer}</p>}
+                    {open && <p className="pb-3 text-xs leading-5 text-body">{faq.answer}</p>}
                   </li>
                 );
               })}
@@ -671,17 +671,17 @@ export const HelpSupportPage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Contact the clinic" />
-            <p className="text-[12px] font-semibold text-slate-900">{treatmentTeam.doctor}</p>
-            <p className="text-xs text-slate-500">{treatmentTeam.department}</p>
+            <p className="text-[12px] font-semibold text-ink">{treatmentTeam.doctor}</p>
+            <p className="text-xs text-muted">{treatmentTeam.department}</p>
             <div className="mt-3 space-y-2.5 text-xs">
-              <a href={`tel:${treatmentTeam.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-slate-600 hover:text-blue-700">
-                <Phone className="h-3.5 w-3.5 text-slate-400" /> {treatmentTeam.phone}
+              <a href={`tel:${treatmentTeam.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-body hover:text-blue-700">
+                <Phone className="h-3.5 w-3.5 text-muted" /> {treatmentTeam.phone}
               </a>
-              <a href={`mailto:${treatmentTeam.email}`} className="flex items-center gap-2 text-slate-600 hover:text-blue-700">
-                <Mail className="h-3.5 w-3.5 text-slate-400" /> {treatmentTeam.email}
+              <a href={`mailto:${treatmentTeam.email}`} className="flex items-center gap-2 text-body hover:text-blue-700">
+                <Mail className="h-3.5 w-3.5 text-muted" /> {treatmentTeam.email}
               </a>
-              <p className="flex items-start gap-2 text-slate-600">
-                <CircleHelp className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" /> Mon–Fri, 9:00–17:00 IST
+              <p className="flex items-start gap-2 text-body">
+                <CircleHelp className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" /> Mon–Fri, 9:00–17:00 IST
               </p>
             </div>
             <a href={`mailto:${treatmentTeam.email}`} className={`${secondaryButton} mt-3 w-full`}>Email clinic support</a>
@@ -700,8 +700,8 @@ export const HelpSupportPage: React.FC = () => {
           </div>
 
           <Card>
-            <SectionTitle title="Accessibility support" action={<Accessibility className="h-4 w-4 text-slate-400" />} />
-            <p className="text-xs leading-5 text-slate-600">
+            <SectionTitle title="Accessibility support" action={<Accessibility className="h-4 w-4 text-muted" />} />
+            <p className="text-xs leading-5 text-body">
               Need a different format, language, or assistance during a screening? The clinic can arrange support.
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -711,14 +711,14 @@ export const HelpSupportPage: React.FC = () => {
             </div>
           </Card>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-[12px] font-semibold text-slate-900">Sign out</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+          <div className="rounded-2xl border border-line bg-white p-4">
+            <p className="text-[12px] font-semibold text-ink">Sign out</p>
+            <p className="mt-1 text-xs leading-5 text-muted">
               Signing out ends this session on this device. Your saved portal preferences remain for next time.
             </p>
             {confirmLogout ? (
               <div className="mt-3 space-y-2">
-                <p className="text-xs font-semibold text-slate-700">Are you sure you want to sign out?</p>
+                <p className="text-xs font-semibold text-body">Are you sure you want to sign out?</p>
                 <div className="flex gap-2">
                   <button type="button" className={primaryButton} onClick={handleLogout}><LogOut className="h-4 w-4" /> Sign out</button>
                   <button type="button" className={secondaryButton} onClick={() => setConfirmLogout(false)}>Stay signed in</button>
@@ -731,14 +731,14 @@ export const HelpSupportPage: React.FC = () => {
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+          <div className="rounded-xl border border-line bg-warm p-3.5">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-body">
               <Database className="h-3.5 w-3.5" /> About this portal
             </p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-1 text-xs leading-5 text-muted">
               NeuLens screening support · demonstration environment. Not for diagnostic use. If you notice an inconsistency in a report, contact the clinic.
             </p>
-            <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-500"><Bell className="h-3 w-3" /> Clinical safety notices cannot be disabled.</p>
+            <p className="mt-1.5 flex items-center gap-1 text-xs text-muted"><Bell className="h-3 w-3" /> Clinical safety notices cannot be disabled.</p>
           </div>
         </div>
       </div>

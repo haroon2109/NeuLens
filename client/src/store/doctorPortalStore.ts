@@ -179,6 +179,7 @@ interface DoctorPortalState {
   removeClinician: (id: string) => void;
   completeOnboarding: () => void;
   addPatient: (patient: Omit<RegisteredPatient, 'id' | 'patientId' | 'registeredAt'>) => string;
+  hydratePatients: (patients: Array<{ id: string; patientId: string; name: string; age: number; gender?: string | null; email?: string | null; phone?: string | null }>) => void;
   setAssignment: (patientId: string, clinician: string) => void;
   addNote: (note: Omit<ClinicalNote, 'id' | 'createdAt'>) => void;
   saveCarePlan: (plan: Omit<CarePlanRecord, 'approvedAt'>) => void;
@@ -321,6 +322,33 @@ export const useDoctorPortalStore = create<DoctorPortalState>()(
         }));
         return patientId;
       },
+      hydratePatients: (patients) =>
+        set((state) => {
+          const merged = new Map(state.registeredPatients.map((patient) => [patient.patientId, patient]));
+          for (const patient of patients) {
+            if (!patient?.patientId || merged.has(patient.patientId)) continue;
+            merged.set(patient.patientId, {
+              id: patient.id,
+              patientId: patient.patientId,
+              name: patient.name,
+              age: patient.age,
+              dob: '',
+              gender: patient.gender || '',
+              email: patient.email || '',
+              phone: patient.phone || '',
+              language: 'en',
+              conditions: '',
+              medications: '',
+              familyHistory: '',
+              assignedDoctor: '',
+              consentConfirmed: true,
+              invitationStatus: 'NOT_SENT',
+              invitationEmail: patient.email || '',
+              registeredAt: ''
+            });
+          }
+          return { registeredPatients: Array.from(merged.values()) };
+        }),
       setAssignment: (patientId, clinician) =>
         set((state) => ({
           assignments: { ...state.assignments, [patientId]: clinician }

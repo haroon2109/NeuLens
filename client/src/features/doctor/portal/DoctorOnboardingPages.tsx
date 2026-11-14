@@ -54,19 +54,19 @@ const DoctorOnboardingShell: React.FC<{
             <NeulensLogoMark className="h-9 w-9" />
             <span>
               <NeulensWordmark size="small" />
-              <span className="mt-0.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+              <span className="mt-0.5 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">
                 Clinical workspace setup
               </span>
             </span>
           </Link>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-body">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
               {isVerified ? 'Verified clinician' : `Verification: ${verificationStatus.replace('_', ' ').toLowerCase()}`}
             </span>
             <Link
               to={isVerified ? '/doctor/dashboard' : '/auth/pending-approval'}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-900"
+              className="text-xs font-semibold text-muted hover:text-ink"
             >
               Save and exit
             </Link>
@@ -74,8 +74,8 @@ const DoctorOnboardingShell: React.FC<{
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[230px_1fr]">
-          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+          <aside className="h-fit rounded-2xl border border-line bg-white p-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-muted">
               Professional onboarding
             </p>
             <ol className="space-y-1">
@@ -91,7 +91,7 @@ const DoctorOnboardingShell: React.FC<{
                           ? 'bg-blue-50 text-blue-800'
                           : complete
                             ? 'text-emerald-800 hover:bg-emerald-50'
-                            : 'text-slate-500 hover:bg-slate-50'
+                            : 'text-muted hover:bg-warm'
                       }`}
                     >
                       <span
@@ -100,7 +100,7 @@ const DoctorOnboardingShell: React.FC<{
                             ? 'bg-blue-700 text-white'
                             : complete
                               ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-slate-100 text-slate-500'
+                              : 'bg-warm text-muted'
                         }`}
                       >
                         {complete ? <CheckCircle2 className="h-3 w-3" /> : item.id}
@@ -111,11 +111,11 @@ const DoctorOnboardingShell: React.FC<{
                 );
               })}
             </ol>
-            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+            <div className="mt-5 rounded-xl border border-line bg-warm p-3">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-body">
                 <Clock3 className="h-3.5 w-3.5" /> Review timeline
               </p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
+              <p className="mt-1 text-xs leading-5 text-muted">
                 Credential checks usually complete within 1–2 business days. Patient records remain locked until approval.
               </p>
             </div>
@@ -139,14 +139,14 @@ const StepActions: React.FC<{
   nextDisabled?: boolean;
   detail?: string;
 }> = ({ back, backLabel = 'Back', nextLabel, onNext, nextDisabled, detail }) => (
-  <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+  <div className="flex flex-col-reverse gap-3 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
       {back && (
         <Link to={back} className={secondaryButton}>
           <ArrowLeft className="h-4 w-4" /> {backLabel}
         </Link>
       )}
-      {detail && <p className="mt-2 text-xs text-slate-500 sm:mt-0">{detail}</p>}
+      {detail && <p className="mt-2 text-xs text-muted sm:mt-0">{detail}</p>}
     </div>
     <button type="button" onClick={onNext} disabled={nextDisabled} className={primaryButton}>
       {nextLabel} <ArrowRight className="h-4 w-4" />
@@ -228,8 +228,8 @@ export const DoctorRegistrationPage: React.FC = () => {
             <Stethoscope className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-[14px] font-semibold text-slate-900">Registrant details</h2>
-            <p className="mt-0.5 text-xs text-slate-500">All fields are required unless marked optional.</p>
+            <h2 className="text-[14px] font-semibold text-ink">Registrant details</h2>
+            <p className="mt-0.5 text-xs text-muted">All fields are required unless marked optional.</p>
           </div>
         </div>
 
@@ -243,35 +243,35 @@ export const DoctorRegistrationPage: React.FC = () => {
           <div>
             <label htmlFor="doctor-name" className={labelClass}>Full name</label>
             <div className="relative">
-              <UserRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <UserRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input id="doctor-name" value={form.fullName} onChange={(event) => update('fullName', event.target.value)} className={`${fieldClass} pl-9`} autoComplete="name" />
             </div>
           </div>
           <div>
             <label htmlFor="doctor-email" className={labelClass}>Professional email</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input id="doctor-email" type="email" value={form.professionalEmail} onChange={(event) => update('professionalEmail', event.target.value)} className={`${fieldClass} pl-9`} autoComplete="email" />
             </div>
           </div>
           <div>
             <label htmlFor="doctor-phone" className={labelClass}>Phone number</label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input id="doctor-phone" type="tel" value={form.phone} onChange={(event) => update('phone', event.target.value)} className={`${fieldClass} pl-9`} autoComplete="tel" />
             </div>
           </div>
           <div>
             <label htmlFor="doctor-registration" className={labelClass}>Medical registration number</label>
             <div className="relative">
-              <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input id="doctor-registration" value={form.medicalRegistrationNumber} onChange={(event) => update('medicalRegistrationNumber', event.target.value)} className={`${fieldClass} pl-9`} placeholder="e.g. MCI-2011-44821" />
             </div>
           </div>
           <div>
             <label htmlFor="doctor-qualification" className={labelClass}>Qualification</label>
             <div className="relative">
-              <GraduationCap className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <GraduationCap className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input id="doctor-qualification" value={form.qualification} onChange={(event) => update('qualification', event.target.value)} className={`${fieldClass} pl-9`} placeholder="e.g. MBBS, MD, DM (Neurology)" />
             </div>
           </div>
@@ -287,11 +287,11 @@ export const DoctorRegistrationPage: React.FC = () => {
             <label htmlFor="doctor-experience" className={labelClass}>Years of experience</label>
             <input id="doctor-experience" type="number" min="0" max="70" value={form.yearsExperience} onChange={(event) => update('yearsExperience', event.target.value)} className={fieldClass} placeholder="e.g. 14" />
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+          <div className="rounded-xl border border-line bg-warm p-3">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-body">
               <BadgeCheck className="h-3.5 w-3.5 text-blue-600" /> Account identity
             </p>
-            <p className="mt-1 break-all text-xs leading-5 text-slate-500">
+            <p className="mt-1 break-all text-xs leading-5 text-muted">
               Signed in as {user?.email || 'clinician'}. Email changes are managed through account security.
             </p>
           </div>
@@ -356,8 +356,8 @@ export const DoctorVerificationPage: React.FC = () => {
         <Card>
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-[14px] font-semibold text-slate-900">Required documents</h2>
-              <p className="mt-0.5 text-xs text-slate-500">PDF, JPG, or PNG · maximum 10 MB each.</p>
+              <h2 className="text-[14px] font-semibold text-ink">Required documents</h2>
+              <p className="mt-0.5 text-xs text-muted">PDF, JPG, or PNG · maximum 10 MB each.</p>
             </div>
             <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${complete ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
               {uploadedCount} of {documentRows.length} uploaded
@@ -368,17 +368,17 @@ export const DoctorVerificationPage: React.FC = () => {
             {documentRows.map(({ key, label, detail, icon: Icon }) => {
               const document = documents[key];
               return (
-                <div key={key} className="rounded-xl border border-slate-200 p-3.5">
+                <div key={key} className="rounded-xl border border-line p-3.5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex gap-3">
-                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${document.status === 'MISSING' ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-700'}`}>
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${document.status === 'MISSING' ? 'bg-warm text-muted' : 'bg-emerald-50 text-emerald-700'}`}>
                         <Icon className="h-4 w-4" />
                       </span>
                       <div>
                         <p className="text-xs font-semibold text-slate-800">{label}</p>
-                        <p className="mt-0.5 text-xs leading-4 text-slate-500">{detail}</p>
+                        <p className="mt-0.5 text-xs leading-4 text-muted">{detail}</p>
                         {document.name && (
-                          <p className="mt-1.5 break-all font-mono text-xs text-slate-600">
+                          <p className="mt-1.5 break-all font-mono text-xs text-body">
                             {document.name} · {document.status.toLowerCase()}
                           </p>
                         )}
@@ -408,30 +408,30 @@ export const DoctorVerificationPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Verification status</h2>
+            <h2 className="text-[13px] font-semibold text-ink">Verification status</h2>
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-slate-500">Documents</span>
+                <span className="text-muted">Documents</span>
                 <span className={`font-semibold ${complete ? 'text-emerald-700' : 'text-amber-700'}`}>{complete ? 'Received' : 'Incomplete'}</span>
               </div>
               <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-slate-500">Credential review</span>
+                <span className="text-muted">Credential review</span>
                 <span className="font-semibold text-slate-800">{verificationStatus === 'VERIFIED' ? 'Verified' : verificationStatus === 'SUBMITTED' ? 'Submitted' : 'Not submitted'}</span>
               </div>
               <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-slate-500">Patient access</span>
-                <span className={`font-semibold ${user?.verificationStatus === 'VERIFIED' ? 'text-emerald-700' : 'text-slate-600'}`}>
+                <span className="text-muted">Patient access</span>
+                <span className={`font-semibold ${user?.verificationStatus === 'VERIFIED' ? 'text-emerald-700' : 'text-body'}`}>
                   {user?.verificationStatus === 'VERIFIED' ? 'Unlocked' : 'Locked until approval'}
                 </span>
               </div>
             </div>
-            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs leading-5 text-slate-500">
+            <div className="mt-3 rounded-lg border border-line bg-warm p-2.5 text-xs leading-5 text-muted">
               Uploading replacement documents creates a new review entry. Previously approved credentials remain valid until review completes.
             </div>
           </Card>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-slate-900">Identity and affiliation</h2>
+            <h2 className="text-[13px] font-semibold text-ink">Identity and affiliation</h2>
             <div className="mt-3 space-y-3">
               <div>
                 <label htmlFor="identity-reference" className={labelClass}>Identity reference</label>
@@ -516,8 +516,8 @@ export const ClinicSetupPage: React.FC = () => {
             <Building2 className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-[14px] font-semibold text-slate-900">Institution details</h2>
-            <p className="mt-0.5 text-xs text-slate-500">This information appears in the footer of clinical documents.</p>
+            <h2 className="text-[14px] font-semibold text-ink">Institution details</h2>
+            <p className="mt-0.5 text-xs text-muted">This information appears in the footer of clinical documents.</p>
           </div>
         </div>
 
@@ -536,7 +536,7 @@ export const ClinicSetupPage: React.FC = () => {
           <div className="sm:col-span-2">
             <label htmlFor="clinic-address" className={labelClass}>Address</label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted" />
               <textarea id="clinic-address" rows={2} value={clinic.address} onChange={(event) => setClinic({ address: event.target.value })} className={`${fieldClass} pl-9`} />
             </div>
           </div>
@@ -552,11 +552,11 @@ export const ClinicSetupPage: React.FC = () => {
             <label htmlFor="clinic-email" className={labelClass}>Clinic email</label>
             <input id="clinic-email" type="email" value={clinic.contactEmail} onChange={(event) => setClinic({ contactEmail: event.target.value })} className={fieldClass} />
           </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+          <div className="rounded-xl border border-line bg-warm p-3">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-body">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Access model
             </p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-1 text-xs leading-5 text-muted">
               Only authorized clinicians listed below can be assigned patients under this institution.
             </p>
           </div>
@@ -566,27 +566,27 @@ export const ClinicSetupPage: React.FC = () => {
       <Card>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[14px] font-semibold text-slate-900">Other authorized clinicians</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Optional. These colleagues can receive referrals or co-manage patients.</p>
+            <h2 className="text-[14px] font-semibold text-ink">Other authorized clinicians</h2>
+            <p className="mt-0.5 text-xs text-muted">Optional. These colleagues can receive referrals or co-manage patients.</p>
           </div>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-600">
+          <span className="rounded-full border border-line bg-warm px-2.5 py-1 text-xs font-bold text-body">
             {clinic.otherClinicians.length} listed
           </span>
         </div>
 
         <div className="space-y-2">
           {clinic.otherClinicians.map((clinician) => (
-            <div key={clinician.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
+            <div key={clinician.id} className="flex items-center justify-between gap-3 rounded-xl border border-line p-3">
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-slate-800">{clinician.name}</p>
-                <p className="truncate text-xs text-slate-500">{clinician.role} · {clinician.email}</p>
+                <p className="truncate text-xs text-muted">{clinician.role} · {clinician.email}</p>
               </div>
-              <button type="button" onClick={() => removeClinician(clinician.id)} className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600" aria-label={`Remove ${clinician.name}`}>
+              <button type="button" onClick={() => removeClinician(clinician.id)} className="rounded-lg p-1.5 text-muted hover:bg-rose-50 hover:text-rose-600" aria-label={`Remove ${clinician.name}`}>
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
-          {clinic.otherClinicians.length === 0 && <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-500">No additional clinicians listed.</p>}
+          {clinic.otherClinicians.length === 0 && <p className="rounded-xl border border-dashed border-line-strong bg-warm p-3 text-xs text-muted">No additional clinicians listed.</p>}
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_1.2fr_auto]">

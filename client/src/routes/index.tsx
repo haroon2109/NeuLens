@@ -53,6 +53,11 @@ const AssessmentQualityReportPage = lazyPage(() => import('../features/patient/p
 const PersonalBaselineReportPage = lazyPage(() => import('../features/patient/portal/PatientAssessmentPages'), 'PersonalBaselineReportPage');
 const AssessmentReportPage = lazyPage(() => import('../features/patient/portal/PatientAssessmentPages'), 'AssessmentReportPage');
 
+const CognitiveHubPage = lazyPage(() => import('../features/cognitive/CognitiveHubPage'), 'CognitiveHubPage');
+const CognitiveTaskLibraryPage = lazyPage(() => import('../features/cognitive/CognitiveTaskLibraryPage'), 'CognitiveTaskLibraryPage');
+const CognitiveSessionDetailPage = lazyPage(() => import('../features/cognitive/CognitiveSessionDetailPage'), 'CognitiveSessionDetailPage');
+const PatientAssessmentConditionsPage = lazyPage(() => import('../features/cognitive/PatientAssessmentConditionsPage'), 'PatientAssessmentConditionsPage');
+
 const BrainHealthOverviewPage = lazyPage(() => import('../features/patient/portal/PatientMonitoringPages'), 'BrainHealthOverviewPage');
 const AssessmentHistoryPage = lazyPage(() => import('../features/patient/portal/PatientMonitoringPages'), 'AssessmentHistoryPage');
 const LongitudinalTrendsPage = lazyPage(() => import('../features/patient/portal/PatientMonitoringPages'), 'LongitudinalTrendsPage');
@@ -105,6 +110,7 @@ const ClinicSetupPage = lazyPage(() => import('../features/doctor/portal/DoctorO
 const AddPatientPage = lazyPage(() => import('../features/doctor/portal/DoctorPatientScreens'), 'AddPatientPage');
 const DoctorPatientOverviewPage = lazyPage(() => import('../features/doctor/portal/DoctorPatientScreens'), 'DoctorPatientOverviewPage');
 
+const DoctorCognitivePage = lazyPage(() => import('../features/doctor/DoctorCognitivePage'), 'DoctorCognitivePage');
 const DoctorAssessmentReviewPage = lazyPage(() => import('../features/doctor/portal/DoctorClinicalReviewPages'), 'DoctorAssessmentReviewPage');
 const DoctorLongitudinalPage = lazyPage(() => import('../features/doctor/portal/DoctorClinicalReviewPages'), 'DoctorLongitudinalPage');
 
@@ -136,7 +142,7 @@ const DoctorProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (user?.role === 'PATIENT') {
-    return <Navigate to="/patient" replace />;
+    return <Navigate to="/patient/dashboard" replace />;
   }
 
   // Unverified or institutional accounts never reach patient records
@@ -266,6 +272,11 @@ export const router = createBrowserRouter([
         element: <PatientProtectedRoute><PatientPortalLayout /></PatientProtectedRoute>,
         children: [
           { path: 'dashboard', element: <PatientDashboardPage /> },
+
+          { path: 'cognitive', element: <CognitiveHubPage /> },
+          { path: 'cognitive/library', element: <CognitiveTaskLibraryPage /> },
+          { path: 'cognitive/history/:assessmentId', element: <CognitiveSessionDetailPage /> },
+          { path: 'context/assessment-conditions', element: <PatientAssessmentConditionsPage /> },
 
           { path: 'assessment/intro', element: <AssessmentIntroductionPage /> },
           { path: 'assessment/cognitive', element: <CognitiveAssessmentPage /> },
@@ -451,6 +462,10 @@ export const router = createBrowserRouter([
           {
             path: 'change-detection',
             element: <ChangeDetectionQueuePage />
+          },
+          {
+            path: 'cognitive',
+            element: <DoctorCognitivePage />
           },
           {
             path: 'review-queue',

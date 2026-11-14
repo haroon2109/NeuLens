@@ -90,7 +90,7 @@ export const DoctorDashboardPage: React.FC = () => {
         );
       case 'REVIEWED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-warm text-body border border-line">
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
             Reviewed
           </span>
@@ -124,7 +124,7 @@ export const DoctorDashboardPage: React.FC = () => {
       {/* ---------------------------------------------------------------- */}
       {/* TOP CLINICAL HEADER                                              */}
       {/* ---------------------------------------------------------------- */}
-      <MotionReveal><div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] items-stretch bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+      <MotionReveal><div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] items-stretch bg-white p-6 rounded-2xl border border-line shadow-card">
         <div className="flex flex-col justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -132,12 +132,12 @@ export const DoctorDashboardPage: React.FC = () => {
                 <Stethoscope className="w-3 h-3" />
                 Department of Neurology
               </span>
-              <span className="text-xs text-slate-400">| Clinical screening & longitudinal review</span>
+              <span className="text-xs text-muted">| Clinical screening & longitudinal review</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-ink font-display">
               Physician Overview Dashboard
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            <p className="text-xs sm:text-sm text-muted mt-0.5">
               Review queue, flagged changes, patient intake, and longitudinal brain-health observations for clinician-led follow-up.
             </p>
           </div>
@@ -145,18 +145,18 @@ export const DoctorDashboardPage: React.FC = () => {
             <button
               onClick={fetchStats}
               disabled={loading}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-warm hover:bg-slate-200 text-body text-xs font-bold transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               Refresh Data
             </button>
-            <Link to="/doctor/review-queue" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#2F5E4E] hover:bg-[#24493D] text-white text-xs font-bold shadow-sm transition-all">
+            <Link to="/doctor/review-queue" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#2F5E4E] hover:bg-[#24493D] text-white text-xs font-bold shadow-card transition-all">
               <ClipboardCheck className="w-4 h-4" /> Clinical Review Queue
             </Link>
-            <Link to="/doctor/change-detection" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all">
+            <Link to="/doctor/change-detection" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-line bg-white hover:bg-warm text-body text-xs font-bold transition-all">
               <AlertTriangle className="w-4 h-4 text-amber-600" /> Flagged changes
             </Link>
-            <Link to="/doctor/patients" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all">
+            <Link to="/doctor/patients" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-line bg-white hover:bg-warm text-body text-xs font-bold transition-all">
               <Users className="w-4 h-4" /> Patient Directory
             </Link>
           </div>
@@ -170,9 +170,9 @@ export const DoctorDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
         {/* Card 1: Total Patients */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-2xl border border-line shadow-card hover:border-line-strong transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em]">
               Enrolled Patients
             </span>
             <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -180,19 +180,19 @@ export const DoctorDashboardPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-slate-900 font-display">
+            <div className="text-3xl font-semibold text-ink font-display">
               {stats?.totalPatients ?? '—'}
             </div>
-            <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
+            <div className="text-xs text-muted mt-1 flex items-center gap-1 font-medium">
               <span>Unique IDs registered on the platform</span>
             </div>
           </div>
         </div>
 
         {/* Card 2: Screenings Today */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-2xl border border-line shadow-card hover:border-line-strong transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em]">
               Screenings Today
             </span>
             <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -200,19 +200,19 @@ export const DoctorDashboardPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-slate-900 font-display">
+            <div className="text-3xl font-semibold text-ink font-display">
               {stats?.assessmentsToday ?? '—'}
             </div>
-            <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
+            <div className="text-xs text-muted mt-1 flex items-center gap-1 font-medium">
               <span>Sessions completed in last 24h</span>
             </div>
           </div>
         </div>
 
         {/* Card 3: Completed Total */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-2xl border border-line shadow-card hover:border-line-strong transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em]">
               Total Assessments
             </span>
             <div className="w-10 h-10 rounded-2xl bg-medical-50 text-medical-600 flex items-center justify-center">
@@ -220,19 +220,19 @@ export const DoctorDashboardPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-slate-900 font-display">
+            <div className="text-3xl font-semibold text-ink font-display">
               {stats?.completedAssessments ?? '—'}
             </div>
-            <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
+            <div className="text-xs text-muted mt-1 flex items-center gap-1 font-medium">
               <span>Multimodal AI batteries stored</span>
             </div>
           </div>
         </div>
 
         {/* Card 4: Pending Review */}
-        <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-2xl border border-line shadow-card hover:border-line-strong transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-[0.12em]">
               Pending Reviews
             </span>
             <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -240,7 +240,7 @@ export const DoctorDashboardPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <div className="text-3xl font-extrabold text-amber-600 font-display">
+            <div className="text-3xl font-semibold text-amber-600 font-display">
               {stats?.pendingReviews ?? '—'}
             </div>
             <div className="text-xs text-amber-700/80 mt-1 flex items-center gap-1 font-medium">
@@ -251,17 +251,17 @@ export const DoctorDashboardPage: React.FC = () => {
 
       </div>
 
-      <section className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <section className="bg-white rounded-2xl border border-line shadow-card overflow-hidden">
+        <div className="p-6 border-b border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-medical-600" />
-              <h2 className="text-lg font-bold text-slate-900 font-display">Longitudinal change cues</h2>
+              <h2 className="text-lg font-bold text-ink font-display">Longitudinal change cues</h2>
               <span className="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
                 {stats?.changeReviewCount ?? '—'} to review
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted mt-1">
               A score below an observed comparable baseline, newly reported daily-activity difficulty, or worsening context prompts clinician review, not diagnosis.
             </p>
           </div>
@@ -271,19 +271,19 @@ export const DoctorDashboardPage: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="p-6 text-sm text-slate-400">Loading change comparisons…</div>
+          <div className="p-6 text-sm text-muted">Loading change comparisons…</div>
         ) : (stats?.changeReviewQueue.length || 0) > 0 ? (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-line">
             {stats?.changeReviewQueue.slice(0, 5).map((cue) => (
               <li key={cue.patientId} className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <Link
                     to={`/doctor/patients/${cue.patientId}`}
-                    className="font-bold text-sm text-slate-900 hover:text-medical-700"
+                    className="font-bold text-sm text-ink hover:text-medical-700"
                   >
                     {cue.patientName}
                   </Link>
-                  <span className="ml-2 font-mono text-xs text-slate-400">{cue.patientId}</span>
+                  <span className="ml-2 font-mono text-xs text-muted">{cue.patientId}</span>
                   <div className="flex flex-wrap gap-2 mt-1.5">
                     {cue.reviewReasons.includes('OUTSIDE_OBSERVED_BASELINE') && (
                       <span className="text-xs font-semibold text-amber-800">
@@ -304,7 +304,7 @@ export const DoctorDashboardPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   {cue.cognitiveChange !== null && (
-                    <span className={`text-xs font-bold ${cue.cognitiveChange < 0 ? 'text-amber-700' : 'text-slate-500'}`}>
+                    <span className={`text-xs font-bold ${cue.cognitiveChange < 0 ? 'text-amber-700' : 'text-muted'}`}>
                       Score change {cue.cognitiveChange > 0 ? '+' : ''}{cue.cognitiveChange} points
                     </span>
                   )}
@@ -319,7 +319,7 @@ export const DoctorDashboardPage: React.FC = () => {
             ))}
           </ul>
         ) : (
-          <div className="p-6 text-sm text-slate-500">
+          <div className="p-6 text-sm text-muted">
             No current comparison cues. Continue periodic screening and daily-activity check-ins to establish a trend.
           </div>
         )}
@@ -328,7 +328,7 @@ export const DoctorDashboardPage: React.FC = () => {
       {/* ---------------------------------------------------------------- */}
       {/* HOSPITAL AI PROTOCOL BANNER                                      */}
       {/* ---------------------------------------------------------------- */}
-      <div className="bg-gradient-to-r from-medical-900 via-slate-900 to-blue-950 p-6 rounded-3xl text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-slate-800">
+      <div className="bg-gradient-to-r from-medical-900 via-slate-900 to-blue-950 p-6 rounded-2xl text-white shadow-elevated flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-slate-800">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/20 text-white flex items-center gap-1">
@@ -360,15 +360,15 @@ export const DoctorDashboardPage: React.FC = () => {
       {/* ---------------------------------------------------------------- */}
       {/* RECENT CLINICAL ASSESSMENTS QUEUE TABLE                          */}
       {/* ---------------------------------------------------------------- */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-line shadow-card overflow-hidden">
         
         {/* Table Toolbar */}
-        <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="p-6 border-b border-line flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 font-display">
+            <h2 className="text-lg font-bold text-ink font-display">
               Clinical Assessment Triage Queue
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted">
               Select any assessment to inspect recorded responses or sign off on the clinical report.
             </p>
           </div>
@@ -376,24 +376,24 @@ export const DoctorDashboardPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Filter */}
             <div className="relative min-w-[240px]">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search patient name or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 font-medium"
+                className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-warm border border-line focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 font-medium"
               />
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+            <div className="flex items-center gap-1 bg-warm p-1 rounded-xl text-xs font-semibold">
               <button
                 onClick={() => setStatusFilter('ALL')}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   statusFilter === 'ALL'
-                    ? 'bg-white text-slate-900 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-ink shadow-card font-bold'
+                    : 'text-body hover:text-ink'
                 }`}
               >
                 All
@@ -402,8 +402,8 @@ export const DoctorDashboardPage: React.FC = () => {
                 onClick={() => setStatusFilter('PENDING')}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   statusFilter === 'PENDING'
-                    ? 'bg-white text-blue-700 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-blue-700 shadow-card font-bold'
+                    : 'text-body hover:text-ink'
                 }`}
               >
                 Pending
@@ -412,8 +412,8 @@ export const DoctorDashboardPage: React.FC = () => {
                 onClick={() => setStatusFilter('HIGH_RISK')}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   statusFilter === 'HIGH_RISK'
-                    ? 'bg-white text-rose-700 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-rose-700 shadow-card font-bold'
+                    : 'text-body hover:text-ink'
                 }`}
               >
                 High Risk
@@ -422,8 +422,8 @@ export const DoctorDashboardPage: React.FC = () => {
                 onClick={() => setStatusFilter('REVIEWED')}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
                   statusFilter === 'REVIEWED'
-                    ? 'bg-white text-slate-900 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-ink shadow-card font-bold'
+                    : 'text-body hover:text-ink'
                 }`}
               >
                 Reviewed
@@ -434,21 +434,21 @@ export const DoctorDashboardPage: React.FC = () => {
 
         {/* Table Content */}
         {loading ? (
-          <div className="p-12 text-center text-slate-400 space-y-3">
+          <div className="p-12 text-center text-muted space-y-3">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-medical-600" />
             <p className="text-sm font-medium">Loading clinical assessment queue...</p>
           </div>
         ) : filteredAssessments.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 space-y-2">
+          <div className="p-12 text-center text-muted space-y-2">
             <ClipboardCheck className="w-10 h-10 mx-auto text-slate-300" />
-            <p className="text-sm font-semibold text-slate-700">No assessments found matching filter</p>
-            <p className="text-xs text-slate-400">Try modifying your search or filter options.</p>
+            <p className="text-sm font-semibold text-body">No assessments found matching filter</p>
+            <p className="text-xs text-muted">Try modifying your search or filter options.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/70 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <tr className="bg-warm/70 border-b border-line text-xs font-bold text-muted uppercase tracking-[0.12em]">
                   <th className="py-3 px-6">Patient Identifier</th>
                   <th className="py-3 px-6">Patient Name & Age</th>
                   <th className="py-3 px-6">Screening Date</th>
@@ -458,9 +458,9 @@ export const DoctorDashboardPage: React.FC = () => {
                   <th className="py-3 px-6 text-right">Clinical Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
+              <tbody className="divide-y divide-line text-xs">
                 {filteredAssessments.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors group">
+                  <tr key={item.id} className="hover:bg-warm/60 transition-colors group">
                     
                     {/* Patient ID */}
                     <td className="py-4 px-6 font-mono font-bold text-medical-700">
@@ -474,12 +474,12 @@ export const DoctorDashboardPage: React.FC = () => {
 
                     {/* Patient Name */}
                     <td className="py-4 px-6">
-                      <div className="font-bold text-slate-900">{item.patientName}</div>
-                      <div className="text-xs text-slate-400">{item.age} years old</div>
+                      <div className="font-bold text-ink">{item.patientName}</div>
+                      <div className="text-xs text-muted">{item.age} years old</div>
                     </td>
 
                     {/* Date */}
-                    <td className="py-4 px-6 text-slate-500 font-medium">
+                    <td className="py-4 px-6 text-muted font-medium">
                       {new Date(item.date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -491,10 +491,10 @@ export const DoctorDashboardPage: React.FC = () => {
                     {/* Score */}
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-slate-900 text-sm">
+                        <span className="font-semibold text-ink text-sm">
                           {Math.round(item.score)}
                         </span>
-                        <span className="text-xs text-slate-400">/ 100</span>
+                        <span className="text-xs text-muted">/ 100</span>
                       </div>
                     </td>
 
@@ -519,7 +519,7 @@ export const DoctorDashboardPage: React.FC = () => {
                       </Link>
                       <Link
                         to={`/doctor/patients/${item.patientId}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all text-xs font-semibold"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-muted hover:text-slate-800 hover:bg-warm transition-all text-xs font-semibold"
                       >
                         Patient File
                         <ChevronRight className="w-3.5 h-3.5" />

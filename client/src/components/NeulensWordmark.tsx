@@ -20,8 +20,8 @@ export const NeulensWordmark: React.FC<NeulensWordmarkProps> = ({
     role="img"
     aria-label="Neulens"
   >
-    <span className="text-slate-900">Neu</span>
-    <span className="text-blue-600">Lens</span>
+    <span className="text-ink">Neu</span>
+    <span className="text-forest">Lens</span>
   </span>
 );
 

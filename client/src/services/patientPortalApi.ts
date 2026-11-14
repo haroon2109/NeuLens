@@ -150,13 +150,17 @@ export interface PatientOverview {
 
 export const patientPortalApi = {
   async getOverview(): Promise<PatientOverview> {
+    // Baseline and brain-health legitimately return 404 until the patient has
+    // enough history. Those are empty states, not a failure of the whole
+    // overview, so each optional resource settles independently.
+    const optional = <T,>(promise: Promise<T | null>) => promise.catch(() => null);
     const [assessments, baseline, longitudinal, changes, context, brainHealth] = await Promise.all([
       request<{ assessments: PatientAssessmentRecord[] }>('/patient/assessments'),
-      request<{ baseline: BaselineRecord }>('/baseline'),
-      request<{ records: LongitudinalRecord[] }>('/longitudinal'),
-      request<{ detections: ChangeDetectionRecord[] }>('/change-detection'),
-      request<{ inputs: ContextInputRecord[] }>('/context-inputs'),
-      request<{ profile: BrainHealthProfileRecord }>('/brain-health')
+      optional(request<{ baseline: BaselineRecord }>('/baseline')),
+      optional(request<{ records: LongitudinalRecord[] }>('/longitudinal')),
+      optional(request<{ detections: ChangeDetectionRecord[] }>('/change-detection')),
+      optional(request<{ inputs: ContextInputRecord[] }>('/context-inputs')),
+      optional(request<{ profile: BrainHealthProfileRecord }>('/brain-health'))
     ]);
 
     return {

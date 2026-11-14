@@ -31,7 +31,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { usePatientPortalStore } from '../../../store/patientPortalStore';
 import { patientPortalApi } from '../../../services/patientPortalApi';
 
-type NavItem = { path: string; label: string; icon: LucideIcon };
+type NavItem = { path: string; label: string; icon: LucideIcon; end?: boolean };
 type NavGroup = { label: string; items: NavItem[] };
 
 const navGroups: NavGroup[] = [
@@ -47,6 +47,8 @@ const navGroups: NavGroup[] = [
     label: 'Assessment',
     items: [
       { path: '/patient/assessment/intro', label: 'Start assessment', icon: Sparkles },
+      { path: '/patient/cognitive', label: 'Cognitive assessment', icon: Brain, end: true },
+      { path: '/patient/cognitive/library', label: 'Task library', icon: ClipboardList },
       { path: '/patient/history', label: 'History', icon: ClipboardList },
       { path: '/patient/daily-function', label: 'Daily Function Questionnaire', icon: ClipboardList },
       { path: '/patient/documents', label: 'Reports & documents', icon: FileText }
@@ -63,7 +65,8 @@ const navGroups: NavGroup[] = [
     label: 'Health context',
     items: [
       { path: '/patient/health-profile', label: 'Health Profile & Context', icon: HeartPulse },
-      { path: '/patient/context', label: 'Context overview', icon: HeartPulse },
+      { path: '/patient/context', label: 'Context overview', icon: HeartPulse, end: true },
+      { path: '/patient/context/assessment-conditions', label: 'Assessment conditions', icon: Activity },
       { path: '/patient/context/sleep', label: 'Sleep & lifestyle', icon: Moon },
       { path: '/patient/context/wellbeing', label: 'Mental wellbeing', icon: Users },
       { path: '/patient/context/clinical', label: 'Clinical & family', icon: Stethoscope }
@@ -89,10 +92,10 @@ const navGroups: NavGroup[] = [
   }
 ];
 
-const textSizeClass = {
-  normal: 'text-[14px]',
-  large: 'text-[16px] [&_h1]:text-[32px] [&_h2]:text-[17px] [&_p]:text-[14px]',
-  xlarge: 'text-[18px] [&_h1]:text-[36px] [&_h2]:text-[19px] [&_p]:text-[16px]'
+const textSizeClass: Record<string, string> = {
+  normal: '',
+  large: 'pp-text-lg',
+  xlarge: 'pp-text-xl'
 };
 
 const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => {
@@ -108,62 +111,69 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
     navigate('/patient/login', { replace: true });
   };
 
+  const nameParts = (user?.name || 'Patient').split(' ').filter(Boolean);
+  const initials = nameParts.map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+
   return (
-    <div className="flex h-full flex-col">
-      <Link to="/patient/dashboard" className="flex items-center gap-2.5 px-5 py-5" onClick={onNavigate}>
-        <NeulensLogoMark className="h-9 w-9" />
-        <span>
+    <div className="flex h-full min-h-0 flex-col">
+      {/* Brand */}
+      <Link
+        to="/patient/dashboard"
+        className="flex items-center gap-2.5 px-5 py-5 text-decoration-none"
+        onClick={onNavigate}
+      >
+        <NeulensLogoMark className="h-9 w-9" aria-hidden="true" />
+        <span className="flex flex-col">
           <NeulensWordmark size="small" />
-          <span className="mt-0.5 block text-xs font-medium text-slate-500">Patient portal</span>
+          <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
+            Patient portal
+          </span>
         </span>
       </Link>
 
-      <div className="mx-4 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      {/* User card — mint surface, matching NeuLens identity */}
+      <div className="mx-4 mb-4 rounded-xl border border-line p-3 bg-mint">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-[12px] font-bold text-blue-800">
-            {(user?.name || 'Patient')
-              .split(' ')
-              .filter(Boolean)
-              .map((part) => part[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()}
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[12px] font-bold text-forest shadow-xs">
+            {initials}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[12px] font-semibold text-slate-900">
+            <span className="block truncate text-[13px] font-semibold text-ink">
               {user?.name || 'Patient'}
             </span>
-            <span className="mt-0.5 block font-mono text-xs text-slate-500">
+            <span className="mt-0.5 block font-mono text-[11px] text-muted">
               {user?.patientId || 'CV-2026-ACTIVE'}
             </span>
           </span>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 pb-4" aria-label="Patient portal navigation">
+      {/* Navigation — sage-tinted section labels, forest active state */}
+      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4" aria-label="Patient portal navigation">
         {navGroups.map((group) => (
           <div key={group.label} className="mb-4">
-            <p className="px-3 pb-1.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+            <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-sage-deep">
               {group.label}
             </p>
             <ul className="space-y-0.5">
-              {group.items.map(({ path, label, icon: Icon }) => (
+              {group.items.map(({ path, label, icon: Icon, end }) => (
                 <li key={path}>
                   <NavLink
                     to={path}
+                    end={end}
                     onClick={onNavigate}
                     className={({ isActive }) =>
-                      `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[12px] font-medium transition ${
+                      `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
                         isActive
-                          ? 'bg-blue-50 text-blue-800'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          ? 'bg-mint text-forest font-semibold'
+                          : 'text-body hover:bg-white/60 hover:text-ink'
                       }`
                     }
                   >
-                    <Icon className="h-4 w-4" strokeWidth={1.8} />
+                    <Icon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
                     <span className="flex-1">{label}</span>
                     {path === '/patient/notifications' && notifications.some((item) => !item.read) && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                      <span className="h-2 w-2 rounded-full bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]" aria-label="Unread notification" />
                     )}
                   </NavLink>
                 </li>
@@ -173,13 +183,14 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
         ))}
       </nav>
 
-      <div className="border-t border-slate-200 p-3">
+      {/* Sign out */}
+      <div className="border-t border-line p-3">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[12px] font-semibold text-slate-600 transition hover:bg-rose-50 hover:text-rose-700"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-body transition-colors hover:bg-rose-50 hover:text-rose-700"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4" aria-hidden="true" />
           Sign out
         </button>
       </div>
@@ -235,94 +246,113 @@ export const PatientPortalLayout: React.FC = () => {
   }, [user?.id, setAppointments]);
 
   const activeLabel =
-    navGroups.flatMap((group) => group.items).find((item) => location.pathname.startsWith(item.path))?.label ||
-    'Patient portal';
+    navGroups
+      .flatMap((group) => group.items)
+      .filter((item) =>
+        item.end
+          ? location.pathname === item.path
+          : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+      )
+      .sort((a, b) => b.path.length - a.path.length)[0]?.label || 'Patient portal';
 
   // A suspended account keeps its record but loses portal access.
   if (user?.status === 'SUSPENDED' || user?.status === 'WITHDRAWN') {
     return <Navigate to="/account-suspended" replace />;
   }
 
+  const contentClass = [
+    'patient-portal',
+    accessibility.highContrast ? 'patient-contrast' : '',
+    textSizeClass[accessibility.textSize]
+  ].filter(Boolean).join(' ');
+
+  const initials = (user?.name || 'P')
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
-    <div
-      className={`patient-portal min-h-screen bg-[#FBF7EF] text-slate-800 ${
-        accessibility.highContrast ? 'patient-contrast' : ''
-      } ${textSizeClass[accessibility.textSize]}`}
-    >
+    <div className={`${contentClass} min-h-screen bg-warm text-ink`}>
+      {/* Skip link */}
       <a
         href="#patient-main"
-        className="sr-only z-50 rounded-lg bg-blue-800 px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        className="sr-only z-50 rounded-lg bg-forest px-4 py-2 text-white text-sm font-semibold focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50"
       >
         Skip to content
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[258px] border-r border-slate-200 bg-white lg:block">
+      {/* Sidebar — desktop */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[258px] border-r border-line bg-white lg:block">
         <SidebarContent />
       </aside>
 
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
             aria-label="Close navigation"
-            className="absolute inset-0 bg-slate-950/40"
+            className="absolute inset-0 bg-ink/40"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-[280px] border-r border-slate-200 bg-white shadow-2xl">
+          <aside className="absolute inset-y-0 left-0 flex w-[min(280px,85vw)] flex-col overflow-hidden border-r border-line bg-white shadow-2xl">
             <SidebarContent onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       )}
 
+      {/* Top layer: header + main + footer */}
       <div className="lg:pl-[258px]">
-        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-line/80 bg-white/95 backdrop-blur">
           <div className="flex h-[64px] items-center gap-3 px-4 sm:px-6">
+            {/* Mobile menu toggle */}
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 lg:hidden"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-body lg:hidden"
               onClick={() => setMobileOpen(true)}
               aria-label="Open navigation"
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
 
+            {/* Breadcrumb-ish label */}
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sage-deep">
                 Patient portal
               </p>
-              <p className="truncate text-[13px] font-semibold text-slate-800">{activeLabel}</p>
+              <p className="truncate text-[13px] font-semibold text-ink">{activeLabel}</p>
             </div>
 
+            {/* Notifications */}
             <Link
               to="/patient/notifications"
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-line text-body transition-colors hover:bg-mint"
               aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
             >
-              <Bell className="h-4 w-4" />
+              <Bell className="h-4 w-4" aria-hidden="true" />
               {unread > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-xs font-bold text-white">
-                  {unread}
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-[18px] items-center justify-center rounded-full bg-forest px-1 text-[10px] font-bold text-white">
+                  {unread > 9 ? '9+' : unread}
                 </span>
               )}
             </Link>
 
+            {/* Profile menu */}
             <Link
               to="/patient/profile"
-              className="flex items-center gap-2 rounded-lg border border-slate-200 py-1.5 pl-1.5 pr-2.5 transition hover:bg-slate-50"
+              className="flex items-center gap-2 rounded-lg border border-line py-1.5 pl-1.5 pr-2.5 transition-colors hover:bg-mint"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-800">
-                {(user?.name || 'P')
-                  .split(' ')
-                  .filter(Boolean)
-                  .map((part) => part[0])
-                  .join('')
-                  .slice(0, 2)
-                  .toUpperCase()}
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-forest shadow-xs">
+                {initials}
               </span>
-              <span className="hidden max-w-[120px] truncate text-[12px] font-semibold text-slate-800 sm:block">
+              <span className="hidden max-w-[120px] truncate text-[12px] font-semibold text-ink sm:block">
                 {user?.name || 'Patient'}
               </span>
-              <ChevronDown className="hidden h-3.5 w-3.5 text-slate-400 sm:block" />
+              <ChevronDown className="hidden h-3.5 w-3.5 text-sage-deep sm:block" aria-hidden="true" />
             </Link>
           </div>
         </header>
@@ -331,8 +361,9 @@ export const PatientPortalLayout: React.FC = () => {
           <Outlet />
         </main>
 
-        <footer className="border-t border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-[1180px] flex-col gap-1.5 px-4 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        {/* Footer */}
+        <footer className="border-t border-line bg-white">
+          <div className="mx-auto flex max-w-[1180px] flex-col gap-1.5 px-4 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <span>Neulens General Hospital · Neurology &amp; Cognitive Health</span>
             <span>Screening support, not a diagnosis. Your clinician guides next steps.</span>
           </div>

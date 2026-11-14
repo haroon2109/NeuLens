@@ -67,6 +67,38 @@ function ensureDemoPatientUser(): UserRecord {
   return user;
 }
 
+const DEMO_DOCTOR_USER_ID = 'demo-clinician-amara-okafor';
+
+/**
+ * The doctor portal signs in against the clinical user table, while the shared
+ * account endpoint uses its own account store. Seed the demo clinician into
+ * both so the documented demo credentials work from either portal.
+ */
+function ensureDemoDoctorUser(): UserRecord {
+  const existing = inMemoryUsers.find((user) => user.id === DEMO_DOCTOR_USER_ID);
+  if (existing) return existing;
+
+  const now = new Date();
+  const user: UserRecord = {
+    id: DEMO_DOCTOR_USER_ID,
+    patientId: null,
+    name: DEMO_DOCTOR.name,
+    email: DEMO_DOCTOR.email,
+    passwordHash: bcrypt.hashSync(DEMO_DOCTOR.password, 10),
+    role: 'CLINICIAN',
+    age: 0,
+    gender: 'PREFER_NOT_TO_SAY',
+    language: 'en',
+    educationYears: null,
+    handedness: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  inMemoryUsers.push(user);
+  return user;
+}
+
 function demoAssessment(
   id: string,
   date: Date,
@@ -184,6 +216,7 @@ export function seedDemoAccess(): void {
   if (!demoAccessEnabled()) return;
 
   const patient = ensureDemoPatientUser();
+  ensureDemoDoctorUser();
   ensureDemoHistory();
 
   const now = new Date();
@@ -214,7 +247,7 @@ export function seedDemoAccess(): void {
     verificationStatus: 'VERIFIED',
     emailVerified: true,
     patientId: null,
-    hospitalUserId: null,
+    hospitalUserId: DEMO_DOCTOR_USER_ID,
     specialty: 'Neurology',
     professionalRegistrationNumber: 'DEMO-REG-2026-001',
     yearsExperience: 12,

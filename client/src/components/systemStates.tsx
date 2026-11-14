@@ -18,7 +18,15 @@ import {
   WifiOff
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { Tone } from '../features/patient/portal/ui';
+import type { AnyTone, Tone } from '../features/patient/portal/ui';
+
+/** Old blue/green/slate/violet tones fold into the NeuLens palette. */
+const legacyTone: Record<string, Tone> = {
+  blue: 'mint',
+  green: 'forestSoft',
+  slate: 'sage',
+  violet: 'ink'
+};
 import {
   Dialog,
   DialogContent,
@@ -41,24 +49,25 @@ import {
  * ------------------------------------------------------------------------- */
 
 const toneStyles: Record<Tone, { wrap: string; icon: string; button: string }> = {
-  blue: { wrap: 'border-blue-200 bg-blue-50/70', icon: 'bg-blue-100 text-blue-700', button: 'bg-blue-700 hover:bg-blue-800 text-white' },
-  green: { wrap: 'border-emerald-200 bg-emerald-50/70', icon: 'bg-emerald-100 text-emerald-700', button: 'bg-emerald-700 hover:bg-emerald-800 text-white' },
-  amber: { wrap: 'border-amber-200 bg-amber-50/70', icon: 'bg-amber-100 text-amber-700', button: 'bg-amber-700 hover:bg-amber-800 text-white' },
-  rose: { wrap: 'border-rose-200 bg-rose-50/70', icon: 'bg-rose-100 text-rose-700', button: 'bg-rose-700 hover:bg-rose-800 text-white' },
-  slate: { wrap: 'border-slate-200 bg-slate-50/70', icon: 'bg-slate-100 text-slate-600', button: 'bg-slate-800 hover:bg-slate-900 text-white' },
-  violet: { wrap: 'border-violet-200 bg-violet-50/70', icon: 'bg-violet-100 text-violet-700', button: 'bg-violet-700 hover:bg-violet-800 text-white' }
+  forest: { wrap: 'border-forest/30 bg-mint/50', icon: 'bg-forest text-white', button: 'bg-forest hover:bg-forest-deep text-white' },
+  forestSoft: { wrap: 'border-sage/60 bg-mint/40', icon: 'bg-mint text-forest', button: 'bg-forest hover:bg-forest-deep text-white' },
+  mint: { wrap: 'border-mint bg-mint/40', icon: 'bg-white text-forest', button: 'bg-forest hover:bg-forest-deep text-white' },
+  amber: { wrap: 'border-amber/60 bg-amber/10', icon: 'bg-amber/15 text-amber-800', button: 'bg-amber-700 hover:bg-amber-800 text-white' },
+  rose: { wrap: 'border-rose/40 bg-rose/10', icon: 'bg-rose/15 text-rose-700', button: 'bg-rose-700 hover:bg-rose-800 text-white' },
+  sage: { wrap: 'border-line bg-warm/70', icon: 'bg-white text-sage-deep', button: 'bg-forest hover:bg-forest-deep text-white' },
+  ink: { wrap: 'border-line bg-white', icon: 'bg-ink text-white', button: 'bg-ink hover:bg-forest-deep text-white' }
 };
 
 export const stateButton =
-  'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-[14px] font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60';
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-forest px-4 py-3 text-[14px] font-semibold text-white shadow-pill transition hover:bg-forest-deep focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest disabled:cursor-not-allowed disabled:opacity-60';
 export const stateButtonSecondary =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-[14px] font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60';
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-white px-4 py-3 text-[14px] font-semibold text-ink transition hover:border-sage-dark hover:bg-warm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-forest disabled:cursor-not-allowed disabled:opacity-60';
 
 /* ------------------------------------------------------------------ panels */
 
 export const StatePanel: React.FC<{
   icon: LucideIcon;
-  tone?: Tone;
+  tone?: AnyTone;
   eyebrow?: string;
   title: string;
   description: string;
@@ -67,8 +76,9 @@ export const StatePanel: React.FC<{
   notes?: string[];
   compact?: boolean;
   illustration?: React.ReactNode;
-}> = ({ icon: Icon, tone = 'slate', eyebrow, title, description, children, actions, notes, compact = false, illustration }) => {
-  const styles = toneStyles[tone];
+}> = ({ icon: Icon, tone = 'sage', eyebrow, title, description, children, actions, notes, compact = false, illustration }) => {
+  const resolved = legacyTone[tone] ?? (tone as Tone);
+  const styles = toneStyles[resolved] ?? toneStyles.sage;
   return (
     <section
       role="status"
@@ -270,7 +280,7 @@ export const InterruptedState: React.FC<{
     ]}
     actions={
       <>
-        <button type="button" onClick={onResume} className={`${stateButton} ${toneStyles.blue.button}`}>
+        <button type="button" onClick={onResume} className={`${stateButton} ${toneStyles.forest.button}`}>
           Resume assessment
         </button>
         <button type="button" onClick={onRestart} className={stateButtonSecondary}>
@@ -303,7 +313,7 @@ export const AssessmentUnavailableState: React.FC<{
     actions={
       <>
         {onRetry && (
-          <button type="button" onClick={onRetry} className={`${stateButton} ${toneStyles.slate.button}`}>
+          <button type="button" onClick={onRetry} className={`${stateButton} ${toneStyles.sage.button}`}>
             <RefreshCw className="h-4 w-4" aria-hidden="true" /> Reload the assessment
           </button>
         )}
@@ -329,7 +339,7 @@ const findingCopy: Record<
 > = {
   NO_BASELINE: {
     icon: Brain,
-    tone: 'blue',
+    tone: 'mint',
     eyebrow: 'Baseline needed',
     title: 'No baseline yet',
     description:
@@ -354,7 +364,7 @@ const findingCopy: Record<
   },
   NO_SIGNIFICANT_CHANGE: {
     icon: CheckCircle2,
-    tone: 'green',
+    tone: 'forestSoft',
     eyebrow: 'Monitoring result',
     title: 'No significant change detected',
     description:
@@ -424,7 +434,7 @@ export const ConsentWithdrawnState: React.FC<{
     notes={withdrawn.map((item) => `${item} is switched off.`)}
     actions={
       onRestore ? (
-        <button type="button" onClick={onRestore} className={`${stateButton} ${toneStyles.violet.button}`}>
+        <button type="button" onClick={onRestore} className={`${stateButton} ${toneStyles.ink.button}`}>
           {restoreLabel}
         </button>
       ) : undefined

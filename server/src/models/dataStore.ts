@@ -1131,6 +1131,70 @@ export class HospitalDataStore {
     }
   }
 
+  /**
+   * Persists a cognitive assessment session as an Assessment record.
+   *
+   * `overallScore` is the deterministic descriptive task accuracy (0–100), not a
+   * clinical score. No diagnostic risk tier is assigned: riskLevel is UNRATED
+   * until a clinician reviews the session.
+   */
+  public static async createCognitiveAssessment(
+    userId: string,
+    data: { overallScore: number | null; taskResponses: Record<string, unknown>; recommendation?: string }
+  ): Promise<AssessmentRecord> {
+    const newRecord: AssessmentRecord = {
+      id: `assess-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      userId,
+      date: new Date(),
+      overallScore: data.overallScore ?? 0,
+      riskLevel: 'UNRATED',
+      status: 'COMPLETED',
+      reviewStatus: 'PENDING_REVIEW',
+      taskResponses: data.taskResponses,
+      eyeMetrics: null,
+      voiceMetrics: null,
+      faceMetrics: null,
+      report: {
+        id: `rep-${Date.now()}`,
+        recommendation:
+          data.recommendation ||
+          'Cognitive assessment session recorded. Descriptive task results only; clinician review required.',
+        doctorNotes: ''
+      }
+    };
+
+    try {
+      const created = await prisma.assessment.create({
+        data: {
+          userId,
+          overallScore: data.overallScore ?? 0,
+          riskLevel: 'UNRATED',
+          status: 'COMPLETED',
+          reviewStatus: 'PENDING_REVIEW',
+          taskResponses: data.taskResponses as Prisma.InputJsonValue,
+          report: {
+            create: {
+              recommendation:
+                data.recommendation ||
+                'Cognitive assessment session recorded. Descriptive task results only; clinician review required.',
+              doctorNotes: ''
+            }
+          }
+        },
+        include: { eyeMetrics: true, voiceMetrics: true, faceMetrics: true, report: true }
+      });
+      inMemoryAssessments.unshift(created as unknown as AssessmentRecord);
+      return created as unknown as AssessmentRecord;
+    } catch (e) {
+      console.error('[HospitalDataStore]: Database write failed on createCognitiveAssessment:', e instanceof Error ? e.message : e);
+      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+        throw new Error('Database storage failure: Unable to persist cognitive assessment. Operation aborted for clinical safety.');
+      }
+      inMemoryAssessments.unshift(newRecord);
+      return newRecord;
+    }
+  }
+
   // --------------------------------------------------------------------------
   // NEW METHODS — Baseline
   // --------------------------------------------------------------------------

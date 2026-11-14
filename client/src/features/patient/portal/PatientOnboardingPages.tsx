@@ -27,7 +27,7 @@ import { MotionReveal } from '../../../components/motion/Reveal';
 import { useAuthStore } from '../../../store/authStore';
 import { usePatientPortalStore, type ConsentKey } from '../../../store/patientPortalStore';
 import { patientPortalApi } from '../../../services/patientPortalApi';
-import { Card, Pill, Toggle } from './ui';
+import { Card, Pill, Toggle, formatDate } from './ui';
 
 const steps = [
   { label: 'Welcome', path: '/patient/welcome' },
@@ -37,6 +37,18 @@ const steps = [
   { label: 'Accessibility', path: '/patient/onboarding/accessibility' }
 ];
 
+const fieldClass =
+  'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[13px] text-ink outline-none transition-colors placeholder:text-muted focus:border-forest focus:ring-4 focus:ring-forest/12';
+const labelClass = 'mb-1.5 block text-[12px] font-semibold text-ink';
+const primaryButton =
+  'pp-btn pp-btn-primary pp-btn-sm inline-flex min-h-11 items-center justify-center gap-2 rounded-xl';
+const secondaryButton =
+  'pp-btn pp-btn-secondary pp-btn-sm inline-flex min-h-11 items-center justify-center gap-2';
+
+/**
+ * Onboarding shell — one NeuLens card, sage eyebrow, warm page background,
+ * mint/forest progress steps. Preserves all existing step labels and routes.
+ */
 const OnboardingShell: React.FC<{
   step: number;
   eyebrow: string;
@@ -45,25 +57,27 @@ const OnboardingShell: React.FC<{
   children: React.ReactNode;
   backTo?: string;
 }> = ({ step, eyebrow, title, description, children, backTo }) => (
-  <div className="min-h-screen bg-[#FBF7EF] text-slate-800">
-    <header className="border-b border-slate-200 bg-white">
+  <div className="min-h-screen bg-warm text-ink">
+    <header className="border-b border-line bg-white">
       <div className="mx-auto flex h-[68px] max-w-5xl items-center justify-between px-4 sm:px-6">
-        <Link to="/patient/welcome" className="flex items-center gap-2.5" aria-label="NeuLens patient portal">
-          <NeulensLogoMark className="h-9 w-9" />
+        <Link to="/patient/welcome" className="flex items-center gap-2.5 text-decoration-none" aria-label="NeuLens patient portal">
+          <NeulensLogoMark className="h-9 w-9" aria-hidden="true" />
           <NeulensWordmark size="small" />
         </Link>
         {backTo && (
           <Link
             to={backTo}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+            className="pp-btn pp-btn-ghost pp-btn-sm inline-flex items-center gap-1.5 rounded-full"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Back
           </Link>
         )}
       </div>
     </header>
 
     <main className="mx-auto w-full max-w-5xl px-4 py-7 sm:px-6 sm:py-10">
+      {/* Progress steps — sage/forest/mint */}
       <ol className="mb-7 grid grid-cols-5 gap-1.5" aria-label="Onboarding progress">
         {steps.map((item, index) => {
           const state = index < step ? 'done' : index === step ? 'current' : 'upcoming';
@@ -71,12 +85,12 @@ const OnboardingShell: React.FC<{
             <li key={item.label}>
               <div
                 className={`h-1.5 rounded-full ${
-                  state === 'done' ? 'bg-emerald-500' : state === 'current' ? 'bg-blue-600' : 'bg-slate-200'
+                  state === 'done' ? 'bg-forest' : state === 'current' ? 'bg-forest' : 'bg-line'
                 }`}
               />
               <span
-                className={`mt-2 block truncate text-xs font-semibold ${
-                  state === 'current' ? 'text-blue-700' : state === 'done' ? 'text-emerald-700' : 'text-slate-400'
+                className={`mt-2 block truncate text-[11px] font-semibold ${
+                  state === 'current' ? 'text-forest' : state === 'done' ? 'text-forest' : 'text-muted'
                 }`}
               >
                 {index + 1}. {item.label}
@@ -86,27 +100,21 @@ const OnboardingShell: React.FC<{
         })}
       </ol>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-42px_rgba(15,23,42,0.4)] sm:p-8">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
-          <Sparkles className="h-3.5 w-3.5" /> {eyebrow}
+      {/* Card — NeuLens pp-card with mint header strip */}
+      <div className="pp-card-deep p-5 shadow-[0_18px_50px_-42px_rgba(27,51,43,0.4)] sm:p-8">
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+          <Sparkles className="h-3.5 w-3.5 text-sage-deep" aria-hidden="true" />
+          {eyebrow}
         </div>
-        <h1 className="mt-2 max-w-2xl text-[26px] font-semibold leading-tight tracking-[-0.035em] text-slate-950 sm:text-[32px]">
+        <h1 className="mt-2 max-w-2xl text-[26px] font-semibold leading-tight tracking-[-0.035em] text-ink sm:text-[32px]">
           {title}
         </h1>
-        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-slate-600">{description}</p>
+        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-body">{description}</p>
         <div className="mt-6">{children}</div>
       </div>
     </main>
   </div>
 );
-
-const fieldClass =
-  'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[13px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100';
-const labelClass = 'mb-1.5 block text-[12px] font-semibold text-slate-700';
-const primaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 text-[13px] font-bold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50';
-const secondaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-50';
 
 // ---------------------------------------------------------------------------
 // Screen 15 — Patient Welcome
@@ -125,15 +133,16 @@ export const PatientWelcomePage: React.FC = () => {
       description="NeuLens brings short, guided activities together so you and your care team can build a clearer picture of your brain health over time."
     >
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+        <div className="rounded-2xl border border-line bg-warm/70 p-4 sm:p-5">
           <MotionReveal className="mb-4">
             <HealthcareScene
               kind="registration"
               className="w-full"
               title="A caregiver helping Margaret begin her NeuLens onboarding"
+              animated={false}
             />
           </MotionReveal>
-          <h2 className="text-[13px] font-bold text-slate-900">What to expect</h2>
+          <h2 className="text-[13px] font-semibold text-ink">What to expect</h2>
           <ul className="mt-3 space-y-3">
             {[
               { icon: ClipboardCheck, title: 'A short five-part screening', detail: 'Memory, attention, eye movement, voice, and facial movement activities.' },
@@ -142,36 +151,36 @@ export const PatientWelcomePage: React.FC = () => {
               { icon: Stethoscope, title: 'Reviewed by a clinician', detail: 'Observations are shared with your care team for professional review.' }
             ].map(({ icon: Icon, title, detail }) => (
               <li key={title} className="flex items-start gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-blue-700 shadow-sm">
-                  <Icon className="h-4 w-4" />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mint text-forest shadow-xs">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span>
-                  <span className="block text-[12px] font-semibold text-slate-800">{title}</span>
-                  <span className="mt-0.5 block text-xs leading-5 text-slate-500">{detail}</span>
+                  <span className="block text-[12px] font-semibold text-ink">{title}</span>
+                  <span className="mt-0.5 block text-[11px] leading-5 text-muted">{detail}</span>
                 </span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 sm:p-5">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm">
-            <Brain className="h-6 w-6" strokeWidth={1.6} />
+        <div className="rounded-2xl border border-mint bg-mint/50 p-4 sm:p-5">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-forest shadow-xs">
+            <Brain className="h-6 w-6" strokeWidth={1.6} aria-hidden="true" />
           </span>
-          <p className="mt-3 text-[12px] font-semibold text-slate-900">Before you begin</p>
-          <p className="mt-1 text-xs leading-5 text-slate-600">
+          <p className="mt-3 text-[12px] font-semibold text-ink">Before you begin</p>
+          <p className="mt-1 text-[11px] leading-5 text-muted">
             We will ask a few questions about you, your health background, and your consent. Then you can set up the experience to suit your needs.
           </p>
           <div className="mt-4 flex flex-wrap gap-1.5">
-            <Pill tone="green">Optional breaks</Pill>
-            <Pill tone="blue">Accessible</Pill>
-            <Pill tone="slate">Private</Pill>
+            <Pill tone="mint">Optional breaks</Pill>
+            <Pill tone="forestSoft">Accessible</Pill>
+            <Pill tone="sage">Private</Pill>
           </div>
         </div>
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-xl text-xs leading-5 text-slate-500">
+      <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <p className="max-w-xl text-[11px] leading-5 text-muted">
           NeuLens identifies changes that may warrant further assessment. It does not diagnose disease or replace professional judgement.
         </p>
         <div className="flex flex-wrap gap-2">
@@ -186,7 +195,7 @@ export const PatientWelcomePage: React.FC = () => {
             onClick={() => navigate(onboardingComplete ? '/patient/dashboard' : '/patient/onboarding/personal-info')}
           >
             {onboardingComplete ? 'Open my portal' : 'Start onboarding'}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -231,7 +240,7 @@ export const PersonalInfoPage: React.FC = () => {
       backTo="/patient/welcome"
     >
       {error && (
-        <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-[12px] font-semibold text-rose-800" role="alert">
+        <p className="mb-4 rounded-xl border border-rose/60 bg-rose/10 px-3.5 py-2.5 text-[12px] font-semibold text-rose-900" role="alert">
           {error}
         </p>
       )}
@@ -321,9 +330,10 @@ export const PersonalInfoPage: React.FC = () => {
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 sm:col-span-2">
-          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">
-            <HeartPulse className="h-3.5 w-3.5" /> Emergency contact <span className="font-medium normal-case tracking-normal text-slate-400">(optional)</span>
+        <div className="rounded-xl border border-line bg-warm/70 p-3.5 sm:col-span-2">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">
+            <HeartPulse className="h-3.5 w-3.5" aria-hidden="true" />
+            Emergency contact <span className="font-medium normal-case tracking-normal text-muted">(optional)</span>
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <input
@@ -345,10 +355,14 @@ export const PersonalInfoPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
-        <Link to="/patient/welcome" className={secondaryButton}><ArrowLeft className="h-4 w-4" /> Back</Link>
+      <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
+        <Link to="/patient/welcome" className={secondaryButton}>
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back
+        </Link>
         <button type="button" className={primaryButton} onClick={handleContinue}>
-          Continue to health background <ArrowRight className="h-4 w-4" />
+          Continue to health background
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </OnboardingShell>
@@ -382,11 +396,13 @@ const ChipSelect: React.FC<{
             const withoutNone = selected.filter((value) => value !== 'None of these');
             onChange(active ? withoutNone.filter((value) => value !== option) : [...withoutNone, option]);
           }}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-            active ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+            active
+              ? 'border-forest/40 bg-mint text-forest'
+              : 'border-line bg-white text-body hover:border-sage-dark/60'
           }`}
         >
-          {active && <Check className="h-3 w-3" />}
+          {active && <Check className="h-3 w-3" aria-hidden="true" />}
           {option}
         </button>
       );
@@ -463,23 +479,30 @@ export const HealthBackgroundPage: React.FC = () => {
               <option>Yes — more than a year ago</option>
               <option>Not sure</option>
             </select>
-            <label className={`${labelClass} mt-4`} htmlFor="health-lifestyle">Relevant lifestyle information</label>
-            <textarea
-              id="health-lifestyle"
-              rows={3}
-              className={fieldClass}
-              value={health.lifestyleNotes}
-              onChange={(event) => setHealth({ lifestyleNotes: event.target.value })}
-              placeholder="Sleep, activity, work, or anything that may affect today's session"
-            />
           </div>
+        </div>
+
+        <div>
+          <label className={labelClass} htmlFor="health-lifestyle">Relevant lifestyle information</label>
+          <textarea
+            id="health-lifestyle"
+            rows={3}
+            className={fieldClass}
+            value={health.lifestyleNotes}
+            onChange={(event) => setHealth({ lifestyleNotes: event.target.value })}
+            placeholder="Sleep, activity, work, or anything that may affect today's session"
+          />
         </div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
-        <Link to="/patient/onboarding/personal-info" className={secondaryButton}><ArrowLeft className="h-4 w-4" /> Back</Link>
+      <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
+        <Link to="/patient/onboarding/personal-info" className={secondaryButton}>
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back
+        </Link>
         <button type="button" className={primaryButton} onClick={() => navigate('/patient/onboarding/consent')}>
-          Continue to consent <ArrowRight className="h-4 w-4" />
+          Continue to consent
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </OnboardingShell>
@@ -576,7 +599,7 @@ export const ConsentPrivacyPage: React.FC = () => {
       backTo="/patient/onboarding/health-background"
     >
       {error && (
-        <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-[12px] font-semibold text-rose-800" role="alert">
+        <p className="mb-4 rounded-xl border border-rose/60 bg-rose/10 px-3.5 py-2.5 text-[12px] font-semibold text-rose-900" role="alert">
           {error}
         </p>
       )}
@@ -600,36 +623,43 @@ export const ConsentPrivacyPage: React.FC = () => {
               kind="consent"
               className="w-full"
               title="Dr. Rahman explaining consent and privacy to Margaret and Harold"
+              animated={false}
             />
           </MotionReveal>
-          <Card className="bg-slate-50/60">
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-slate-600">
-              <Lock className="h-3.5 w-3.5" /> How data is handled
+          <Card className="bg-warm/70">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">
+              <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+              How data is handled
             </p>
-            <ul className="mt-3 space-y-2.5 text-xs leading-5 text-slate-600">
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />Raw video and audio are not included in your portal reports.</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />Only derived observations and task responses are stored.</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />Access is limited to verified clinicians in your care team.</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />You can withdraw optional permissions from Privacy &amp; Data Settings.</li>
+            <ul className="mt-3 space-y-2.5 text-[11px] leading-5 text-muted">
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Raw video and audio are not included in your portal reports.</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Only derived observations and task responses are stored.</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Access is limited to verified clinicians in your care team.</li>
+              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />You can withdraw optional permissions from Privacy &amp; Data Settings.</li>
             </ul>
           </Card>
-          <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-3.5">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-              <Info className="h-3.5 w-3.5" /> A note on clinical use
+          <div className="rounded-xl border border-mint bg-mint/50 p-3.5">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold text-forest">
+              <Info className="h-3.5 w-3.5" aria-hidden="true" />
+              A note on clinical use
             </p>
-            <p className="mt-1.5 text-xs leading-5 text-blue-900/80">
+            <p className="mt-1.5 text-[11px] leading-5 text-forest/80">
               NeuLens is a screening support tool. Observations are exploratory and require professional interpretation.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
-        <Link to="/patient/onboarding/health-background" className={secondaryButton}><ArrowLeft className="h-4 w-4" /> Back</Link>
+      <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:items-center">
+        <Link to="/patient/onboarding/health-background" className={secondaryButton}>
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back
+        </Link>
         <div className="flex w-full flex-col items-end gap-2 sm:w-auto">
-          {!requiredComplete && <span className="text-xs font-medium text-slate-500">Required items are marked *</span>}
+          {!requiredComplete && <span className="text-[11px] font-medium text-muted">Required items are marked *</span>}
           <button type="button" className={primaryButton} onClick={() => void handleContinue()} disabled={!requiredComplete}>
-            Accept and continue <ArrowRight className="h-4 w-4" />
+            Accept and continue
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -669,7 +699,10 @@ export const AccessibilitySetupPage: React.FC = () => {
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="space-y-4">
           <div>
-            <label className={labelClass} htmlFor="access-language"><Languages className="mr-1 inline h-3.5 w-3.5" /> Language</label>
+            <label className={labelClass} htmlFor="access-language">
+              <Languages className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+              Language
+            </label>
             <select
               id="access-language"
               className={fieldClass}
@@ -686,7 +719,10 @@ export const AccessibilitySetupPage: React.FC = () => {
           </div>
 
           <div>
-            <span className={labelClass}><Type className="mr-1 inline h-3.5 w-3.5" /> Text size</span>
+            <span className={labelClass}>
+              <Type className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+              Text size
+            </span>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { value: 'normal' as const, label: 'A', detail: 'Standard' },
@@ -698,14 +734,14 @@ export const AccessibilitySetupPage: React.FC = () => {
                   type="button"
                   onClick={() => setAccessibility({ textSize: option.value })}
                   aria-pressed={accessibility.textSize === option.value}
-                  className={`rounded-xl border px-3 py-3 text-center transition ${
+                  className={`rounded-xl border px-3 py-3 text-center transition-colors ${
                     accessibility.textSize === option.value
-                      ? 'border-blue-300 bg-blue-50 text-blue-800'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                      ? 'border-forest/40 bg-mint text-forest font-semibold'
+                      : 'border-line bg-white text-body hover:border-sage-dark/60'
                   }`}
                 >
-                  <span className="block text-[17px] font-bold">{option.label}</span>
-                  <span className="mt-0.5 block text-xs">{option.detail}</span>
+                  <span className="block text-[17px] font-bold" style={{ fontFamily: 'var(--nl-font-sans)' }}>{option.label}</span>
+                  <span className="mt-0.5 block text-[11px]">{option.detail}</span>
                 </button>
               ))}
             </div>
@@ -740,58 +776,65 @@ export const AccessibilitySetupPage: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          <Card className="bg-slate-50/60">
-            <p className="text-[12px] font-semibold text-slate-900">Camera and microphone check</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+          <Card className="bg-warm/70">
+            <p className="text-[12px] font-semibold text-ink">Camera and microphone check</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted">
               A quick check helps avoid technical interruptions. You can skip this and test later.
             </p>
             <div className="mt-3 space-y-2.5">
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3">
-                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                  <Camera className="h-4 w-4 text-slate-500" /> Camera
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
+                <span className="flex items-center gap-2 text-[12px] font-semibold text-ink">
+                  <Camera className="h-4 w-4 text-sage-deep" aria-hidden="true" />
+                  Camera
                 </span>
                 {accessibility.cameraTested ? (
-                  <Pill tone="green" dot>Ready</Pill>
+                  <Pill tone="forestSoft" dot>Ready</Pill>
                 ) : (
-                  <button type="button" className="text-xs font-bold text-blue-700" onClick={() => runTest('camera')}>
+                  <button type="button" className="text-[11px] font-bold text-forest" onClick={() => runTest('camera')}>
                     {testing === 'camera' ? 'Checking…' : 'Test camera'}
                   </button>
                 )}
               </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3">
-                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                  <Mic className="h-4 w-4 text-slate-500" /> Microphone
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
+                <span className="flex items-center gap-2 text-[12px] font-semibold text-ink">
+                  <Mic className="h-4 w-4 text-sage-deep" aria-hidden="true" />
+                  Microphone
                 </span>
                 {accessibility.micTested ? (
-                  <Pill tone="green" dot>Ready</Pill>
+                  <Pill tone="forestSoft" dot>Ready</Pill>
                 ) : (
-                  <button type="button" className="text-xs font-bold text-blue-700" onClick={() => runTest('mic')}>
+                  <button type="button" className="text-[11px] font-bold text-forest" onClick={() => runTest('mic')}>
                     {testing === 'mic' ? 'Checking…' : 'Test microphone'}
                   </button>
                 )}
               </div>
             </div>
-            <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-slate-500">
-              <AudioLines className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-5 text-muted">
+              <AudioLines className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               Device tests are illustrative in this demonstration environment.
             </p>
           </Card>
 
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3.5">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
-              <Accessibility className="h-3.5 w-3.5" /> Built for different needs
+          <div className="rounded-xl border border-forest/40 bg-mint/50 p-3.5">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold text-forest">
+              <Accessibility className="h-3.5 w-3.5" aria-hidden="true" />
+              Built for different needs
             </p>
-            <p className="mt-1.5 text-xs leading-5 text-emerald-900/80">
+            <p className="mt-1.5 text-[11px] leading-5 text-forest/80">
               Large controls, spoken guidance, and pause options are available throughout the assessment.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
-        <Link to="/patient/onboarding/consent" className={secondaryButton}><ArrowLeft className="h-4 w-4" /> Back</Link>
+      <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
+        <Link to="/patient/onboarding/consent" className={secondaryButton}>
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Back
+        </Link>
         <button type="button" className={primaryButton} onClick={finish}>
-          Finish setup and open portal <CheckCircle2 className="h-4 w-4" />
+          Finish setup and open portal
+          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </OnboardingShell>

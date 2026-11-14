@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import './portalDesignSystem.css';
 
 @tailwind base;
 @tailwind components;
@@ -80,7 +81,10 @@
   }
 
   body {
-    @apply font-sans antialiased overflow-x-hidden;
+    /* `clip` prevents sideways scrolling without creating a scroll container,
+       which would break every position: sticky header in the portals. */
+    @apply font-sans antialiased;
+    overflow-x: clip;
     background-color: var(--nl-bg);
     color: var(--nl-text-primary);
     font-family: var(--nl-font-sans);

@@ -46,7 +46,7 @@ const sortedAssessments = (assessments: DoctorAssessment[]) =>
   [...assessments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 const OverviewLink: React.FC<{ patientId: string }> = ({ patientId }) => (
-  <Link to={`/doctor/patients/${patientId}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900">
+  <Link to={`/doctor/patients/${patientId}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink">
     <ArrowLeft className="h-3.5 w-3.5" /> Patient overview
   </Link>
 );
@@ -81,8 +81,8 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
 
   const scoreDelta = assessment && previous ? Math.round(assessment.overallScore) - Math.round(previous.overallScore) : null;
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-slate-500">Loading assessment…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-slate-500">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading assessment…</div>;
+  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
 
   return (
     <div className="space-y-5">
@@ -136,8 +136,8 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
             <Card>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-[13px] font-semibold text-slate-900">Session summary</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                  <h2 className="text-[13px] font-semibold text-ink">Session summary</h2>
+                  <p className="mt-0.5 text-xs text-muted">
                     {formatDate(assessment.date)} · {assessment.assessmentType || 'Full screening battery'}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -151,24 +151,24 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <ScoreDial value={assessment.overallScore} label="Composite" />
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Previous valid</p>
-                    <p className="mt-1 text-[16px] font-semibold text-slate-900">{previous ? Math.round(previous.overallScore) : '—'}</p>
-                    <p className={`mt-1 text-xs font-semibold ${scoreDelta === null ? 'text-slate-400' : scoreDelta < -3 ? 'text-amber-700' : scoreDelta > 3 ? 'text-emerald-700' : 'text-slate-500'}`}>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Previous valid</p>
+                    <p className="mt-1 text-[16px] font-semibold text-ink">{previous ? Math.round(previous.overallScore) : '—'}</p>
+                    <p className={`mt-1 text-xs font-semibold ${scoreDelta === null ? 'text-muted' : scoreDelta < -3 ? 'text-amber-700' : scoreDelta > 3 ? 'text-emerald-700' : 'text-muted'}`}>
                       {scoreDelta === null ? 'No previous session' : `${scoreDelta > 0 ? '+' : ''}${scoreDelta} vs previous`}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
-                <label htmlFor="review-session" className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">
+              <div className="mt-4 flex flex-col gap-2 rounded-xl border border-line bg-warm p-3 sm:flex-row sm:items-center sm:justify-between">
+                <label htmlFor="review-session" className="text-xs font-bold uppercase tracking-[0.08em] text-muted">
                   View another session
                 </label>
                 <select
                   id="review-session"
                   value={selectedIndex}
                   onChange={(event) => setSelectedIndex(Number(event.target.value))}
-                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500"
+                  className="rounded-lg border border-line-strong bg-white px-2.5 py-1.5 text-xs font-semibold text-body outline-none focus:border-blue-500"
                 >
                   {ordered.map((item, index) => (
                     <option key={item.id} value={index}>
@@ -180,17 +180,17 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="text-[13px] font-semibold text-slate-900">Task completion</h2>
-              <p className="mt-0.5 text-xs text-slate-500">Missing tasks limit interpretation.</p>
+              <h2 className="text-[13px] font-semibold text-ink">Task completion</h2>
+              <p className="mt-0.5 text-xs text-muted">Missing tasks limit interpretation.</p>
               <ul className="mt-3 space-y-2">
                 {tasks.map((task) => (
                   <li key={task.id} className="flex items-start gap-2 text-xs">
                     {task.complete ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" /> : <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300" />}
-                    <span className={task.complete ? 'text-slate-700' : 'text-slate-400'}>{task.label}</span>
+                    <span className={task.complete ? 'text-body' : 'text-muted'}>{task.label}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 rounded-lg bg-slate-50 px-2.5 py-2 text-xs font-semibold text-slate-600">
+              <p className="mt-3 rounded-lg bg-warm px-2.5 py-2 text-xs font-semibold text-body">
                 {tasks.filter((task) => task.complete).length} of {tasks.length} tasks recorded
               </p>
             </Card>
@@ -206,24 +206,24 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
           <Card>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-[13px] font-semibold text-slate-900">Domain observations</h2>
-                <p className="mt-0.5 text-xs text-slate-500">Raw and derived signals from this session. Missing values are shown explicitly.</p>
+                <h2 className="text-[13px] font-semibold text-ink">Domain observations</h2>
+                <p className="mt-0.5 text-xs text-muted">Raw and derived signals from this session. Missing values are shown explicitly.</p>
               </div>
-              <Activity className="h-4 w-4 text-slate-400" />
+              <Activity className="h-4 w-4 text-muted" />
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {observations.map((domain) => {
                 const Icon = iconForDomain[domain.id] || Activity;
                 return (
-                  <div key={domain.id} className="rounded-xl border border-slate-200 p-3.5">
+                  <div key={domain.id} className="rounded-xl border border-line p-3.5">
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
                       <Icon className="h-3.5 w-3.5 text-blue-700" /> {domain.domain}
                     </p>
                     <dl className="mt-2 space-y-1.5">
                       {domain.values.map((value) => (
                         <div key={value.label} className="flex items-start justify-between gap-2">
-                          <dt className="text-xs text-slate-500">{value.label}</dt>
-                          <dd className={`text-right text-xs font-semibold ${value.value === 'Missing' ? 'text-slate-400' : 'text-slate-800'}`}>{value.value}</dd>
+                          <dt className="text-xs text-muted">{value.label}</dt>
+                          <dd className={`text-right text-xs font-semibold ${value.value === 'Missing' ? 'text-muted' : 'text-slate-800'}`}>{value.value}</dd>
                         </div>
                       ))}
                     </dl>
@@ -235,7 +235,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <h2 className="text-[13px] font-semibold text-slate-900">Session quality</h2>
+              <h2 className="text-[13px] font-semibold text-ink">Session quality</h2>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {[
                   ['Audio', qualityLabel(quality.audio)],
@@ -243,48 +243,48 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
                   ['Completion', qualityLabel(quality.completion)],
                   ['Comprehension', qualityLabel(quality.comprehension)]
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/60 p-2.5">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">{label}</p>
+                  <div key={label} className="rounded-xl border border-line bg-warm/60 p-2.5">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">{label}</p>
                     <p className="mt-1 text-xs font-semibold text-slate-800">{value}</p>
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-xs leading-4 text-slate-500">
+              <p className="mt-3 text-xs leading-4 text-muted">
                 Interruptions: {quality.interruptions}. {quality.comparable ? 'The session met the comparability requirement.' : 'This session should not be used alone to infer change.'}
               </p>
             </Card>
 
             <Card>
-              <h2 className="text-[13px] font-semibold text-slate-900">Baseline comparison</h2>
+              <h2 className="text-[13px] font-semibold text-ink">Baseline comparison</h2>
               {changeSummary ? (
                 <dl className="mt-3 space-y-2 text-xs">
-                  <div className="flex justify-between gap-3 border-b border-slate-100 pb-2">
-                    <dt className="text-slate-500">Latest score</dt>
-                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.latestScore !== null ? `${changeSummary.cognitive.latestScore} / 100` : 'Unavailable'}</dd>
+                  <div className="flex justify-between gap-3 border-b border-line pb-2">
+                    <dt className="text-muted">Latest score</dt>
+                    <dd className="font-semibold text-ink">{changeSummary.cognitive.latestScore !== null ? `${changeSummary.cognitive.latestScore} / 100` : 'Unavailable'}</dd>
                   </div>
-                  <div className="flex justify-between gap-3 border-b border-slate-100 pb-2">
-                    <dt className="text-slate-500">Previous score</dt>
-                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.previousScore !== null ? `${changeSummary.cognitive.previousScore} / 100` : 'Unavailable'}</dd>
+                  <div className="flex justify-between gap-3 border-b border-line pb-2">
+                    <dt className="text-muted">Previous score</dt>
+                    <dd className="font-semibold text-ink">{changeSummary.cognitive.previousScore !== null ? `${changeSummary.cognitive.previousScore} / 100` : 'Unavailable'}</dd>
                   </div>
-                  <div className="flex justify-between gap-3 border-b border-slate-100 pb-2">
-                    <dt className="text-slate-500">Observed range</dt>
-                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not yet established'}</dd>
+                  <div className="flex justify-between gap-3 border-b border-line pb-2">
+                    <dt className="text-muted">Observed range</dt>
+                    <dd className="font-semibold text-ink">{changeSummary.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not yet established'}</dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Outside observed baseline</dt>
-                    <dd className="font-semibold text-slate-900">{changeSummary.cognitive.outsideObservedBaseline ? 'Yes' : 'No'}</dd>
+                    <dt className="text-muted">Outside observed baseline</dt>
+                    <dd className="font-semibold text-ink">{changeSummary.cognitive.outsideObservedBaseline ? 'Yes' : 'No'}</dd>
                   </div>
                 </dl>
               ) : (
-                <p className="mt-3 text-xs text-slate-500">Baseline comparison is unavailable for this record.</p>
+                <p className="mt-3 text-xs text-muted">Baseline comparison is unavailable for this record.</p>
               )}
-              <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs leading-4 text-slate-500">
+              <p className="mt-3 rounded-lg border border-line bg-warm p-2.5 text-xs leading-4 text-muted">
                 Comparison uses the patient’s own prior observations only. It does not establish a diagnosis or a universal cut-off.
               </p>
             </Card>
           </div>
 
-          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
             <Link to={`/doctor/patients/${patient.patientId}/notes?assessment=${assessment.id}`} className={primaryButton}>
               Continue to clinical notes <ArrowRight className="h-4 w-4" />
             </Link>
@@ -374,8 +374,8 @@ export const DoctorLongitudinalPage: React.FC = () => {
     }).length;
   }, [changeSummary, chronological]);
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-slate-500">Loading longitudinal record…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-slate-500">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading longitudinal record…</div>;
+  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
 
   return (
     <div className="space-y-5">
@@ -423,16 +423,16 @@ export const DoctorLongitudinalPage: React.FC = () => {
                 <Card key={item.id}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-900">
+                      <p className="flex items-center gap-1.5 text-[12px] font-semibold text-ink">
                         <Icon className="h-3.5 w-3.5 text-blue-700" /> {item.title}
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <p className="mt-0.5 text-xs text-muted">
                         {item.points.length} valid point{item.points.length === 1 ? '' : 's'} of {chronological.length} sessions
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[17px] font-semibold text-slate-900">{latest !== null ? `${Math.round(latest * 10) / 10}${item.unit}` : 'Missing'}</p>
-                      <p className={`text-xs font-semibold ${delta === null ? 'text-slate-400' : delta < 0 ? 'text-amber-700' : delta > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
+                      <p className="text-[17px] font-semibold text-ink">{latest !== null ? `${Math.round(latest * 10) / 10}${item.unit}` : 'Missing'}</p>
+                      <p className={`text-xs font-semibold ${delta === null ? 'text-muted' : delta < 0 ? 'text-amber-700' : delta > 0 ? 'text-emerald-700' : 'text-muted'}`}>
                         {delta === null ? 'No comparison' : `${delta > 0 ? '+' : ''}${Math.round(delta * 10) / 10}${item.unit} vs previous`}
                       </p>
                     </div>
@@ -441,7 +441,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
                     <TrendLine points={item.points} tone={item.color} valueSuffix={item.unit} />
                   </div>
                   {delta !== null && Math.abs(delta) >= 5 && (
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted">
                       Direction of change shown for review; not a validated threshold for clinical significance.
                     </p>
                   )}
@@ -452,29 +452,29 @@ export const DoctorLongitudinalPage: React.FC = () => {
 
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <Card>
-              <h2 className="text-[13px] font-semibold text-slate-900">Previous session comparison</h2>
-              <p className="mt-0.5 text-xs text-slate-500">Latest observation minus the preceding valid observation.</p>
+              <h2 className="text-[13px] font-semibold text-ink">Previous session comparison</h2>
+              <p className="mt-0.5 text-xs text-muted">Latest observation minus the preceding valid observation.</p>
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-slate-100 text-xs font-bold uppercase tracking-[0.08em] text-slate-400">
+                    <tr className="border-b border-line text-xs font-bold uppercase tracking-[0.08em] text-muted">
                       <th className="py-2">Domain</th>
                       <th className="py-2">Latest</th>
                       <th className="py-2">Previous</th>
                       <th className="py-2 text-right">Direction</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-line">
                     {series.map((item) => {
                       const latest = latestOf(item);
                       const previous = previousOf(item);
                       const delta = latest !== null && previous !== null ? latest - previous : null;
                       return (
                         <tr key={item.id}>
-                          <td className="py-2.5 font-medium text-slate-700">{item.title}</td>
-                          <td className="py-2.5 text-slate-700">{latest !== null ? `${Math.round(latest * 10) / 10}${item.unit}` : 'Missing'}</td>
-                          <td className="py-2.5 text-slate-500">{previous !== null ? `${Math.round(previous * 10) / 10}${item.unit}` : '—'}</td>
-                          <td className={`py-2.5 text-right font-semibold ${delta === null ? 'text-slate-400' : delta < 0 ? 'text-amber-700' : delta > 0 ? 'text-emerald-700' : 'text-slate-500'}`}>
+                          <td className="py-2.5 font-medium text-body">{item.title}</td>
+                          <td className="py-2.5 text-body">{latest !== null ? `${Math.round(latest * 10) / 10}${item.unit}` : 'Missing'}</td>
+                          <td className="py-2.5 text-muted">{previous !== null ? `${Math.round(previous * 10) / 10}${item.unit}` : '—'}</td>
+                          <td className={`py-2.5 text-right font-semibold ${delta === null ? 'text-muted' : delta < 0 ? 'text-amber-700' : delta > 0 ? 'text-emerald-700' : 'text-muted'}`}>
                             {delta === null ? 'No comparison' : `${delta > 0 ? '+' : ''}${Math.round(delta * 10) / 10}`}
                           </td>
                         </tr>
@@ -487,7 +487,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
 
             <div className="space-y-4">
               <Card>
-                <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900">
+                <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
                   <AlertTriangle className="h-3.5 w-3.5 text-amber-600" /> Missing data
                 </h2>
                 {missing.length === 0 ? (
@@ -504,14 +504,14 @@ export const DoctorLongitudinalPage: React.FC = () => {
                     ))}
                   </ul>
                 )}
-                <p className="mt-3 text-xs leading-4 text-slate-500">
+                <p className="mt-3 text-xs leading-4 text-muted">
                   Gaps are not assumed to represent stability or improvement. They remain missing in summaries.
                 </p>
               </Card>
 
               <Card>
-                <h2 className="text-[13px] font-semibold text-slate-900">Change persistence</h2>
-                <p className="mt-2 text-xs leading-5 text-slate-600">
+                <h2 className="text-[13px] font-semibold text-ink">Change persistence</h2>
+                <p className="mt-2 text-xs leading-5 text-body">
                   {changeSummary?.status === 'REVIEW'
                     ? `${arraySessionsOutsideBaseline} of the last three comparable sessions fall outside the observed baseline range. Persistence across sessions carries more weight than a single result.`
                     : changeSummary?.status === 'NO_CHANGE'

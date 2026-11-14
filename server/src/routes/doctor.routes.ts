@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { DoctorController } from '../controllers/doctor.controller';
 import { PlatformController } from '../controllers/platform.controller';
+import { CognitiveController } from '../controllers/cognitive.controller';
 import { AppointmentController } from '../controllers/appointment.controller';
 import { authenticateToken, requireRole } from '../middleware/auth';
 
@@ -26,5 +27,12 @@ router.get('/appointments', clinicianGuard, AppointmentController.listAll);
 router.post('/patients/:id/appointments', clinicianGuard, AppointmentController.createForPatient);
 router.patch('/appointments/:id', clinicianGuard, AppointmentController.update);
 router.get('/platform-insights', clinicianGuard, PlatformController.getInsights);
+
+// Cognitive assessment management: task library, recorded sessions and
+// clinician approval of a patient's assessment plan.
+router.get('/cognitive/tasks', clinicianGuard, CognitiveController.clinicianLibrary);
+router.get('/patients/:id/cognitive', clinicianGuard, CognitiveController.patientSessions);
+router.get('/patients/:id/cognitive/plan', clinicianGuard, CognitiveController.patientPlan);
+router.post('/patients/:id/cognitive/plan-approval', clinicianGuard, CognitiveController.approvePlan);
 
 export default router;

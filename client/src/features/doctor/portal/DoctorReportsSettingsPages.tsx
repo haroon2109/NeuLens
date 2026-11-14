@@ -71,7 +71,7 @@ const ReportCenterCard: React.FC<{
   selectedId: string | null;
 }> = ({ patients, onSelect, selectedId }) => (
   <Card padded>
-    <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-3">Patient report center</h2>
+    <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Patient report center</h2>
     {patients.length === 0 ? (
       <EmptyState scene="emptySearch" icon={Users} title="No patients on file" detail="Register patients to generate clinical reports." />
     ) : (
@@ -82,15 +82,15 @@ const ReportCenterCard: React.FC<{
               type="button"
               onClick={() => onSelect(p.id)}
               className={`w-full text-left rounded-xl border px-3.5 py-3 text-xs transition ${
-                selectedId === p.id ? 'border-blue-300 bg-blue-50/70 text-slate-900 font-semibold' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                selectedId === p.id ? 'border-blue-300 bg-blue-50/70 text-ink font-semibold' : 'border-line bg-white text-body hover:bg-warm'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold">{p.name}</span>
-                <span className="text-xs text-slate-500">{p.age} yrs</span>
+                <span className="text-xs text-muted">{p.age} yrs</span>
               </div>
               <div className="mt-1.5 flex items-center gap-2">
-                <span className="text-xs text-slate-500 truncate">{p.patientId}</span>
+                <span className="text-xs text-muted truncate">{p.patientId}</span>
                 <span className="ml-auto"><RiskPill risk={p.risk} /></span>
               </div>
             </button>
@@ -109,8 +109,8 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Clinical report</p>
-            <h3 className="mt-2 text-[17px] font-semibold text-slate-900">{patient.name}</h3>
-            <p className="mt-1 text-[12px] text-slate-600">{patient.age} yrs · {patient.gender ?? 'Not recorded'} · {patient.patientId}</p>
+            <h3 className="mt-2 text-[17px] font-semibold text-ink">{patient.name}</h3>
+            <p className="mt-1 text-[12px] text-body">{patient.age} yrs · {patient.gender ?? 'Not recorded'} · {patient.patientId}</p>
           </div>
           <div className="flex gap-2 shrink-0">
             <button type="button" onClick={onPrint} className={primaryButton}>
@@ -124,19 +124,19 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <MetricTile label="Latest screening" value={formatDate(latest.date) || 'Not available'} detail={latest.assessmentType ? `Type: ${latest.assessmentType}` : 'Standard battery'} />
             <MetricTile label="Overall score" value={`${Math.round(latest.overallScore)} / 100`} />
-            <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-              <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Review status</p>
+            <div className="rounded-xl border border-line bg-warm/60 p-3">
+              <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Review status</p>
               <div className="mt-1.5"><ReviewPill status={latest.reviewStatus} /></div>
             </div>
           </div>
         )}
         {latest && (
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-[12px] leading-6 text-slate-700">
-            <p className="font-semibold text-slate-900 mb-1">Screening recommendation</p>
-            {latest.report?.recommendation ? <p className="whitespace-pre-line">{latest.report.recommendation}</p> : <p className="text-slate-500 italic">No recommendation recorded for this session.</p>}
+          <div className="mt-4 rounded-xl border border-line bg-warm/60 p-4 text-[12px] leading-6 text-body">
+            <p className="font-semibold text-ink mb-1">Screening recommendation</p>
+            {latest.report?.recommendation ? <p className="whitespace-pre-line">{latest.report.recommendation}</p> : <p className="text-muted italic">No recommendation recorded for this session.</p>}
             {latest.report?.doctorNotes ? (
               <>
-                <p className="mt-3 font-semibold text-slate-900">Reviewer notes</p>
+                <p className="mt-3 font-semibold text-ink">Reviewer notes</p>
                 <p className="whitespace-pre-line">{latest.report.doctorNotes}</p>
               </>
             ) : null}
@@ -145,16 +145,16 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
       </Card>
 
       <Card padded>
-        <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-3">Assessment history</h2>
+        <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Assessment history</h2>
         {assessments.length === 0 ? (
-          <p className="text-[12px] text-slate-500">No assessments recorded for this patient.</p>
+          <p className="text-[12px] text-muted">No assessments recorded for this patient.</p>
         ) : (
           <ul className="space-y-2">
             {assessments.map((a) => (
-              <li key={a.id} className="rounded-xl border border-slate-200 bg-white p-3.5 text-xs">
+              <li key={a.id} className="rounded-xl border border-line bg-white p-3.5 text-xs">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold">{formatDate(a.date)}</span>
-                  <span className="text-xs text-slate-500">{a.assessmentType ?? 'Standard'}</span>
+                  <span className="text-xs text-muted">{a.assessmentType ?? 'Standard'}</span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
                   <InfoRow label="Overall score" value={`${Math.round(a.overallScore)} / 100`} />
@@ -163,7 +163,7 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
                   <InfoRow label="Review" value={<ReviewPill status={a.reviewStatus} />} />
                 </div>
                 {a.reviewedBy && (
-                  <p className="mt-2 text-xs text-slate-500">Reviewed by {a.reviewedBy} · {formatDateTime(a.reviewedAt ?? '')}</p>
+                  <p className="mt-2 text-xs text-muted">Reviewed by {a.reviewedBy} · {formatDateTime(a.reviewedAt ?? '')}</p>
                 )}
               </li>
             ))}
@@ -173,10 +173,10 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
 
       {changeSummary && (
         <Card padded>
-          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-3">Change summary</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Change summary</h2>
           <div className="flex items-center gap-2 mb-3">
             <ChangePill status={changeSummary.status === 'REVIEW' ? 'REVIEW' : changeSummary.status === 'NO_CHANGE' ? 'NO_CHANGE' : 'REVIEW'} />
-            <span className="text-[12px] font-semibold text-slate-700">
+            <span className="text-[12px] font-semibold text-body">
               {changeSummary.status === 'INSUFFICIENT_DATA' ? 'Not enough comparable data' : changeSummary.status === 'NO_CHANGE' ? 'No notable change detected' : 'Review suggested'}
             </span>
           </div>
@@ -186,7 +186,7 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
           <InfoRow label="Comparable assessments" value={String(changeSummary.cognitive.comparableAssessments)} />
           <InfoRow label="Outside observed baseline" value={changeSummary.cognitive.outsideObservedBaseline ? 'Yes' : 'No'} />
           {changeSummary.reviewReasons.length > 0 && (
-            <div className="mt-2 text-xs text-slate-600">
+            <div className="mt-2 text-xs text-body">
               <p className="font-semibold mb-1">Review reasons</p>
               <ul className="list-disc list-inside space-y-0.5">
                 {changeSummary.reviewReasons.map((r) => (
@@ -200,12 +200,12 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
 
       {changeAcknowledgements.length > 0 && (
         <Card padded>
-          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-3">Change acknowledgements</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Change acknowledgements</h2>
           <ul className="space-y-1.5 text-xs">
             {changeAcknowledgements.map((a) => (
-              <li key={a.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+              <li key={a.id} className="rounded-lg border border-line bg-white px-3 py-2">
                 <span className="font-semibold">{a.status}</span>
-                <span className="ml-2 text-slate-500">{formatDateTime(a.acknowledgedAt)}</span>
+                <span className="ml-2 text-muted">{formatDateTime(a.acknowledgedAt)}</span>
               </li>
             ))}
           </ul>
@@ -214,16 +214,16 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
 
       {notes.length > 0 && (
         <Card padded>
-          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-3">Clinical notes</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Clinical notes</h2>
           <ul className="space-y-2">
             {notes.map((n) => (
-              <li key={n.id} className="rounded-xl border border-slate-200 bg-white p-3.5 text-xs">
+              <li key={n.id} className="rounded-xl border border-line bg-white p-3.5 text-xs">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold">{formatDate(n.createdAt)}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${n.decision === 'CLINICAL_REVIEW' ? 'bg-rose-100 text-rose-800' : n.decision === 'REFER' ? 'bg-blue-100 text-blue-800' : n.decision === 'MONITOR' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}`}>{n.decision}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${n.decision === 'CLINICAL_REVIEW' ? 'bg-rose-100 text-rose-800' : n.decision === 'REFER' ? 'bg-blue-100 text-blue-800' : n.decision === 'MONITOR' ? 'bg-amber-100 text-amber-800' : 'bg-warm text-body'}`}>{n.decision}</span>
                 </div>
-                {n.observations && <p className="mt-2 text-slate-700 whitespace-pre-line">{n.observations}</p>}
-                {n.interpretation && <p className="mt-1.5 text-slate-600 whitespace-pre-line">{n.interpretation}</p>}
+                {n.observations && <p className="mt-2 text-body whitespace-pre-line">{n.observations}</p>}
+                {n.interpretation && <p className="mt-1.5 text-body whitespace-pre-line">{n.interpretation}</p>}
                 {n.followUpRequired && n.followUpDate && <p className="mt-1.5 text-rose-700 font-semibold">Follow-up · {formatDate(n.followUpDate)}</p>}
               </li>
             ))}
@@ -233,16 +233,16 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
 
       {referrals.length > 0 && (
         <Card padded>
-          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-3">Referrals</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Referrals</h2>
           <ul className="space-y-2 text-xs">
             {referrals.map((r) => (
-              <li key={r.id} className="rounded-xl border border-slate-200 bg-white p-3.5">
+              <li key={r.id} className="rounded-xl border border-line bg-white p-3.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-semibold capitalize">{r.type.replace(/_/g, ' ')}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${r.status === 'SENT' ? 'bg-blue-100 text-blue-800' : r.status === 'ACKNOWLEDGED' ? 'bg-emerald-100 text-emerald-800' : r.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-700'}`}>{r.status}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${r.status === 'SENT' ? 'bg-blue-100 text-blue-800' : r.status === 'ACKNOWLEDGED' ? 'bg-emerald-100 text-emerald-800' : r.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-warm text-body'}`}>{r.status}</span>
                 </div>
-                <p className="mt-1.5 text-slate-600">{r.reason}</p>
-                <div className="mt-2 flex items-center gap-3 text-slate-500">
+                <p className="mt-1.5 text-body">{r.reason}</p>
+                <div className="mt-2 flex items-center gap-3 text-muted">
                   <span>{r.destination}</span>
                   <span>{r.urgency}</span>
                   <span>{formatDate(r.createdAt)}</span>
@@ -255,12 +255,12 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
 
       {appointments.length > 0 && (
         <Card padded>
-          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-3">Appointments</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Appointments</h2>
           <ul className="space-y-1.5 text-xs">
             {appointments.map((a) => (
-              <li key={a.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 flex items-center justify-between">
+              <li key={a.id} className="rounded-lg border border-line bg-white px-3 py-2 flex items-center justify-between">
                     <span>{a.title}</span>
-                    <span className="text-slate-500">{formatDate(a.date)} · {a.time}</span>
+                    <span className="text-muted">{formatDate(a.date)} · {a.time}</span>
                   </li>
             ))}
           </ul>
@@ -338,8 +338,8 @@ export const DoctorReportsPage: React.FC = () => {
         }
       />
       {selectedPatientId && patient && !isLoading ? (
-        <div className="mt-6 flex gap-6">
-          <div className="w-72 shrink-0">
+        <div className="mt-6 flex min-w-0 flex-col gap-6 lg:flex-row">
+          <div className="w-full min-w-0 shrink-0 lg:w-72">
             <PatientWorkflowNav patientId={patient.patientId} />
           </div>
           <div className="flex-1 min-w-0">
@@ -356,8 +356,8 @@ export const DoctorReportsPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="mt-6 flex gap-6">
-          <div className="w-72 shrink-0">
+        <div className="mt-6 flex min-w-0 flex-col gap-6 lg:flex-row">
+          <div className="w-full min-w-0 shrink-0 lg:w-72">
             <ReportCenterCard patients={patientList} onSelect={handleSelect} selectedId={selectedPatientId ?? null} />
           </div>
           <div className="flex-1 min-w-0">
@@ -378,17 +378,17 @@ export const DoctorReportsPage: React.FC = () => {
  * --------------------------------------------------------------- */
 
 const SectionHeading: React.FC<{ title: string; description?: string }> = ({ title, description }) => (
-  <div className="border-b border-slate-200 pb-3 mb-4">
-    <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
-    {description && <p className="mt-1 text-[12px] text-slate-600">{description}</p>}
+  <div className="border-b border-line pb-3 mb-4">
+    <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
+    {description && <p className="mt-1 text-[12px] text-body">{description}</p>}
   </div>
 );
 
 const SettingRow: React.FC<{ label: string; description?: string; children: React.ReactNode }> = ({ label, description, children }) => (
-  <div className="flex items-start justify-between gap-4 py-3 border-b border-slate-100 last:border-0">
+  <div className="flex items-start justify-between gap-4 py-3 border-b border-line last:border-0">
     <div className="min-w-0">
       <p className="text-xs font-semibold text-slate-800">{label}</p>
-      {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+      {description && <p className="mt-0.5 text-xs text-muted">{description}</p>}
     </div>
     <div className="shrink-0">{children}</div>
   </div>
@@ -435,8 +435,8 @@ export const DoctorSettingsPage: React.FC = () => {
         description="Manage your profile, clinic, notifications, and security preferences."
       />
 
-      <div className="mt-6 flex gap-8">
-        <nav className="w-48 shrink-0 space-y-1">
+      <div className="mt-6 flex min-w-0 flex-col gap-6 lg:flex-row lg:gap-8">
+        <nav className="flex w-full shrink-0 gap-1 overflow-x-auto pb-1 lg:block lg:w-48 lg:space-y-1 lg:pb-0">
           {[
             { id: 'profile', label: 'Profile' },
             { id: 'clinic', label: 'Clinic' },
@@ -448,8 +448,8 @@ export const DoctorSettingsPage: React.FC = () => {
               key={item.id}
               type="button"
               onClick={() => { setActiveSection(item.id); reset(item.id); setSavedSection(null); }}
-              className={`w-full text-left rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${
-                activeSection === item.id ? 'bg-blue-50 text-blue-800 font-bold' : 'text-slate-600 hover:bg-slate-50'
+              className={`shrink-0 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold transition lg:w-full lg:whitespace-normal ${
+                activeSection === item.id ? 'bg-blue-50 text-blue-800 font-bold' : 'text-body hover:bg-warm'
               }`}
             >
               {item.label}
@@ -462,15 +462,15 @@ export const DoctorSettingsPage: React.FC = () => {
             <Card padded>
               <SectionHeading title="Profile" description="Your clinician profile and verification details." />
               <div className="space-y-4">
-                <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs">
-                  <p className="font-semibold text-slate-900">{clinicianName}</p>
-                  <p className="mt-1 text-slate-600">{user?.email ?? 'No email on file'}</p>
+                <div className="rounded-xl border border-line bg-warm/60 p-4 text-xs">
+                  <p className="font-semibold text-ink">{clinicianName}</p>
+                  <p className="mt-1 text-body">{user?.email ?? 'No email on file'}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
                       verificationStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800' :
                       verificationStatus === 'IN_PROGRESS' || verificationStatus === 'SUBMITTED' ? 'bg-amber-100 text-amber-800' :
                       verificationStatus === 'REJECTED' ? 'bg-rose-100 text-rose-800' :
-                      'bg-slate-100 text-slate-700'
+                      'bg-warm text-body'
                     }`}>
                       Verification: {verificationStatus.replace(/_/g, ' ')}
                     </span>
@@ -620,7 +620,7 @@ export const DoctorSettingsPage: React.FC = () => {
           {activeSection === 'notifications' && (
             <Card padded>
               <SectionHeading title="Notifications" description="Choose which updates you receive by email." />
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-line">
                 <SettingRow label="New assessment results" description="When a patient completes a screening battery.">
                   <Toggle
                     label="New assessment results"
@@ -664,7 +664,7 @@ export const DoctorSettingsPage: React.FC = () => {
           {activeSection === 'security' && (
             <Card padded>
               <SectionHeading title="Security" description="Account security and session preferences." />
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-line">
                 <SettingRow label="Two-factor authentication" description="Add a second verification step on login.">
                   <Toggle
                     label="Two-factor authentication"
@@ -696,7 +696,7 @@ export const DoctorSettingsPage: React.FC = () => {
           {activeSection === 'privacy' && (
             <Card padded>
               <SectionHeading title="Privacy & support" description="Data sharing preferences and help resources." />
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-line">
                 <SettingRow label="Share data for second opinion" description="Allow anonymized data to be shared with consulting clinicians.">
                   <Toggle
                     label="Share data for second opinion"
@@ -706,15 +706,15 @@ export const DoctorSettingsPage: React.FC = () => {
                   />
                 </SettingRow>
               </div>
-              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs">
-                <p className="font-semibold text-slate-900">Privacy & data use</p>
-                <p className="mt-1.5 text-slate-600 leading-5">
+              <div className="mt-4 rounded-xl border border-line bg-warm/60 p-4 text-xs">
+                <p className="font-semibold text-ink">Privacy & data use</p>
+                <p className="mt-1.5 text-body leading-5">
                   Screening data is used to support clinical review and care planning. It is not a diagnosis and does not replace a clinical evaluation. You can review and adjust your sharing preferences above.
                 </p>
               </div>
-              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs">
-                <p className="font-semibold text-slate-900">Help & support</p>
-                <p className="mt-1.5 text-slate-600 leading-5">
+              <div className="mt-4 rounded-xl border border-line bg-warm/60 p-4 text-xs">
+                <p className="font-semibold text-ink">Help & support</p>
+                <p className="mt-1.5 text-body leading-5">
                   For technical issues, verification questions, or training requests, contact the NeuLens clinical support team through the hospital help desk.
                 </p>
               </div>
@@ -733,11 +733,11 @@ export const DoctorSettingsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs">
+      <div className="mt-6 rounded-xl border border-line bg-warm/60 p-4 text-xs">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="font-semibold text-slate-900">{clinicianName}</p>
-            <p className="text-slate-600">Signed in as clinician</p>
+            <p className="font-semibold text-ink">{clinicianName}</p>
+            <p className="text-body">Signed in as clinician</p>
           </div>
           <button
             type="button"
@@ -767,7 +767,7 @@ export const DoctorReportViewPage: React.FC = () => {
     <div className="min-w-0">
       <DoctorPageHeader screen="Report" title="Report view" />
       <Card padded>
-        <p className="text-xs text-slate-600">This legacy report view is preserved for backward compatibility. Use the report center at <Link to="/doctor/reports" className={secondaryButton}>/doctor/reports</Link> for the current clinical report experience.</p>
+        <p className="text-xs text-body">This legacy report view is preserved for backward compatibility. Use the report center at <Link to="/doctor/reports" className={secondaryButton}>/doctor/reports</Link> for the current clinical report experience.</p>
       </Card>
     </div>
   );

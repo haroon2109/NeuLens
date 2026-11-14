@@ -28,7 +28,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-slate-50 text-slate-800">
+    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-slate-50 text-slate-800">
       {/* Decorative subtle medical ambient glows */}
       <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-sky-400/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />

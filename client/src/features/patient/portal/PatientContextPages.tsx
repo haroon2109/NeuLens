@@ -24,12 +24,12 @@ import { usePatientOverview } from './usePatientOverview';
 import { Card, InfoRow, Pill, PortalPageHeader, SectionTitle, formatDate } from './ui';
 
 const primaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 text-[12px] font-bold text-white transition hover:bg-blue-800';
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-primary';
 const secondaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-50';
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-secondary';
 const fieldClass =
-  'w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[13px] text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100';
-const labelClass = 'mb-1.5 block text-[12px] font-semibold text-slate-700';
+  'w-full rounded-xl border border-line-strong bg-warm/70 px-3.5 py-2.5 text-[13px] text-ink outline-none transition focus:border-forest focus:bg-white focus:ring-4 focus:ring-forest/12';
+const labelClass = 'mb-1.5 block text-[12px] font-semibold text-ink';
 
 const rangeLabels = ['Very low', 'Low', 'Moderate', 'Good', 'Very good'];
 
@@ -48,7 +48,7 @@ const RangeField: React.FC<{
   <div>
     <div className="flex items-center justify-between gap-3">
       <label className={labelClass} htmlFor={id}>{label}</label>
-      <span className="text-xs font-bold text-blue-800">{value}{suffix || (max === 5 ? '/5' : '')}</span>
+      <span className="text-xs font-bold text-forest">{value}{suffix || (max === 5 ? '/5' : '')}</span>
     </div>
     <input
       id={id}
@@ -58,9 +58,9 @@ const RangeField: React.FC<{
       step={step}
       value={value}
       onChange={(event) => onChange(Number(event.target.value))}
-      className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
+      className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-line accent-forest"
     />
-    <div className="mt-1 flex justify-between text-xs text-slate-400">
+    <div className="mt-1 flex justify-between text-xs text-muted">
       <span>{low}</span><span>{high}</span>
     </div>
   </div>
@@ -81,23 +81,21 @@ export const HealthContextOverviewPage: React.FC = () => {
         title="What may be shaping your results"
         description="Sleep, activity, wellbeing, and clinical information help your care team interpret screening observations in context. These do not change your score."
         actions={<Link to="/patient/context/sleep" className={primaryButton}>Update context</Link>}
-      />
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      />          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { icon: Moon, label: 'Sleep', value: `${sleep.durationHours} hrs`, detail: `Quality ${sleep.quality}/5 · ${sleep.awakenings} awakenings`, tone: 'text-violet-700 bg-violet-50', href: '/patient/context/sleep' },
-          { icon: Activity, label: 'Physical activity', value: `${sleep.steps.toLocaleString()} steps`, detail: `${sleep.activeMinutes} active minutes`, tone: 'text-emerald-700 bg-emerald-50', href: '/patient/context/sleep' },
-          { icon: Users, label: 'Mental wellbeing', value: `Mood ${wellbeing.mood}/5`, detail: `Stress ${wellbeing.stress}/5`, tone: 'text-amber-700 bg-amber-50', href: '/patient/context/wellbeing' },
-          { icon: Stethoscope, label: 'Clinical measures', value: clinical ? `${clinical.values.systolic}/${clinical.values.diastolic}` : 'Not available', detail: clinical ? 'Blood pressure · last import' : 'No clinical import linked', tone: 'text-blue-700 bg-blue-50', href: '/patient/context/clinical' }
-        ].map(({ icon: Icon, label, value, detail, tone, href }) => (
-          <Link key={label} to={href} className="rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-slate-300">
-            <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${tone}`}>
+          { icon: Moon, label: 'Sleep', value: `${sleep.durationHours} hrs`, detail: `Quality ${sleep.quality}/5 · ${sleep.awakenings} awakenings`, chip: 'mint', href: '/patient/context/sleep' },
+          { icon: Activity, label: 'Physical activity', value: `${sleep.steps.toLocaleString()} steps`, detail: `${sleep.activeMinutes} active minutes`, chip: 'mint', href: '/patient/context/sleep' },
+          { icon: Users, label: 'Mental wellbeing', value: `Mood ${wellbeing.mood}/5`, detail: `Stress ${wellbeing.stress}/5`, chip: 'amber', href: '/patient/context/wellbeing' },
+          { icon: Stethoscope, label: 'Clinical measures', value: clinical ? `${clinical.values.systolic}/${clinical.values.diastolic}` : 'Not available', detail: clinical ? 'Blood pressure · last import' : 'No clinical import linked', chip: 'sage', href: '/patient/context/clinical' }
+        ].map(({ icon: Icon, label, value, detail, chip, href }) => (
+          <Link key={label} to={href} className="pp-card p-4">
+            <span className={`flex h-8 w-8 items-center justify-center rounded-lg pp-icon-chip ${chip}`}>
               <Icon className="h-4 w-4" />
             </span>
-            <p className="mt-2.5 text-xs font-semibold uppercase tracking-[0.07em] text-slate-500">{label}</p>
-            <p className="mt-1 text-[17px] font-semibold text-slate-900">{value}</p>
-            <p className="mt-0.5 text-xs text-slate-500">{detail}</p>
-            <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-700">
+            <p className="mt-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</p>
+            <p className="mt-1 text-[17px] font-semibold text-ink">{value}</p>
+            <p className="mt-0.5 text-xs text-muted">{detail}</p>
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-forest">
               Review <ArrowRight className="h-3 w-3" />
             </span>
           </Link>
@@ -123,14 +121,14 @@ export const HealthContextOverviewPage: React.FC = () => {
                 state: item.consentGranted ? 'Consent recorded' : 'Consent missing'
               }))
             ].map((item, index) => (
-              <li key={`${item.label}-${index}`} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <li key={`${item.label}-${index}`} className="flex flex-col gap-2 rounded-xl border border-line p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-600">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg pp-icon-chip white">
                     <Database className="h-4 w-4" />
                   </span>
                   <div>
-                    <p className="text-xs font-semibold text-slate-800">{item.label}</p>
-                    <p className="text-xs text-slate-500">{item.source} · {item.date}</p>
+                    <p className="text-xs font-semibold text-ink">{item.label}</p>
+                    <p className="text-xs text-muted">{item.source} · {item.date}</p>
                   </div>
                 </div>
                 <Pill tone={item.state === 'Consent missing' ? 'amber' : 'green'} dot>{item.state}</Pill>
@@ -139,26 +137,21 @@ export const HealthContextOverviewPage: React.FC = () => {
           </ul>
         </Card>
 
-        <div className="space-y-4">
-          <Card>
-            <SectionTitle title="Family & medical history" detail="Shared during onboarding." />
+        <div className="space-y-4">          <Card>
+          <SectionTitle title="Family & medical history" detail="Shared during onboarding." />
             <div className="flex flex-wrap gap-1.5">
-              {health.conditions.length ? health.conditions.map((item) => <Pill key={item} tone="slate">{item}</Pill>) : <Pill tone="slate">No conditions shared</Pill>}
+              {health.conditions.length ? health.conditions.map((item) => <Pill key={item} tone="sage">{item}</Pill>) : <Pill tone="sage">No conditions shared</Pill>}
             </div>
-            <p className="mt-3 text-xs leading-5 text-slate-600">
+            <p className="mt-3 text-xs leading-5 text-muted">
               {health.familyHistory || 'No family history was shared during onboarding.'}
             </p>
-            <Link to="/patient/context/clinical" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">
+            <Link to="/patient/context/clinical" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline">
               Review clinical & family history <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </Card>
-          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3.5">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-              <Info className="h-3.5 w-3.5" /> Context is not causation
-            </p>
-            <p className="mt-1 text-xs leading-5 text-blue-900/80">
-              A poor night's sleep may affect a session, but context alone does not explain or diagnose a change. Clinicians consider all information together.
-            </p>
+          <div className="pp-notice">
+            <Info className="h-3.5 w-3.5" />
+            <span>Context is not causation. A poor night's sleep may affect a session, but context alone does not explain or diagnose a change. Clinicians consider all information together.</span>
           </div>
         </div>
       </div>
@@ -206,8 +199,9 @@ export const SleepLifestylePage: React.FC = () => {
       </MotionReveal>
 
       {saved && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[12px] font-semibold text-emerald-900" role="status">
-          <CheckCircle2 className="h-4 w-4" /> Context saved for your care team.
+        <div className="pp-success">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Context saved for your care team.</span>
         </div>
       )}
 
@@ -226,9 +220,9 @@ export const SleepLifestylePage: React.FC = () => {
                   step="0.5"
                   value={sleep.durationHours}
                   onChange={(event) => setSleep({ durationHours: Number(event.target.value) })}
-                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
+                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-line accent-forest"
                 />
-                <span className="w-16 text-[12px] font-bold text-blue-800">{sleep.durationHours} hrs</span>
+                <span className="w-16 text-[12px] font-bold text-forest">{sleep.durationHours} hrs</span>
               </div>
             </div>
             <RangeField id="sleep-quality" label="Sleep quality" value={sleep.quality} onChange={(value) => setSleep({ quality: value })} low="Poor" high="Excellent" />
@@ -279,7 +273,7 @@ export const SleepLifestylePage: React.FC = () => {
           placeholder="A short note for your clinician"
         />
         <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs leading-5 text-slate-500">Shared with your care team. Optional research sharing follows your privacy settings.</p>
+          <p className="text-xs leading-5 text-muted">Shared with your care team. Optional research sharing follows your privacy settings.</p>
           <button type="button" className={primaryButton} onClick={save}>
             <Save className="h-4 w-4" /> Save context
           </button>
@@ -317,7 +311,7 @@ export const MentalWellbeingPage: React.FC = () => {
         eyebrow="Screen 36 · Mental wellbeing"
         title="How have you been feeling?"
         description="A short self-report helps put a screening session in context. It is not a mood diagnosis or a validated screening instrument."
-        actions={<Pill tone="slate">Optional</Pill>}
+        actions={<Pill tone="sage">Optional</Pill>}
       />
 
       <MotionReveal className="mx-auto w-full max-w-2xl">
@@ -329,8 +323,9 @@ export const MentalWellbeingPage: React.FC = () => {
       </MotionReveal>
 
       {saved && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[12px] font-semibold text-emerald-900" role="status">
-          <CheckCircle2 className="h-4 w-4" /> Wellbeing check-in saved.
+        <div className="pp-success">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Wellbeing check-in saved.</span>
         </div>
       )}
 
@@ -359,19 +354,19 @@ export const MentalWellbeingPage: React.FC = () => {
         </Card>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">
+          <Card>
+            <p className="flex items-center gap-1.5 text-xs font-bold text-sage-deep">
               <Brain className="h-3.5 w-3.5" /> A gentle reminder
             </p>
-            <p className="mt-2 text-[12px] leading-6 text-slate-600">
+            <p className="mt-2 text-[12px] leading-6 text-body">
               Memory complaints and mood can influence each other. Your clinician will consider this alongside your screening observations and history.
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {rangeLabels.slice(0, 4).map((label) => <Pill key={label} tone="slate">{label}</Pill>)}
+              {rangeLabels.slice(0, 4).map((label) => <Pill key={label} tone="sage">{label}</Pill>)}
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+          <div className="rounded-xl border border-amber/60 bg-amber/10 p-3.5">
             <p className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
               <Info className="h-3.5 w-3.5" /> About validated instruments
             </p>
@@ -382,10 +377,10 @@ export const MentalWellbeingPage: React.FC = () => {
 
           <Card>
             <SectionTitle title="If you need support now" />
-            <p className="text-xs leading-5 text-slate-600">
+            <p className="text-xs leading-5 text-muted">
               If you feel unsafe or in crisis, contact local emergency services or your hospital support line immediately.
             </p>
-            <a href="tel:+914440001200" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">
+            <a href="tel:+914440001200" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline">
               <HeartPulse className="h-3.5 w-3.5" /> Hospital support: +91 44 4000 1200
             </a>
           </Card>
@@ -414,8 +409,9 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
       />
 
       {saved && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[12px] font-semibold text-emerald-900" role="status">
-          <CheckCircle2 className="h-4 w-4" /> History updated.
+        <div className="pp-success">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>History updated.</span>
         </div>
       )}
 
@@ -471,13 +467,13 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
                   <InfoRow label="Source" value="Clinical record import" />
                   <InfoRow label="Last updated" value={formatDate(clinical.recordedAt)} />
                 </dl>
-                <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-slate-500">
+                <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-muted">
                   <Database className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   Imported information is read-only and used for context only. It does not alter your screening observations.
                 </p>
               </>
             ) : (
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-muted">
                 No clinical measurements are linked. Ask your care team about sharing recent measurements if relevant.
               </p>
             )}
@@ -486,7 +482,7 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
           <Card>
             <SectionTitle title="Previous cognitive assessments" />
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-slate-600">{health.previousAssessments}</span>
+              <span className="text-xs text-muted">{health.previousAssessments}</span>
               <Pill tone="slate">Self-reported</Pill>
             </div>
             <p className="mt-2 text-xs leading-5 text-slate-500">
@@ -494,13 +490,9 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
             </p>
           </Card>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-              <ClipboardList className="h-3.5 w-3.5" /> Data-source labels
-            </p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              Patient-reported, patient-recorded, and imported clinical values are shown separately so clinicians know where each value came from.
-            </p>
+          <div className="pp-notice">
+            <ClipboardList className="h-3.5 w-3.5" />
+            <span>Data-source labels: patient-reported, patient-recorded, and imported clinical values are shown separately so clinicians know where each value came from.</span>
           </div>
         </div>
       </div>

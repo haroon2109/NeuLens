@@ -17,7 +17,10 @@ const PATIENT_VISIBLE_TASK_KEYS = [
   'task5',
   'functionalCheckIn',
   'functionalAssessment',
-  'dailyFunction'
+  'dailyFunction',
+  // Sanitised cognitive-session summary only. Task-level raw detail and the
+  // exploratory composite stay clinician-side. No risk tier is included.
+  'cognitiveSummary'
 ] as const;
 
 type TaskResponses = Record<string, unknown> | null | undefined;

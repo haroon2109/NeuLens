@@ -11,6 +11,7 @@ import changeDetectionRoutes from './changedetection.routes';
 import contextInputRoutes from './contextinput.routes';
 import brainHealthRoutes from './brainhealth.routes';
 import assessmentCompleteRoutes from './assessmentcomplete.routes';
+import cognitiveRoutes from './cognitive.routes';
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use('/screenings', screeningRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/voice', voiceRoutes);
 router.use('/patient', patientRoutes);
+router.use('/patient/cognitive', cognitiveRoutes);
 router.use('/doctor', doctorRoutes);
 
 // New architecture endpoints — baseline, longitudinal, change detection, context inputs, brain health

@@ -63,7 +63,10 @@ export const PatientLoginPage: React.FC = () => {
         setLanguage(res.user.language as SupportedLanguage);
       }
 
-      navigate('/patient/language');
+      // Sign-in lands on the portal dashboard, where language and assessment
+      // options live. The standalone language screen remains reachable by URL
+      // for the legacy screening flow, but it must not intercept every login.
+      navigate('/patient/dashboard', { replace: true });
     } catch (err: any) {
       setErrorMsg(
         err.message ||

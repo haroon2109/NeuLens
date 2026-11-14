@@ -45,20 +45,20 @@ export const DoctorPatientScreenPage: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto py-24 text-center space-y-4">
         <div className="w-10 h-10 border-3 border-medical-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Preparing Clinical Screening Battery...</p>
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">Preparing Clinical Screening Battery...</p>
       </div>
     );
   }
 
   if (error || !patient) {
     return (
-      <div className="max-w-lg mx-auto py-16 text-center space-y-4 bg-white p-8 rounded-3xl border border-slate-200">
+      <div className="max-w-lg mx-auto py-16 text-center space-y-4 bg-white p-8 rounded-2xl border border-line">
         <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-900">Patient Not Found</h2>
-        <p className="text-xs text-slate-500">{error || 'Please select a valid patient to administer an assessment.'}</p>
+        <h2 className="text-xl font-bold text-ink">Patient Not Found</h2>
+        <p className="text-xs text-muted">{error || 'Please select a valid patient to administer an assessment.'}</p>
         <Link
           to="/doctor/patients"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-warm hover:bg-slate-200 text-body rounded-xl text-xs font-bold"
         >
           <ArrowLeft className="w-4 h-4" />
           Return to Patient Directory
@@ -73,12 +73,12 @@ export const DoctorPatientScreenPage: React.FC = () => {
       {/* ---------------------------------------------------------------- */}
       {/* CLINICAL BANNER (Identifies the target patient)                 */}
       {/* ---------------------------------------------------------------- */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-line shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         
         <div className="flex items-center gap-3.5">
           <Link
             to={`/doctor/patients/${patient.patientId}`}
-            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all shrink-0"
+            className="w-9 h-9 rounded-xl bg-warm hover:bg-slate-200 text-body flex items-center justify-center transition-all shrink-0"
             title="Cancel & Return to Patient Profile"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -86,19 +86,19 @@ export const DoctorPatientScreenPage: React.FC = () => {
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-medical-700 bg-medical-50 border border-medical-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-xs font-bold uppercase tracking-[0.12em] text-medical-700 bg-medical-50 border border-medical-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 Active Screening Administration
               </span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-display font-bold text-base text-slate-900">
+              <span className="font-display font-bold text-base text-ink">
                 {patient.name}
               </span>
               <span className="font-mono text-xs font-bold text-medical-700 bg-blue-50 px-2 py-0.5 rounded-md">
                 {patient.patientId}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-muted">
                 • {patient.age} yrs • {patient.gender}
               </span>
             </div>
@@ -107,7 +107,7 @@ export const DoctorPatientScreenPage: React.FC = () => {
 
         <Link
           to={`/doctor/patients/${patient.patientId}`}
-          className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors self-start sm:self-auto"
+          className="text-xs font-bold text-muted hover:text-slate-800 transition-colors self-start sm:self-auto"
         >
           Cancel & Return to File
         </Link>

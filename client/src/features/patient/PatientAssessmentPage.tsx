@@ -123,22 +123,22 @@ export const PatientAssessmentPage: React.FC = () => {
   const patientName = user?.name || 'Valued Patient';
 
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between transition-all ${fontClasses[fontSizeScale]}`}>
+    <div className={`patient-portal min-h-screen bg-warm text-ink flex flex-col justify-between transition-all ${fontClasses[fontSizeScale]}`}>
       
       {/* Top Accessibility Support Header */}
-      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-5xl mx-auto px-6 h-18 flex items-center justify-between">
+      <header className="bg-white border-b border-line sticky top-0 z-40 shadow-card">
+        <div className="max-w-5xl mx-auto px-6 h-[72px] flex items-center justify-between gap-3">
           
           {/* Active Patient Badge */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-medical-50 text-medical-600 flex items-center justify-center font-bold">
-              <User className="w-5 h-5" />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 shrink-0 rounded-xl bg-mint text-forest flex items-center justify-center">
+              <User className="w-5 h-5" aria-hidden="true" />
             </div>
-            <div>
-              <span className="text-xs font-bold text-slate-900 block leading-tight">
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-ink block leading-tight truncate">
                 {patientName}
               </span>
-              <span className="font-mono text-xs font-semibold text-medical-700 bg-medical-50 px-2 py-0.5 rounded-md">
+              <span className="mt-0.5 inline-block font-mono text-[11px] font-semibold text-forest bg-mint border border-sage/50 px-2 py-0.5 rounded-md">
                 {patientId}
               </span>
             </div>
@@ -148,29 +148,29 @@ export const PatientAssessmentPage: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* Font Size Accessibility Toggle */}
-            <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">
-              <span className="px-2 text-xs uppercase text-slate-400 flex items-center gap-1">
+            <div className="hidden sm:flex items-center bg-warm p-1 rounded-lg border border-line text-xs font-semibold text-body">
+              <span className="px-2 text-[10px] uppercase tracking-[0.12em] text-sage-deep flex items-center gap-1">
                 <Type className="w-3 h-3" />
                 Text
               </span>
               <button
                 type="button"
                 onClick={() => setFontSizeScale('normal')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${fontSizeScale === 'normal' ? 'bg-white shadow-xs text-medical-700' : 'hover:text-slate-900'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${fontSizeScale === 'normal' ? 'bg-white shadow-card text-forest font-semibold' : 'hover:text-ink'}`}
               >
                 A
               </button>
               <button
                 type="button"
                 onClick={() => setFontSizeScale('large')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${fontSizeScale === 'large' ? 'bg-white shadow-xs text-medical-700 font-bold' : 'hover:text-slate-900'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${fontSizeScale === 'large' ? 'bg-white shadow-card text-forest font-semibold' : 'hover:text-ink'}`}
               >
                 A+
               </button>
               <button
                 type="button"
                 onClick={() => setFontSizeScale('xlarge')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${fontSizeScale === 'xlarge' ? 'bg-white shadow-xs text-medical-700 font-extrabold' : 'hover:text-slate-900'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${fontSizeScale === 'xlarge' ? 'bg-white shadow-card text-forest font-semibold' : 'hover:text-ink'}`}
               >
                 A++
               </button>
@@ -180,7 +180,7 @@ export const PatientAssessmentPage: React.FC = () => {
             <button
               type="button"
               onClick={() => repeatInstruction()}
-              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold text-medical-700 flex items-center gap-1.5 transition-all shadow-xs"
+              className="px-3 py-2 bg-mint hover:bg-mint/70 border border-sage/60 rounded-xl text-xs font-semibold text-forest flex items-center gap-1.5 transition-all"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Repeat Spoken Guidance</span>
@@ -191,9 +191,9 @@ export const PatientAssessmentPage: React.FC = () => {
             <button
               type="button"
               onClick={() => provideSimplerExplanation()}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-all"
+              className="px-3 py-2 bg-warm hover:bg-white border border-line rounded-xl text-xs font-semibold text-body flex items-center gap-1.5 transition-all"
             >
-              <HelpCircle className="w-3.5 h-3.5 text-medical-600" />
+              <HelpCircle className="w-3.5 h-3.5 text-sage-deep" />
               <span className="hidden sm:inline">Help</span>
             </button>
 
@@ -217,7 +217,7 @@ export const PatientAssessmentPage: React.FC = () => {
       </main>
 
       {/* Discrete Portal Footer */}
-      <footer className="border-t border-slate-200/80 py-4 bg-white/60 text-center text-xs text-slate-400">
+      <footer className="border-t border-line py-4 bg-white/70 text-center text-xs text-muted">
         Hospital Neurological Screening Session &bull; Private & Secure
       </footer>
 

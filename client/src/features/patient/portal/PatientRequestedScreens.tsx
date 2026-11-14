@@ -24,11 +24,11 @@ import { MotionReveal } from '../../../components/motion/Reveal';
 import { Card, EmptyState, InfoRow, Pill, PortalPageHeader, ScoreDial, SectionTitle, formatDate } from './ui';
 
 const primaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 text-[12px] font-bold text-white shadow-sm transition hover:bg-blue-800';
+  'pp-btn pp-btn-primary pp-btn-sm inline-flex items-center justify-center gap-2';
 const secondaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-50';
+  'pp-btn pp-btn-secondary pp-btn-sm inline-flex items-center justify-center gap-2';
 
-const labelClass = 'mb-1 block text-xs font-bold uppercase tracking-[0.08em] text-slate-500';
+const labelClass = 'mb-1 block text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep';
 
 const activityLabels: Record<string, string> = {
   appointments: 'Remembering appointments',
@@ -77,7 +77,7 @@ export const PatientHealthProfilePage: React.FC = () => {
             <InfoRow label="Care team role" value={treatmentTeam.role} />
             <InfoRow label="Caregiver / support" value={health?.caregiverName || health?.caregiver || health?.supportContact || 'Not recorded'} />
           </dl>
-          <p className="mt-3 text-xs leading-5 text-slate-500">Caregiver/support details are context for discussion and are not diagnostic.</p>
+          <p className="mt-3 text-[11px] leading-5 text-muted">Caregiver/support details are context for discussion and are not diagnostic.</p>
         </Card>
 
         <Card>
@@ -117,8 +117,8 @@ export const PatientHealthProfilePage: React.FC = () => {
       </div>
 
       {!hasContext && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs leading-5 text-amber-900 flex gap-2">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-amber/60 bg-amber\/10 p-3.5 text-[11px] leading-5 text-amber-900 flex gap-2">
+          <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
           <span>Limited context recorded so far. Adding sleep, lifestyle, mood, or health history can help your clinician interpret observations; it does not change screening scores.</span>
         </div>
       )}
@@ -146,21 +146,21 @@ export const DailyFunctionQuestionnairePage: React.FC = () => {
       />
 
       <MotionReveal><HealthcareScene kind="functional" className="w-full max-w-3xl" /></MotionReveal>
-      <div className="rounded-xl border border-blue-100 bg-blue-50 p-3.5 text-xs leading-5 text-blue-900 flex gap-2">
-        <Info className="h-4 w-4 shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-forest/40 bg-mint/50 p-3.5 text-[11px] leading-5 text-forest/90 flex gap-2">
+        <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
         <span>Do not treat these responses as independently diagnostic. A clinician interprets them together with history, context, and observations over time.</span>
       </div>
 
       <Card>
         <SectionTitle title="Most recent recorded check-in" detail={latestAssessment ? `From assessment ${formatDate(latestAssessment.date)}` : 'No recorded assessment yet'} />
         {latestFunctional?.skipped ? (
-          <p className="text-[12px] text-slate-600">The daily function check-in was skipped in the latest recorded session.</p>
+          <p className="text-[12px] text-muted">The daily function check-in was skipped in the latest recorded session.</p>
         ) : entries.length ? (
           <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
             {entries.map(([key, value]) => (
-              <div key={key} className="flex items-start justify-between border-b border-slate-100 py-2 gap-3">
-                <dt className="text-xs text-slate-600">{activityLabels[key] || key.replace(/_/g, ' ')}</dt>
-                <dd className="text-xs font-semibold text-slate-800 text-right">{responseLabel(value)}</dd>
+              <div key={key} className="flex items-start justify-between border-b border-line py-2 gap-3">
+                <dt className="text-[12px] text-muted">{activityLabels[key] || key.replace(/_/g, ' ')}</dt>
+                <dd className="text-[12px] font-semibold text-ink text-right">{responseLabel(value)}</dd>
               </div>
             ))}
           </dl>
@@ -178,23 +178,23 @@ export const DailyFunctionQuestionnairePage: React.FC = () => {
       <Card>
         <SectionTitle title="Recorded sessions with functional data" detail={`${assessments.length} assessment(s) in history (recorded only).`} />
         {assessments.length ? (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-line">
             {assessments.slice(0, 8).map((a: any) => {
               const fc = a?.taskResponses?.functionalCheckIn || a?.taskResponses?.functionalAssessment || a?.taskResponses?.dailyFunction;
               const has = fc && !fc.skipped && typeof fc === 'object';
               return (
                 <li key={a.id} className="flex items-center justify-between gap-3 py-2.5">
                   <div>
-                    <p className="text-[12px] font-semibold text-slate-900">{formatDate(a.date)}</p>
-                    <p className="text-xs text-slate-500">{has ? 'Daily function responses recorded' : 'Not recorded / skipped in this session'}</p>
+                    <p className="text-[12px] font-semibold text-ink">{formatDate(a.date)}</p>
+                    <p className="text-[11px] text-muted">{has ? 'Daily function responses recorded' : 'Not recorded / skipped in this session'}</p>
                   </div>
-                  <Pill tone={has ? 'green' : 'slate'}>{has ? 'Recorded' : 'Missing'}</Pill>
+                  <Pill tone={has ? 'forestSoft' : 'sage'}>{has ? 'Recorded' : 'Missing'}</Pill>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <p className="text-xs text-slate-500">No assessment history yet.</p>
+          <p className="text-[11px] text-muted">No assessment history yet.</p>
         )}
       </Card>
     </div>
@@ -229,13 +229,13 @@ export const BrainHealthTimelinePage: React.FC = () => {
         <Card>
           <SectionTitle title="Timeline of assessments" detail="Most recent first. Only recorded sessions are shown." />
           {assessments.length ? (
-            <ol className="relative border-l border-slate-200 ml-2 space-y-4 pl-4">
+            <ol className="relative border-l border-line/80 ml-2 space-y-4 pl-4">
               {assessments.slice(0, 12).map((a: any, idx: number) => (
                 <li key={a.id} className="relative">
-                  <span className={`absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white ${idx === 0 ? 'bg-blue-600' : 'bg-slate-300'}`} />
-                  <p className="text-[12px] font-semibold text-slate-900">{formatDate(a.date)} <span className="font-normal text-slate-500">· {a.assessmentType || 'Screening'}</span></p>
-                  <p className="text-xs text-slate-600">Overall: {a.overallScore != null ? `${Math.round(a.overallScore)} / 100` : '—'} · {a.reviewStatus?.replace(/_/g, ' ').toLowerCase() || 'status not recorded'}</p>
-                  {baseline && idx === assessments.length - 1 && <p className="text-xs text-emerald-700 mt-0.5">Baseline reference context available</p>}
+                  <span className={`absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white ${idx === 0 ? 'bg-forest' : 'bg-line-strong'}`} />
+                  <p className="text-[12px] font-semibold text-ink">{formatDate(a.date)} <span className="font-normal text-muted">· {a.assessmentType || 'Screening'}</span></p>
+                  <p className="text-[11px] text-muted">Overall: {a.overallScore != null ? `${Math.round(a.overallScore)} / 100` : '—'} · {a.reviewStatus?.replace(/_/g, ' ').toLowerCase() || 'status not recorded'}</p>
+                  {baseline && idx === assessments.length - 1 && <p className="text-[11px] text-forest mt-0.5">Baseline reference context available</p>}
                 </li>
               ))}
             </ol>
@@ -249,19 +249,19 @@ export const BrainHealthTimelinePage: React.FC = () => {
           {changes.length ? (
             <ul className="space-y-2">
               {changes.slice(0, 8).map((c: any, i: number) => (
-                <li key={c.id || i} className="rounded-xl border border-slate-200 p-3">
+                <li key={c.id || i} className="rounded-xl border border-line bg-warm/70 p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold text-slate-900">{formatDate(c.detectedAt || c.createdAt || c.date)}</p>
-                    <Pill tone={c.status === 'REVIEW' ? 'amber' : c.status === 'NO_CHANGE' ? 'green' : 'slate'}>{c.status || 'Recorded'}</Pill>
+                    <p className="text-[12px] font-semibold text-ink">{formatDate(c.detectedAt || c.createdAt || c.date)}</p>
+                    <Pill tone={c.status === 'REVIEW' ? 'amber' : c.status === 'NO_CHANGE' ? 'forestSoft' : 'sage'}>{c.status || 'Recorded'}</Pill>
                   </div>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">
+                  <p className="mt-1 text-[11px] leading-5 text-muted">
                     {Array.isArray(c.reasons) && c.reasons.length ? c.reasons.map((r: string) => r.replace(/_/g, ' ').toLowerCase()).join(', ') : (c.summary || 'No reason details recorded.')}
                   </p>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-xs leading-5 text-slate-500">No change summaries recorded yet. Change is interpreted only across comparable, quality-acceptable sessions.</p>
+            <p className="text-[11px] leading-5 text-muted">No change summaries recorded yet. Change is interpreted only across comparable, quality-acceptable sessions.</p>
           )}
         </Card>
       </div>
@@ -288,8 +288,8 @@ export const PersonalizedPreventionPlanPage: React.FC = () => {
       />
 
       <MotionReveal><HealthcareScene kind="prevention" className="w-full max-w-3xl" /></MotionReveal>
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs leading-5 text-amber-900 flex gap-2">
-        <Info className="h-4 w-4 shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-amber/60 bg-amber\/10 p-3.5 text-[11px] leading-5 text-amber-900 flex gap-2">
+        <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
         <span>Suggestions are supportive and for clinician discussion/approval. They are derived only from recorded task/context/functional inputs (no invented data) and never constitute a prescription or inferred disease.</span>
       </div>
 
@@ -304,17 +304,17 @@ export const PersonalizedPreventionPlanPage: React.FC = () => {
           {prevention.length || general.length ? (
             <ul className="space-y-2">
               {[...prevention, ...general].map((step: any, i: number) => (
-                <li key={step.id || i} className="flex gap-2 rounded-xl border border-slate-200 p-3">
-                  <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${step.done ? 'text-emerald-600' : 'text-slate-300'}`} />
+                <li key={step.id || i} className="flex gap-2 rounded-xl border border-line bg-warm/70 p-3">
+                  <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${step.done ? 'text-forest' : 'text-muted'}`} aria-hidden="true" />
                   <div>
-                    <p className="text-[12px] font-semibold text-slate-900">{step.action || step.title || step.type || 'Recorded step'}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{step.reason || step.detail || 'Supportive/monitoring step recorded for discussion.'}</p>
+                    <p className="text-[12px] font-semibold text-ink">{step.action || step.title || step.type || 'Recorded step'}</p>
+                    <p className="text-[11px] text-muted mt-0.5">{step.reason || step.detail || 'Supportive/monitoring step recorded for discussion.'}</p>
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-xs leading-5 text-slate-500">No personalized prevention/support steps recorded yet. Complete assessments and context, then review with your clinician.</p>
+            <p className="text-[11px] leading-5 text-muted">No personalized prevention/support steps recorded yet. Complete assessments and context, then review with your clinician.</p>
           )}
         </Card>
 
@@ -327,7 +327,7 @@ export const PersonalizedPreventionPlanPage: React.FC = () => {
           {carePlan?.steps?.length ? (
             <ul className="space-y-2 mb-3">
               {carePlan.steps.slice(0, 4).map((s: any) => (
-                <li key={s.id} className="flex gap-2 text-xs text-slate-700"><CheckCircle2 className={`h-4 w-4 shrink-0 ${s.done ? 'text-emerald-600' : 'text-slate-300'}`} />{s.title}</li>
+                <li key={s.id} className="flex gap-2 text-[11px] text-muted"><CheckCircle2 className={`h-4 w-4 shrink-0 ${s.done ? 'text-forest' : 'text-muted'}`} aria-hidden="true" />{s.title}</li>
               ))}
             </ul>
           ) : null}
@@ -338,7 +338,7 @@ export const PersonalizedPreventionPlanPage: React.FC = () => {
         </Card>
       </div>
 
-      <p className="text-xs text-slate-500">Sources: recorded assessments, context, and clinician-entered plan data only. No synthetic or invented data.</p>
+      <p className="text-[11px] text-muted">Sources: recorded assessments, context, and clinician-entered plan data only. No synthetic or invented data.</p>
     </div>
   );
 };

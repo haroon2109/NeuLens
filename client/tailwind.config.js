@@ -25,8 +25,10 @@ export default {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        // `text-muted` is the portal's secondary-text colour. The old shadcn
+        // default here was a pale cream, which made body copy invisible.
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
+          DEFAULT: '#63716B',
           foreground: 'hsl(var(--muted-foreground))',
         },
         popover: {
@@ -49,6 +51,20 @@ export default {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
         },
+
+        // ─── NeuLens brand palette as bare utilities ──────────────
+        // Portal screens write `bg-warm`, `border-line`, `text-ink`, etc.
+        // These entries make those classes resolve to the public-site palette.
+        sage: { DEFAULT: '#A9C7B6', dark: '#7FA692', deep: '#46715E' },
+        mint: { DEFAULT: '#DFF3EA', soft: '#EEF8F3' },
+        warm: '#FBF7EF',
+        forest: { DEFAULT: '#2F5E4E', deep: '#24493D' },
+        ink: '#1B332B',
+        body: '#4E5F58',
+        line: { DEFAULT: '#E2E7DF', strong: '#CFD8CE' },
+        // Bare accents used with opacity modifiers (bg-amber/10, border-rose/60)
+        amber: { DEFAULT: '#D97706' },
+        rose: { DEFAULT: '#B42332' },
 
         // ─── NeuLens formalized palette ───────────────────────────
         nl: {
@@ -151,6 +167,7 @@ export default {
         card: '0 4px 20px -2px rgba(27, 51, 43, 0.05), 0 2px 6px -1px rgba(27, 51, 43, 0.02)',
         'card-hover': '0 12px 30px -4px rgba(27, 51, 43, 0.08), 0 4px 10px -2px rgba(27, 51, 43, 0.03)',
         pill: '0 4px 14px 0 rgba(47, 94, 78, 0.22)',
+        elevated: '0 24px 70px -48px rgba(27, 51, 43, 0.28), 0 2px 8px rgba(27, 51, 43, 0.035)',
         glass: '0 8px 30px 0 rgba(27, 51, 43, 0.04)',
         healthRing: '0 0 20px rgba(47, 94, 78, 0.18)',
       },

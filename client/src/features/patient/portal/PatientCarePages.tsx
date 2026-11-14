@@ -33,15 +33,15 @@ import {
 } from './ui';
 
 const primaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 text-[12px] font-bold text-white transition hover:bg-blue-800';
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-primary';
 const secondaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-50';
+  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-secondary';
 
 const appointmentTone = (status: string) => {
   if (status === 'CANCELLED') return 'rose' as const;
-  if (status === 'COMPLETED') return 'slate' as const;
+  if (status === 'COMPLETED') return 'sage' as const;
   if (status === 'RESCHEDULED') return 'amber' as const;
-  return 'green' as const;
+  return 'forestSoft' as const;
 };
 
 // ---------------------------------------------------------------------------
@@ -118,19 +118,19 @@ export const AppointmentsPage: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {upcoming.map((appointment) => (
-                  <div key={appointment.id} className="rounded-xl border border-slate-200 p-3.5">
+                  <div key={appointment.id} className="rounded-xl border border-line p-3.5">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <p className="text-[13px] font-semibold text-slate-900">{appointment.title}</p>
-                        <p className="mt-0.5 text-xs text-slate-500">{appointment.clinician}</p>
+                        <p className="text-[13px] font-semibold text-ink">{appointment.title}</p>
+                        <p className="mt-0.5 text-xs text-muted">{appointment.clinician}</p>
                       </div>
                       <Pill tone={appointmentTone(appointment.status)} dot>{appointment.status.toLowerCase()}</Pill>
                     </div>
-                    <div className="mt-2.5 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
-                      <span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-slate-400" /> {formatDate(appointment.date)} · {appointment.time}</span>
-                      <span className="flex items-start gap-1.5"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" /> {appointment.location}</span>
+                    <div className="mt-2.5 grid gap-2 text-xs text-body sm:grid-cols-2">
+                      <span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 text-muted" /> {formatDate(appointment.date)} · {appointment.time}</span>
+                      <span className="flex items-start gap-1.5"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" /> {appointment.location}</span>
                     </div>
-                    {appointment.notes && <p className="mt-2 rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs leading-5 text-slate-500">{appointment.notes}</p>}
+                    {appointment.notes && <p className="mt-2 rounded-lg bg-warm px-2.5 py-1.5 text-xs leading-5 text-muted">{appointment.notes}</p>}
 
                     {rescheduling === appointment.id ? (
                       <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50/60 p-3">
@@ -142,14 +142,14 @@ export const AppointmentsPage: React.FC = () => {
                             value={newDate}
                             min={new Date().toISOString().slice(0, 10)}
                             onChange={(event) => setNewDate(event.target.value)}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs"
+                            className="rounded-lg border border-line bg-white px-2.5 py-2 text-xs"
                           />
                           <input
                             type="time"
                             aria-label="New appointment time"
                             value={newTime}
                             onChange={(event) => setNewTime(event.target.value)}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs"
+                            className="rounded-lg border border-line bg-white px-2.5 py-2 text-xs"
                           />
                           <button
                             type="button"
@@ -163,7 +163,7 @@ export const AppointmentsPage: React.FC = () => {
                         <p className="mt-1.5 text-xs text-blue-900/70">Your care team will see the new time. Contact the clinic if you need to change it again.</p>
                       </div>
                     ) : (
-                      <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-2.5">
+                      <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-2.5">
                         <button type="button" className="text-xs font-bold text-blue-700 hover:underline" onClick={() => beginReschedule(appointment.id, appointment.date, appointment.time)}>
                           Reschedule
                         </button>
@@ -186,7 +186,7 @@ export const AppointmentsPage: React.FC = () => {
                 <li key={appointment.id} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold text-slate-800">{appointment.title}</p>
-                    <p className="text-xs text-slate-500">{formatDate(appointment.date)} · {appointment.clinician}</p>
+                    <p className="text-xs text-muted">{formatDate(appointment.date)} · {appointment.clinician}</p>
                   </div>
                   <Pill tone={appointmentTone(appointment.status)}>{appointment.status.toLowerCase()}</Pill>
                 </li>
@@ -198,11 +198,11 @@ export const AppointmentsPage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Your clinic" />
-            <p className="text-[12px] font-semibold text-slate-900">{treatmentTeam.doctor}</p>
-            <p className="mt-0.5 text-xs text-slate-500">{treatmentTeam.role}</p>
+            <p className="text-[12px] font-semibold text-ink">{treatmentTeam.doctor}</p>
+            <p className="mt-0.5 text-xs text-muted">{treatmentTeam.role}</p>
             <dl className="mt-3 space-y-2 text-xs">
-              <div className="flex gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" /><dd className="text-slate-600">{treatmentTeam.institution}<br />{treatmentTeam.department}<br />Block B, Suite 400</dd></div>
-              <div className="flex items-center gap-2"><Stethoscope className="h-3.5 w-3.5 text-slate-400" /><dd className="text-slate-600">{treatmentTeam.phone}</dd></div>
+              <div className="flex gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" /><dd className="text-body">{treatmentTeam.institution}<br />{treatmentTeam.department}<br />Block B, Suite 400</dd></div>
+              <div className="flex items-center gap-2"><Stethoscope className="h-3.5 w-3.5 text-muted" /><dd className="text-body">{treatmentTeam.phone}</dd></div>
             </dl>
             <div className="mt-3 flex flex-wrap gap-2">
               <a href={`mailto:${treatmentTeam.email}`} className={secondaryButton}>Email clinic</a>
@@ -264,7 +264,7 @@ export const CarePlanPage: React.FC = () => {
                   type="button"
                   onClick={() => toggleCareStep(step.id)}
                   className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition ${
-                    step.done ? 'border-emerald-200 bg-emerald-50/60' : 'border-slate-200 hover:border-slate-300'
+                    step.done ? 'border-emerald-200 bg-emerald-50/60' : 'border-line hover:border-slate-300'
                   }`}
                 >
                   <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
@@ -274,7 +274,7 @@ export const CarePlanPage: React.FC = () => {
                   </span>
                   <span>
                     <span className={`block text-[12px] font-semibold ${step.done ? 'text-emerald-950' : 'text-slate-800'}`}>{step.title}</span>
-                    <span className="mt-0.5 block text-xs leading-5 text-slate-500">{step.detail}</span>
+                    <span className="mt-0.5 block text-xs leading-5 text-muted">{step.detail}</span>
                   </span>
                 </button>
               </li>
@@ -286,10 +286,10 @@ export const CarePlanPage: React.FC = () => {
           <Card>
             <SectionTitle title="Monitoring schedule" />
             <dl className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between gap-3"><dt className="text-slate-500">Next assessment</dt><dd className="font-semibold text-slate-800">{formatDate(carePlan.nextReview)}</dd></div>
-              <div className="flex items-center justify-between gap-3"><dt className="text-slate-500">Recommended follow-up</dt><dd className="font-semibold text-slate-800">{treatmentTeam.nextReview}</dd></div>
-              <div className="flex items-center justify-between gap-3"><dt className="text-slate-500">Repeat interval</dt><dd className="font-semibold text-slate-800">About 4 weeks</dd></div>
-              <div className="flex items-center justify-between gap-3"><dt className="text-slate-500">Clinician</dt><dd className="font-semibold text-slate-800">{treatmentTeam.doctor}</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Next assessment</dt><dd className="font-semibold text-slate-800">{formatDate(carePlan.nextReview)}</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Recommended follow-up</dt><dd className="font-semibold text-slate-800">{treatmentTeam.nextReview}</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Repeat interval</dt><dd className="font-semibold text-slate-800">About 4 weeks</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Clinician</dt><dd className="font-semibold text-slate-800">{treatmentTeam.doctor}</dd></div>
             </dl>
             <Link to="/patient/assessment/intro" className={`${primaryButton} mt-3`}>Start scheduled assessment</Link>
           </Card>
@@ -313,10 +313,10 @@ export const CarePlanPage: React.FC = () => {
             { icon: Sparkles, title: 'Staying active', detail: 'Gentle, regular movement supports general brain health. Choose what feels safe and enjoyable.' },
             { icon: BookOpen, title: 'Tracking changes', detail: 'A consistent screening routine helps separate day-to-day variation from patterns worth reviewing.' }
           ].map(({ icon: Icon, title, detail }) => (
-            <div key={title} className="rounded-xl border border-slate-200 p-3.5">
+            <div key={title} className="rounded-xl border border-line p-3.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><Icon className="h-4 w-4" /></span>
-              <p className="mt-2 text-xs font-semibold text-slate-900">{title}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+              <p className="mt-2 text-xs font-semibold text-ink">{title}</p>
+              <p className="mt-1 text-xs leading-5 text-muted">{detail}</p>
             </div>
           ))}
         </div>
@@ -362,7 +362,7 @@ export const NotificationsPage: React.FC = () => {
             type="button"
             onClick={() => setFilter(value)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-              filter === value ? 'bg-blue-700 text-white' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              filter === value ? 'bg-blue-700 text-white' : 'border border-line bg-white text-body hover:bg-warm'
             }`}
           >
             {value === 'ALL' ? 'All' : `Unread (${unread})`}
@@ -379,17 +379,17 @@ export const NotificationsPage: React.FC = () => {
               const Icon = categoryIcon(item.category);
               return (
                 <li key={item.id} className={`flex gap-3 p-4 ${item.read ? '' : 'bg-blue-50/30'}`}>
-                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.read ? 'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-700'}`}>
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.read ? 'bg-slate-100 text-muted' : 'bg-blue-100 text-blue-700'}`}>
                     <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-[12px] font-semibold text-slate-900">{item.title}</p>
+                      <p className="text-[12px] font-semibold text-ink">{item.title}</p>
                       {!item.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label="Unread" />}
                     </div>
-                    <p className="mt-0.5 text-xs leading-5 text-slate-500">{item.detail}</p>
+                    <p className="mt-0.5 text-xs leading-5 text-muted">{item.detail}</p>
                     <div className="mt-1.5 flex items-center gap-3">
-                      <span className="text-xs font-medium uppercase tracking-[0.06em] text-slate-400">{formatDateTime(item.date)}</span>
+                      <span className="text-xs font-medium uppercase tracking-[0.06em] text-muted">{formatDateTime(item.date)}</span>
                       {!item.read && (
                         <button type="button" onClick={() => markNotificationRead(item.id)} className="text-xs font-bold text-blue-700 hover:underline">
                           Mark as read
@@ -444,9 +444,9 @@ export const DocumentsPage: React.FC = () => {
                   <FileText className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-[12px] font-semibold text-slate-900">{document.title}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{document.type} · {formatDate(document.date)}</p>
-                  <p className="mt-1 max-w-lg text-xs leading-5 text-slate-500">{document.summary}</p>
+                  <p className="text-[12px] font-semibold text-ink">{document.title}</p>
+                  <p className="mt-0.5 text-xs text-muted">{document.type} · {formatDate(document.date)}</p>
+                  <p className="mt-1 max-w-lg text-xs leading-5 text-muted">{document.summary}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -457,7 +457,7 @@ export const DocumentsPage: React.FC = () => {
                     logDocumentAccess(document.id);
                     window.print();
                   }}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line text-body hover:bg-warm"
                   aria-label={`Print ${document.title}`}
                 >
                   <Printer className="h-3.5 w-3.5" />
@@ -468,7 +468,7 @@ export const DocumentsPage: React.FC = () => {
                     logDocumentAccess(document.id);
                     download(document.title, document.summary, document.date);
                   }}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-xs font-bold text-body hover:bg-warm"
                 >
                   <Download className="h-3.5 w-3.5" /> Download
                 </button>
@@ -484,14 +484,14 @@ export const DocumentsPage: React.FC = () => {
           {documentAccess.length ? (
             <ul className="space-y-2">
               {documentAccess.map((entry, index) => (
-                <li key={`${entry.id}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2">
-                  <span className="truncate text-xs text-slate-700">{entry.title}</span>
-                  <span className="shrink-0 text-xs text-slate-400">{formatDateTime(entry.at)}</span>
+                <li key={`${entry.id}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-line px-3 py-2">
+                  <span className="truncate text-xs text-body">{entry.title}</span>
+                  <span className="shrink-0 text-xs text-muted">{formatDateTime(entry.at)}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-xs leading-5 text-slate-500">No document access has been recorded yet.</p>
+            <p className="text-xs leading-5 text-muted">No document access has been recorded yet.</p>
           )}
         </Card>
 

@@ -96,13 +96,13 @@ export const DoctorPortalDashboardPage: React.FC = () => {
         }
       />
 
-      <form onSubmit={handleSearch} className="relative rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-        <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <form onSubmit={handleSearch} className="relative rounded-2xl border border-line bg-white p-2 shadow-card">
+        <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Quick search by patient name or hospital ID…"
-          className="w-full rounded-xl border-0 bg-slate-50 py-3 pl-11 pr-24 text-[12px] text-slate-800 outline-none placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-xl border-0 bg-warm py-3 pl-11 pr-24 text-[12px] text-slate-800 outline-none placeholder:text-muted focus:bg-white focus:ring-2 focus:ring-blue-500/20"
           aria-label="Quick patient search"
         />
         <button type="submit" className={`${primaryButton} absolute right-3 top-1/2 -translate-y-1/2`}>
@@ -125,10 +125,10 @@ export const DoctorPortalDashboardPage: React.FC = () => {
 
       <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <Card padded={false}>
-          <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="text-[13px] font-semibold text-slate-900">Recent assessment activity</h2>
-              <p className="mt-0.5 text-xs text-slate-500">Latest completed screening sessions across your panel.</p>
+              <h2 className="text-[13px] font-semibold text-ink">Recent assessment activity</h2>
+              <p className="mt-0.5 text-xs text-muted">Latest completed screening sessions across your panel.</p>
             </div>
             <Link to="/doctor/patients" className="text-xs font-semibold text-blue-700 hover:text-blue-900">
               View all
@@ -136,30 +136,30 @@ export const DoctorPortalDashboardPage: React.FC = () => {
           </div>
 
           {loading ? (
-            <p className="p-6 text-center text-xs text-slate-500">Loading assessment activity…</p>
+            <p className="p-6 text-center text-xs text-muted">Loading assessment activity…</p>
           ) : (stats?.recentAssessments || []).length === 0 ? (
             <div className="p-8 text-center">
               <FileText className="mx-auto h-7 w-7 text-slate-300" />
-              <p className="mt-2 text-xs font-semibold text-slate-700">No completed assessments yet</p>
-              <p className="mt-1 text-xs text-slate-500">Completed screening sessions will appear here for review.</p>
+              <p className="mt-2 text-xs font-semibold text-body">No completed assessments yet</p>
+              <p className="mt-1 text-xs text-muted">Completed screening sessions will appear here for review.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line">
               {(stats?.recentAssessments || []).slice(0, 5).map((assessment) => (
                 <li key={assessment.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <Link to={`/doctor/patients/${assessment.patientId}`} className="text-[12px] font-semibold text-slate-900 hover:text-blue-700">
+                    <Link to={`/doctor/patients/${assessment.patientId}`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
                       {assessment.patientName}
                     </Link>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-muted">
                       {assessment.patientId} · {formatDate(assessment.date)} · {assessment.assessmentType || 'Full screening'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">{Math.round(assessment.score)} / 100</span>
+                    <span className="rounded-lg bg-warm px-2 py-1 text-xs font-bold text-body">{Math.round(assessment.score)} / 100</span>
                     <RiskPill risk={assessment.riskLevel} />
                     <ReviewPill status={assessment.reviewStatus} />
-                    <Link to={`/doctor/patients/${assessment.patientId}/review?assessment=${assessment.id}`} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={`Review assessment for ${assessment.patientName}`}>
+                    <Link to={`/doctor/patients/${assessment.patientId}/review?assessment=${assessment.id}`} className="rounded-lg p-1.5 text-muted hover:bg-warm hover:text-body" aria-label={`Review assessment for ${assessment.patientName}`}>
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
@@ -170,12 +170,12 @@ export const DoctorPortalDashboardPage: React.FC = () => {
         </Card>
 
         <Card padded={false}>
-          <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-900">
+              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600" /> Change alerts
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">Within-person signals needing acknowledgement.</p>
+              <p className="mt-0.5 text-xs text-muted">Within-person signals needing acknowledgement.</p>
             </div>
             <Link to="/doctor/change-detection" className="text-xs font-semibold text-blue-700 hover:text-blue-900">
               Queue
@@ -185,23 +185,23 @@ export const DoctorPortalDashboardPage: React.FC = () => {
           {openChangeAlerts.length === 0 ? (
             <div className="p-7 text-center">
               <CheckCircle2 className="mx-auto h-7 w-7 text-emerald-400" />
-              <p className="mt-2 text-xs font-semibold text-slate-700">No open change alerts</p>
-              <p className="mt-1 text-xs leading-4 text-slate-500">Acknowledged or insufficient-comparison patients are excluded.</p>
+              <p className="mt-2 text-xs font-semibold text-body">No open change alerts</p>
+              <p className="mt-1 text-xs leading-4 text-muted">Acknowledged or insufficient-comparison patients are excluded.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line">
               {openChangeAlerts.slice(0, 4).map((alert) => (
                 <li key={alert.patientId} className="px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <Link to={`/doctor/patients/${alert.patientId}/change-detection`} className="text-[12px] font-semibold text-slate-900 hover:text-blue-700">
+                      <Link to={`/doctor/patients/${alert.patientId}/change-detection`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
                         {alert.patientName}
                       </Link>
-                      <p className="mt-0.5 text-xs text-slate-500">{formatDate(alert.latestAssessmentDate)} · {alert.reviewReasons.length} review cue{alert.reviewReasons.length === 1 ? '' : 's'}</p>
+                      <p className="mt-0.5 text-xs text-muted">{formatDate(alert.latestAssessmentDate)} · {alert.reviewReasons.length} review cue{alert.reviewReasons.length === 1 ? '' : 's'}</p>
                     </div>
                     <ChangePill status="REVIEW" />
                   </div>
-                  <p className="mt-1.5 text-xs leading-4 text-slate-600">
+                  <p className="mt-1.5 text-xs leading-4 text-body">
                     {alert.reviewReasons.includes('OUTSIDE_OBSERVED_BASELINE') && 'Score outside the observed baseline. '}
                     {alert.reviewReasons.includes('FUNCTIONAL_CHANGE') && 'Reported daily-function change. '}
                     {alert.reviewReasons.includes('CONTEXT_CHANGE') && 'Health-context contributors changed.'}
@@ -215,28 +215,28 @@ export const DoctorPortalDashboardPage: React.FC = () => {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card padded={false}>
-          <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="text-[13px] font-semibold text-slate-900">Upcoming follow-ups</h2>
-              <p className="mt-0.5 text-xs text-slate-500">Appointments and repeat assessment reminders.</p>
+              <h2 className="text-[13px] font-semibold text-ink">Upcoming follow-ups</h2>
+              <p className="mt-0.5 text-xs text-muted">Appointments and repeat assessment reminders.</p>
             </div>
             <Link to="/doctor/appointments" className="text-xs font-semibold text-blue-700 hover:text-blue-900">Manage</Link>
           </div>
           {upcoming.length === 0 ? (
             <div className="p-7 text-center">
               <CalendarDays className="mx-auto h-7 w-7 text-slate-300" />
-              <p className="mt-2 text-xs font-semibold text-slate-700">Nothing scheduled</p>
+              <p className="mt-2 text-xs font-semibold text-body">Nothing scheduled</p>
               <Link to="/doctor/appointments" className={`${secondaryButton} mt-3`}>
                 <Plus className="h-3.5 w-3.5" /> Schedule follow-up
               </Link>
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line">
               {upcoming.slice(0, 4).map((appointment) => (
                 <li key={appointment.id} className="flex items-start justify-between gap-3 px-4 py-3">
                   <div>
-                    <p className="text-[12px] font-semibold text-slate-900">{appointment.title}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="text-[12px] font-semibold text-ink">{appointment.title}</p>
+                    <p className="mt-0.5 text-xs text-muted">
                       {appointment.date} at {appointment.time} · {appointment.location}
                     </p>
                   </div>
@@ -250,33 +250,33 @@ export const DoctorPortalDashboardPage: React.FC = () => {
         </Card>
 
         <Card padded={false}>
-          <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5">
+          <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="text-[13px] font-semibold text-slate-900">Recent clinical notes</h2>
-              <p className="mt-0.5 text-xs text-slate-500">Your latest observations and review decisions.</p>
+              <h2 className="text-[13px] font-semibold text-ink">Recent clinical notes</h2>
+              <p className="mt-0.5 text-xs text-muted">Your latest observations and review decisions.</p>
             </div>
             <Link to="/doctor/patients" className="text-xs font-semibold text-blue-700 hover:text-blue-900">Open records</Link>
           </div>
           {recentNotes.length === 0 ? (
             <div className="p-7 text-center">
               <Clock3 className="mx-auto h-7 w-7 text-slate-300" />
-              <p className="mt-2 text-xs font-semibold text-slate-700">No notes yet</p>
-              <p className="mt-1 text-xs text-slate-500">Clinical notes are saved per patient review.</p>
+              <p className="mt-2 text-xs font-semibold text-body">No notes yet</p>
+              <p className="mt-1 text-xs text-muted">Clinical notes are saved per patient review.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line">
               {recentNotes.map((note) => {
                 const patient = registeredPatients.find((item) => item.patientId === note.patientId);
                 return (
                   <li key={note.id} className="px-4 py-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <Link to={`/doctor/patients/${note.patientId}/notes`} className="text-[12px] font-semibold text-slate-900 hover:text-blue-700">
+                        <Link to={`/doctor/patients/${note.patientId}/notes`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
                           {patient?.name || note.patientId}
                         </Link>
-                        <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-slate-500">{note.observations}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-muted">{note.observations}</p>
                       </div>
-                      <span className="shrink-0 text-xs font-semibold text-slate-400">{formatDateTime(note.createdAt)}</span>
+                      <span className="shrink-0 text-xs font-semibold text-muted">{formatDateTime(note.createdAt)}</span>
                     </div>
                   </li>
                 );
@@ -287,20 +287,20 @@ export const DoctorPortalDashboardPage: React.FC = () => {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Link to="/doctor/patients/new" className="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-sm">
+        <Link to="/doctor/patients/new" className="group rounded-2xl border border-line bg-white p-4 transition hover:border-blue-300 hover:shadow-card">
           <UserPlus className="h-5 w-5 text-blue-700" />
-          <p className="mt-2 text-[12px] font-semibold text-slate-900">Register a patient</p>
-          <p className="mt-0.5 text-xs leading-4 text-slate-500">Create a hospital ID, capture consent, and send an invitation.</p>
+          <p className="mt-2 text-[12px] font-semibold text-ink">Register a patient</p>
+          <p className="mt-0.5 text-xs leading-4 text-muted">Create a hospital ID, capture consent, and send an invitation.</p>
         </Link>
-        <Link to="/doctor/reports" className="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-sm">
+        <Link to="/doctor/reports" className="group rounded-2xl border border-line bg-white p-4 transition hover:border-blue-300 hover:shadow-card">
           <FileText className="h-5 w-5 text-blue-700" />
-          <p className="mt-2 text-[12px] font-semibold text-slate-900">Clinical reports</p>
-          <p className="mt-0.5 text-xs leading-4 text-slate-500">Review printable patient and longitudinal summaries.</p>
+          <p className="mt-2 text-[12px] font-semibold text-ink">Clinical reports</p>
+          <p className="mt-0.5 text-xs leading-4 text-muted">Review printable patient and longitudinal summaries.</p>
         </Link>
-        <Link to="/doctor/longitudinal" className="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-sm">
+        <Link to="/doctor/longitudinal" className="group rounded-2xl border border-line bg-white p-4 transition hover:border-blue-300 hover:shadow-card">
           <TrendingUp className="h-5 w-5 text-blue-700" />
-          <p className="mt-2 text-[12px] font-semibold text-slate-900">Longitudinal trends</p>
-          <p className="mt-0.5 text-xs leading-4 text-slate-500">Compare cognitive, ocular, vocal, and functional changes.</p>
+          <p className="mt-2 text-[12px] font-semibold text-ink">Longitudinal trends</p>
+          <p className="mt-0.5 text-xs leading-4 text-muted">Compare cognitive, ocular, vocal, and functional changes.</p>
         </Link>
       </div>
     </div>
