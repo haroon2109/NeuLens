@@ -112,6 +112,7 @@ def analyze_voice_acoustics(
     syllable_count: int | None = Form(default=None, ge=0, le=100_000),
     language: str | None = Form(default=None),
     _: Principal = Depends(principal_or_internal),
+    settings: Settings = Depends(get_settings),
 ) -> AnalysisEnvelope:
     """Measure acoustic properties of one uploaded speech clip.
 
@@ -142,6 +143,7 @@ def analyze_voice_acoustics(
             target_text=target_text,
             response_latency_ms=response_latency_ms,
             syllable_count=syllable_count,
+            speech_threshold=settings.vad_speech_threshold,
         )
     except acoustics.AudioUnavailable as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc

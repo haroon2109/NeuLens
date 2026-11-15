@@ -56,6 +56,8 @@ export const DoctorReportViewPage: React.FC = () => {
   const [explanationError, setExplanationError] = useState<string | null>(null);
   const [savingReview, setSavingReview] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -240,6 +242,26 @@ export const DoctorReportViewPage: React.FC = () => {
           </Link>
 
           <button
+            onClick={async () => {
+              setExportError(null);
+              setExporting(true);
+              try {
+                await doctorApi.exportAssessment(reportData.assessment.id);
+              } catch (err: any) {
+                setExportError(err?.message || 'Export failed.');
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting}
+            title="Download structured session data (JSON) for audit or pilot analysis"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white border border-line text-body hover:bg-warm text-xs font-bold transition-all shadow-card disabled:opacity-60"
+          >
+            <Download className="w-3.5 h-3.5 text-medical-600" />
+            {exporting ? 'Exporting…' : 'Export JSON'}
+          </button>
+
+          <button
             onClick={() => window.print()}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white text-xs font-bold transition-all shadow-card shadow-medical-600/20"
           >
@@ -248,6 +270,12 @@ export const DoctorReportViewPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {exportError && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+          {exportError}
+        </div>
+      )}
 
       {/* ---------------------------------------------------------------- */}
       {/* CONFIDENTIAL CLINICAL REPORT CONTAINER (Printable)               */}

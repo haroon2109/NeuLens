@@ -7,11 +7,21 @@
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "build": "tsc",
     "start": "node dist/app.js",
+    "migrate:deploy": "ts-node --project tsconfig.json src/scripts/migrate-deploy.ts",
     "test": "tsc && NODE_ENV=test node --test dist/tests",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "clinician:create": "npm run build && node dist/scripts/createClinician.js"
+    "clinician:create": "npm run build && node dist/scripts/createClinician.js",
+    "postbuild": "npx prisma generate",
+    "healthcheck": "bash healthcheck.sh",
+    "predeploy": "npm run build && npm run prisma:generate && npm run migrate:deploy",
+    "start-prod": "npm run build && npm run prisma:generate && npm run migrate:deploy && npm start",
+    "deploy": "npm run build && npm run prisma:generate && npm run migrate:deploy",
+    "ci": "npm run build && npm run prisma:generate && npm test",
+    "verify-ci": "npm run build && npm run prisma:generate && npm test && echo CI_OK",
+    "verify-ci-healthcheck": "npm run build && npm run prisma:generate && npm test && bash healthcheck.sh && echo CI_HEALTHCHECK_OK",
+    "verify-deploy-script": "npx ts-node --project tsconfig.json src/scripts/migrate-deploy.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",
@@ -21,7 +31,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.5.0",
-    "zod": "^3.22.4"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

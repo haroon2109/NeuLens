@@ -225,7 +225,10 @@ export class DoctorController {
       const { id } = req.params;
       const { reviewStatus, doctorNotes } = doctorReviewSchema.parse(req.body);
 
-      const doctorName = req.user.email.includes('sharma') ? 'Dr. Sarah Sharma' : 'Attending Neurologist';
+      // Attribute the review to the signed-in clinician rather than guessing
+      // from their email address.
+      const clinician = await HospitalDataStore.findUserById(req.user.id);
+      const doctorName = clinician?.name?.trim() || req.user.email;
 
       const updated = await HospitalDataStore.updateAssessmentReview(
         id,
@@ -404,6 +407,51 @@ export class DoctorController {
         metadata: { status, outcomeStatus },
       });
       return res.status(200).json({ success: true, referral });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * GET /api/v1/doctor/reports/:id/export
+   * Clinician-only structured export of a screening record for audit,
+   * pilot analysis, or handoff. Returns the same clinician-visible record
+   * as the report view in a downloadable JSON envelope.
+   */
+  public static async exportAssessment(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user || (req.user.role !== 'CLINICIAN' && req.user.role !== 'ADMIN')) {
+        return res.status(403).json({ error: 'Clinician access required' });
+      }
+
+      const { id } = req.params;
+      const reportData = await HospitalDataStore.getScreeningReport(id);
+
+      if (!reportData) {
+        return res.status(404).json({ error: 'Clinical screening report not found' });
+      }
+
+      await auditFromRequest(req, {
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        action: 'ASSESSMENT_EXPORT',
+        resourceType: 'ASSESSMENT',
+        resourceId: id,
+        metadata: { patientId: reportData.patient.patientId, format: 'json' },
+      });
+
+      const payload = {
+        exportVersion: '1.0',
+        exportedAt: new Date().toISOString(),
+        exportedBy: { id: req.user.id, role: req.user.role },
+        disclaimer:
+          'Research-stage screening record for clinician-supervised use. Not a diagnosis, not a validated clinical instrument, and not a substitute for clinical evaluation.',
+        report: reportData,
+      };
+
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="neulens-assessment-${id}.json"`);
+      return res.status(200).send(JSON.stringify(payload, null, 2));
     } catch (err) {
       next(err);
     }

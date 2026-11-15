@@ -32,9 +32,16 @@ const DEMO_PATIENT_USER_ID = 'demo-patient-margaret-ellis';
 const DEMO_PATIENT_ACCOUNT_ID = 'acct_demo_patient';
 const DEMO_DOCTOR_ACCOUNT_ID = 'acct_demo_doctor';
 
-/** Demo access is on for local/demo deployments unless explicitly disabled. */
+/**
+ * Demo access is on by default for local and jury use. In production it must be
+ * opted into explicitly, so a clinical deployment never seeds the documented
+ * demo clinician by accident.
+ */
 export function demoAccessEnabled(): boolean {
-  return process.env.DEMO_ACCESS_ENABLED !== 'false';
+  const flag = process.env.DEMO_ACCESS_ENABLED;
+  if (flag === 'false') return false;
+  if (process.env.NODE_ENV === 'production') return flag === 'true';
+  return true;
 }
 
 function ensureDemoPatientUser(): UserRecord {

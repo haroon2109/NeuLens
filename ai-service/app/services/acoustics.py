@@ -11,8 +11,12 @@ acoustic properties a clinician may want to review:
 * an approximate syllable rate for speech rate
 * task-specific word accuracy when a transcript and target sentence exist
 
-Speech/non-speech detection uses Silero VAD when it is installed and otherwise
-falls back to an energy-based segmenter. Every result is an exploratory
+Speech/non-speech detection uses Silero VAD, a speech classifier trained on
+recorded speech. It is a runtime dependency, not an option: the energy-based
+segmenter below only runs if the model fails to load, and the response records
+which one produced the timings in ``vad``. Because Silero decides what counts
+as speech, a clip of noise or tones yields little speech and is marked
+non-comparable instead of being measured. Every result is an exploratory
 observation, not a diagnosis or a validated cognitive marker, and a recording
 whose signal quality is too low is marked non-comparable rather than reported
 as a poor performance.
@@ -38,6 +42,10 @@ MIN_SPEECH_SECONDS = 0.12
 MERGE_GAP_SECONDS = 0.20
 PITCH_FLOOR_HZ = 60.0
 PITCH_CEILING_HZ = 500.0
+# Silero's own default. Overridable per deployment via VAD_SPEECH_THRESHOLD.
+DEFAULT_SPEECH_THRESHOLD = 0.5
+MIN_SPEECH_THRESHOLD = 0.05
+MAX_SPEECH_THRESHOLD = 0.95
 
 NOTE = (
     "Measured acoustic properties of a short repeated sentence. "
@@ -66,11 +74,11 @@ def _load_libs() -> tuple[Any, Any]:
 
 @lru_cache(maxsize=1)
 def _silero_model() -> Any | None:
-    """Load Silero VAD once, if torch and the package are installed.
+    """Load Silero VAD once per process.
 
-    Silero is intentionally optional: it pulls in torch, which is a large
-    dependency. Without it the energy segmenter below is used and the response
-    says so in ``vad``.
+    Returns None if the model cannot be loaded, so a broken install degrades to
+    the energy segmenter instead of failing the request. The response records
+    which one was used in ``vad``.
     """
 
     try:
@@ -83,6 +91,12 @@ def _silero_model() -> Any | None:
 
 def available_vad() -> str:
     return "silero" if _silero_model() is not None else "energy"
+
+
+def _clamp_threshold(threshold: float) -> float:
+    """Keep the threshold inside the range where Silero behaves sensibly."""
+
+    return min(max(float(threshold), MIN_SPEECH_THRESHOLD), MAX_SPEECH_THRESHOLD)
 
 
 def _ensure_wav(path: Path, content_type: str | None, workdir: Path) -> Path:
@@ -166,7 +180,9 @@ def _energy_segments(y: Any, sr: int, librosa: Any, numpy: Any) -> list[tuple[fl
     return [(start, end) for start, end in merged if end - start >= MIN_SPEECH_SECONDS]
 
 
-def _silero_segments(y: Any, sr: int) -> list[tuple[float, float]] | None:
+def _silero_segments(
+    y: Any, sr: int, threshold: float = DEFAULT_SPEECH_THRESHOLD
+) -> list[tuple[float, float]] | None:
     model = _silero_model()
     if model is None:
         return None
@@ -178,6 +194,7 @@ def _silero_segments(y: Any, sr: int) -> list[tuple[float, float]] | None:
             torch.from_numpy(y),
             model,
             sampling_rate=sr,
+            threshold=_clamp_threshold(threshold),
             min_speech_duration_ms=int(MIN_SPEECH_SECONDS * 1000),
             min_silence_duration_ms=int(MERGE_GAP_SECONDS * 1000),
             return_seconds=False,
@@ -395,8 +412,14 @@ def analyze_audio(
     response_latency_ms: int | None = None,
     syllable_count: int | None = None,
     max_seconds: float = 120.0,
+    speech_threshold: float = DEFAULT_SPEECH_THRESHOLD,
 ) -> dict[str, Any]:
-    """Measure acoustic properties of one speech clip."""
+    """Measure acoustic properties of one speech clip.
+
+    ``speech_threshold`` is the Silero VAD speech probability above which audio
+    counts as speech. It is recorded in the response, because lowering it changes
+    what the measurement means.
+    """
 
     librosa, numpy = _load_libs()
     source = Path(path)
@@ -413,7 +436,8 @@ def analyze_audio(
     if duration > max_seconds:
         raise AudioRejected(f"The audio clip is longer than {max_seconds:.0f} seconds.")
 
-    segments = _silero_segments(y, sr)
+    threshold = _clamp_threshold(speech_threshold)
+    segments = _silero_segments(y, sr, threshold)
     vad = "silero"
     if segments is None:
         segments = _energy_segments(y, sr, librosa, numpy)
@@ -459,6 +483,9 @@ def analyze_audio(
         "response_latency_ms": response_latency_ms,
         "peak_amplitude": round(peak, 4),
         "vad": vad,
+        # Only meaningful for the Silero path; the energy segmenter has no
+        # probability threshold to report.
+        "vad_threshold": threshold if vad == "silero" else None,
         "speech_errors": errors,
         "speech_accuracy_percent": accuracy,
         "quality": _quality(duration, speech_duration, voiced_ratio, peak, pitch_mean),

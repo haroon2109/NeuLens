@@ -88,7 +88,20 @@ def clip(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(path)
 
 
-def test_measures_timing_pitch_and_quality(clip: str) -> None:
+@pytest.fixture()
+def energy_segmenter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Measure the synthetic clips with the energy segmenter.
+
+    The clips are tone bursts, not speech, and Silero VAD is a speech
+    classifier: it correctly reports almost no speech in them. These tests
+    assert timing values, so they pin the segmenter to keep the numbers stable
+    whether or not the model is installed.
+    """
+
+    monkeypatch.setattr(acoustics, "_silero_segments", lambda *args, **kwargs: None)
+
+
+def test_measures_timing_pitch_and_quality(clip: str, energy_segmenter: None) -> None:
     metrics = acoustics.analyze_audio(clip, content_type="audio/wav")
 
     assert metrics["duration_seconds"] == pytest.approx(3.3, abs=0.2)
@@ -99,7 +112,7 @@ def test_measures_timing_pitch_and_quality(clip: str) -> None:
     assert 60 < metrics["intensity_mean_db"] < 100
     assert metrics["quality"]["level"] in {"good", "fair"}
     assert metrics["quality"]["comparable"] is True
-    assert metrics["vad"] in {"silero", "energy"}
+    assert metrics["vad"] == "energy"
     # Pure tones have no amplitude perturbation to speak of.
     assert metrics["jitter_percent"] is not None
     assert metrics["shimmer_percent"] is not None
@@ -137,7 +150,7 @@ def test_endpoint_requires_auth(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-def test_endpoint_returns_voice_envelope(client: TestClient) -> None:
+def test_endpoint_returns_voice_envelope(client: TestClient, energy_segmenter: None) -> None:
     response = client.post(
         "/v1/ai/voice/acoustics",
         files={"file": ("speech.wav", make_clip(), "audio/wav")},
@@ -159,6 +172,90 @@ def test_endpoint_returns_voice_envelope(client: TestClient) -> None:
     # Six spoken words in ~2.3 s of speech.
     assert body["metrics"]["word_count"] == 6
     assert 100 < body["metrics"]["speech_rate_words_per_minute"] < 220
+
+
+@pytest.mark.skipif(
+    acoustics.available_vad() != "silero", reason="silero-vad is not installed"
+)
+def test_silero_vad_runs_and_rejects_non_speech(clip: str) -> None:
+    """Silero is wired in and only counts speech as speech."""
+
+    metrics = acoustics.analyze_audio(clip, content_type="audio/wav")
+
+    assert metrics["vad"] == "silero"
+    # Two-tone audio is not speech, so it is reported as largely non-speech and
+    # the clip is marked non-comparable rather than measured.
+    assert metrics["speech_duration_seconds"] < 1.5
+    assert metrics["quality"]["comparable"] is False
+
+
+@pytest.mark.skipif(
+    acoustics.available_vad() != "silero", reason="silero-vad is not installed"
+)
+def test_speech_threshold_is_passed_to_silero(clip: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The configured threshold reaches the model instead of being ignored."""
+
+    import silero_vad
+
+    seen: dict[str, object] = {}
+    original = silero_vad.get_speech_timestamps
+
+    def spy(audio, model, **kwargs):
+        seen.update(kwargs)
+        return original(audio, model, **kwargs)
+
+    monkeypatch.setattr(silero_vad, "get_speech_timestamps", spy)
+
+    metrics = acoustics.analyze_audio(clip, content_type="audio/wav", speech_threshold=0.35)
+
+    assert seen["threshold"] == 0.35
+    assert metrics["vad"] == "silero"
+    assert metrics["vad_threshold"] == 0.35
+
+
+def test_out_of_range_threshold_is_clamped(clip: str) -> None:
+    metrics = acoustics.analyze_audio(clip, content_type="audio/wav", speech_threshold=500)
+    assert metrics["vad_threshold"] <= 0.95
+
+
+def test_energy_segmenter_reports_no_threshold(clip: str, energy_segmenter: None) -> None:
+    metrics = acoustics.analyze_audio(clip, content_type="audio/wav")
+    assert metrics["vad"] == "energy"
+    assert metrics["vad_threshold"] is None
+
+
+def test_energy_segmenter_is_used_when_model_is_unavailable(
+    clip: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(acoustics, "_silero_model", lambda: None)
+
+    metrics = acoustics.analyze_audio(clip, content_type="audio/wav")
+
+    assert metrics["vad"] == "energy"
+    assert metrics["speech_duration_seconds"] == pytest.approx(2.3, abs=0.3)
+    assert metrics["quality"]["comparable"] is True
+
+
+@pytest.mark.skipif(
+    acoustics.available_vad() != "silero", reason="silero-vad is not installed"
+)
+def test_endpoint_uses_configured_speech_threshold(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.config import get_settings
+
+    monkeypatch.setenv("VAD_SPEECH_THRESHOLD", "0.35")
+    get_settings.cache_clear()
+
+    response = client.post(
+        "/v1/ai/voice/acoustics",
+        files={"file": ("speech.wav", make_clip(), "audio/wav")},
+        headers={"Authorization": f"Bearer {_token()}"},
+    )
+    get_settings.cache_clear()
+
+    assert response.status_code == 200
+    assert response.json()["metrics"]["vad_threshold"] == 0.35
 
 
 def test_endpoint_accepts_internal_service_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -194,7 +194,7 @@ export const AssessmentIntroductionPage: React.FC = () => {
               </div>
             ))}
           </div>
-          <div className="mt-4 rounded-xl border border-amber/60 bg-amber\/10 p-3.5">
+          <div className="mt-4 rounded-xl border border-amber/60 bg-amber/10 p-3.5">
             <p className="flex items-center gap-1.5 text-[12px] font-bold text-amber-900">
               <PauseCircle className="h-4 w-4" aria-hidden="true" />
               Pause and exit are always available
@@ -442,7 +442,7 @@ const StagePage: React.FC<{ stage: keyof typeof stageDefinitions }> = ({ stage }
       </div>
 
       {definition.exploratoryNote && (
-        <div className="rounded-xl border border-amber/60 bg-amber\/10 p-3.5">
+        <div className="rounded-xl border border-amber/60 bg-amber/10 p-3.5">
           <p className="flex items-center gap-1.5 text-[12px] font-bold text-amber-900">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             Exploratory modality
@@ -605,7 +605,7 @@ export const AssessmentQualityReportPage: React.FC = () => {
         <EmptyState scene="emptyAssessment" icon={ShieldCheck} title="No session to assess" detail="Complete a screening to see its quality report." />
       ) : (
         <>
-          <div className={`rounded-2xl border p-4 ${comparable ? 'border-forest/40 bg-mint/50' : 'border-amber/60 bg-amber\/10'}`}>
+          <div className={`rounded-2xl border p-4 ${comparable ? 'border-forest/40 bg-mint/50' : 'border-amber/60 bg-amber/10'}`}>
             <div className="flex items-start gap-3">
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${comparable ? 'bg-forest text-white shadow-xs' : 'bg-amber-100 text-amber-700 shadow-xs'}`}>
                 {comparable ? <CheckCircle2 className="h-5 w-5" aria-hidden="true" /> : <AlertTriangle className="h-5 w-5" aria-hidden="true" />}
@@ -848,7 +848,7 @@ export const AssessmentReportPage: React.FC = () => {
                     </div>
                     <p className={`mt-3 rounded-xl border p-3 text-[11px] leading-5 ${Math.abs(change) <= 5
                         ? 'border-forest/40 bg-mint/50 text-ink'
-                        : 'border-amber/60 bg-amber\/10 text-amber-900'}
+                        : 'border-amber/60 bg-amber/10 text-amber-900'}
                     `}>
                       {Math.abs(change) <= 5
                         ? `This session is ${Math.abs(change)} points ${change >= 0 ? 'above' : 'below'} your recorded baseline. That is within the range we would expect from ordinary session-to-session variation.`

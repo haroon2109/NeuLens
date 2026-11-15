@@ -76,7 +76,7 @@ tracking quality alongside the measurements.
 | Web Audio API | Browser capture in `client/src/services/voice/acousticCapture.ts` | Active |
 | Librosa | Decoding, VAD support and signal features in `ai-service/app/services/acoustics.py` | Active |
 | Parselmouth (`praat-parselmouth`) | Pitch, intensity, jitter and shimmer via Praat | Active |
-| Silero VAD | Optional speech/non-speech detection; the code loads it when the package is installed and otherwise reports `"vad": "energy"` | Optional |
+| Silero VAD | Speech/non-speech detection for the voice pipeline (MIT, code and weights). Runs in-process via `torch`; findings are labelled `"vad": "silero"`. The speech threshold is set by `VAD_SPEECH_THRESHOLD` (default 0.5) | Active |
 | Whisper | Speech transcription; not required for the acoustic measurements | Not adopted — transcription does not establish cognitive status, and Gnani Prisma supplies the current transcript path |
 
 Licensing notes:
@@ -86,9 +86,11 @@ Licensing notes:
   Gnani Prisma/Timbre APIs. They are integration choices, not part of the
   open-source analysis stack; the acoustic measurements above do not depend on
   them and keep working if those credentials are removed.
-* Silero VAD is MIT, but the PyPI package pulls PyTorch. Install it only in
-  environments where that footprint is acceptable; the energy fallback keeps
-  the service functional without it.
+* Silero VAD is MIT-licensed, including the weights. It requires PyTorch, so
+  the service pins the CPU-only build from PyTorch's own wheel index; the
+  default PyPI wheel would add several GB of unused CUDA libraries to the
+  image. An energy segmenter remains as a fallback if the model fails to load,
+  and the response records which one measured the clip.
 * openSMILE's open-source edition is **not** licensed for commercial product
   use and is deliberately absent.
 

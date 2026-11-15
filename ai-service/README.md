@@ -70,12 +70,13 @@ The repeat-sentence activity records a short clip in the browser (Web Audio API 
 | Decode | ffmpeg (WebM/Opus → mono 16 kHz WAV) | LGPL/GPL build-dependent |
 | Timing, intensity, syllable rate | librosa | ISC |
 | Pitch, jitter, shimmer, intensity | Praat via `praat-parselmouth` | GPLv3 (links Praat) |
-| Speech/non-speech | Silero VAD (optional) | MIT |
+| Speech/non-speech | Silero VAD (CPU `torch`) | MIT |
 
 Notes for a commercial deployment:
 
 * `praat-parselmouth` links Praat, so it is GPLv3. Review the obligations for your distribution model (or isolate/remove this stage) before shipping.
-* Silero VAD is optional here because it pulls in torch. Install it with `pip install silero-vad`; without it responses report `"vad": "energy"`.
+* Silero VAD decides what counts as speech, so the service measures the detected speech and marks a clip of noise or tones non-comparable rather than reporting it.
+* `VAD_SPEECH_THRESHOLD` (default `0.5`, Silero's own) tunes that boundary. Lower it towards `0.35` when quiet, dysarthric or heavily accented speech is flagged as "little speech" and patients are asked to re-record; raise it when background noise is counted as speech. The trade-off is measurable: on the same noisy 8 s clip, `0.5` found 6.0 s of speech across 3 segments and `0.2` found 7.5 s merged into 1 segment, losing a real pause. Every response reports the value used in `vad_threshold`. It pulls in PyTorch, pinned to the CPU-only build in `requirements.txt` (the default wheel brings ~5 GB of CUDA libraries this service does not use). `"vad": "silero"` reports the model; `"energy"` only appears if the model fails to load and the energy fallback runs.
 * openSMILE is deliberately not used: its open-source edition is not licensed for commercial products without a separate agreement.
 * Whisper is not required. Transcription is optional (the existing Gnani STT route) and only feeds task-specific word accuracy.
 * Every number is an exploratory acoustic observation, not a validated cognitive or clinical marker.
@@ -114,3 +115,5 @@ Use datasets only within their access/licence terms, keep provenance, and do not
 docker build -t neulens-ai .
 docker run --env-file .env -p 8000:8000 neulens-ai
 ```
+
+The build is two-stage: `build-essential` compiles `praat-parselmouth` in the `builder` stage and is not copied into the runtime image, which saves roughly 310 MB. The runtime layer carries ffmpeg, the venv and the app. CI builds this image and fails if a dependency change reintroduces the CUDA/NVIDIA stack, since the pinned CPU-only torch is what keeps the image at a workable size.

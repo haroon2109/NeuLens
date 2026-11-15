@@ -118,7 +118,7 @@ export class VoiceController {
     if (!validation.success) {
       return res.status(400).json({
         error: 'Invalid transcription parameters',
-        details: validation.error.errors
+        details: validation.error.issues
       });
     }
 
@@ -271,7 +271,7 @@ export class VoiceController {
     if (!validation.success) {
       return res.status(400).json({
         error: 'Validation failed for synthesis request',
-        details: validation.error.errors
+        details: validation.error.issues
       });
     }
 
@@ -322,7 +322,7 @@ export class VoiceController {
     if (!validation.success) {
       return res.status(400).json({
         error: 'Validation failed for Evon summary request',
-        details: validation.error.errors
+        details: validation.error.issues
       });
     }
 

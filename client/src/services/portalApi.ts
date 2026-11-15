@@ -247,6 +247,36 @@ export const doctorApi = {
     });
   },
 
+  async exportAssessment(assessmentId: string): Promise<void> {
+    let res: Response;
+    try {
+      res = await fetch(`${API_ROOT}/doctor/reports/${assessmentId}/export`, { ...WITH_SESSION });
+    } catch {
+      throw new Error('Cannot reach the Neulens server. Please check that the API server is running and try again.');
+    }
+    if (res.status === 401) {
+      notifySessionExpired();
+      throw new Error('Your session has expired. Please sign in again.');
+    }
+    if (!res.ok) {
+      let message = `Export failed (status ${res.status}).`;
+      try {
+        const j = await res.json();
+        message = j.error || j.message || message;
+      } catch {}
+      throw new Error(message);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `neulens-assessment-${assessmentId}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+
   async getReferrals() {
     const json = await apiRequest('/doctor/referrals', {
     });

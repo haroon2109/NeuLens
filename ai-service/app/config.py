@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -41,6 +42,14 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5:3b"
     ollama_timeout_seconds: float = 20.0
+
+    # Silero VAD speech-probability threshold. Chunks scoring above it count as
+    # speech. 0.5 is Silero's own default and works for typical speech, but it
+    # under-detects quiet, dysarthric or heavily accented speech, which would be
+    # reported as little speech and prompt a re-record. Lowering it towards 0.35
+    # accepts more of that speech at the cost of also accepting more background
+    # noise. Calibrate against real recordings before changing it in production.
+    vad_speech_threshold: float = Field(default=0.5, ge=0.05, le=0.95)
 
     @property
     def origins(self) -> list[str]:

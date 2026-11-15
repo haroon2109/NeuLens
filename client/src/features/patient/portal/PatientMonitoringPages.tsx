@@ -145,7 +145,7 @@ export const BrainHealthOverviewPage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Monitoring status" detail={latestChange ? `Last check ${formatDate(latestChange.detectedAt)}` : 'Not yet assessed'} />
-            <div className={`rounded-xl border p-3 ${status.label === 'Review suggested' ? 'border-amber/60 bg-amber\/10' : 'border-forest/40 bg-mint/50'}`}>
+            <div className={`rounded-xl border p-3 ${status.label === 'Review suggested' ? 'border-amber/60 bg-amber/10' : 'border-forest/40 bg-mint/50'}`}>
               <p className="text-[12px] font-semibold text-ink">{status.detail}</p>
               <p className="mt-1 text-[11px] leading-5 text-muted">
                 A review prompt is not a diagnosis. Your clinician considers it with your history, context, and other sessions.
@@ -495,7 +495,7 @@ export const ChangeDetectionPage: React.FC = () => {
         />
       ) : (
         <>
-          <div className={`rounded-2xl border p-4 ${status.label === 'Review suggested' ? 'border-amber/60 bg-amber\/10' : 'border-forest/40 bg-mint/50'}`}>
+          <div className={`rounded-2xl border p-4 ${status.label === 'Review suggested' ? 'border-amber/60 bg-amber/10' : 'border-forest/40 bg-mint/50'}`}>
             <div className="flex items-start gap-3">
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${status.label === 'Review suggested' ? 'bg-amber-100 text-amber-700 shadow-xs' : 'bg-forest text-white shadow-xs'}`}>
                 {status.label === 'Review suggested' ? <AlertTriangle className="h-5 w-5" aria-hidden="true" /> : <ShieldCheck className="h-5 w-5" aria-hidden="true" />}

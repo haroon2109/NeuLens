@@ -178,7 +178,9 @@ app.use('*', (req, res) => {
 
 // Start listening if not in test suite environment
 if (process.env.NODE_ENV !== 'test') {
-  // Adds fictional, verified jury accounts. Disable with DEMO_ACCESS_ENABLED=false.
+  // Adds fictional, verified jury accounts. Off unless explicitly opted in:
+  // - local / non-production default on (convenient jury testing)
+  // - production default off unless DEMO_ACCESS_ENABLED=true
   seedDemoAccess();
 
   app.listen(PORT, HOST, async () => {

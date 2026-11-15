@@ -4,8 +4,8 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm install && npm run build
-    startCommand: npx prisma migrate deploy --schema=server/prisma/schema.prisma && npm start
+    buildCommand: npm install && npm run build && npm run prisma:generate
+    startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -21,6 +21,15 @@ services:
         generateValue: true
       - key: CLIENT_ORIGIN
         value: https://cognivision-ai.onrender.com
+      # This instance is the public jury/prototype demo whose fictional logins
+      # are documented in the README. Set to "false" on any instance that
+      # holds real patient records: demo access is otherwise off in production.
+      - key: DEMO_ACCESS_ENABLED
+        value: "true"
+      # The frontend build is done by buildCommand. The startup command only
+      # runs the server; schema changes are applied by a separate migration
+      # deploy command so a bad migration fails the deploy rather than starting
+      # the service in a degraded (in-memory only) mode.
       - key: GNANI_API_BASE_URL
         value: https://api.vachana.ai
       - key: GNANI_API_KEY
@@ -55,6 +64,10 @@ services:
         sync: false
       - key: ENABLE_MODEL_INFERENCE
         value: false
+      # Silero VAD speech probability. Lower it if real recordings are being
+      # reported as little speech; the value used is recorded in each response.
+      - key: VAD_SPEECH_THRESHOLD
+        value: "0.5"
 
 databases:
   - name: cognivision-db

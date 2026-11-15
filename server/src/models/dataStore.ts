@@ -696,6 +696,33 @@ export class HospitalDataStore {
       handedness?: string | null;
     };
   } | null> {
+    try {
+      const assessment = await prisma.assessment.findUnique({
+        where: { id: assessmentId },
+        include: { eyeMetrics: true, voiceMetrics: true, faceMetrics: true, report: true }
+      });
+      if (assessment) {
+        const patient = await prisma.user.findUnique({ where: { id: assessment.userId } });
+        if (!patient) return null;
+        return {
+          assessment: assessment as unknown as AssessmentRecord,
+          patient: {
+            id: patient.id,
+            patientId: patient.patientId || 'CV-2026-UNKNOWN',
+            name: patient.name,
+            age: patient.age,
+            gender: patient.gender,
+            language: patient.language,
+            educationYears: patient.educationYears,
+            handedness: patient.handedness
+          }
+        };
+      }
+    } catch (error) {
+      if (!memoryFallbackAllowed()) throw error;
+      console.warn('Prisma DB error fetching screening report. Falling back to memory:', error);
+    }
+
     const assessment = inMemoryAssessments.find(a => a.id === assessmentId);
     if (!assessment) return null;
 
@@ -723,12 +750,47 @@ export class HospitalDataStore {
     doctorNotes: string,
     clinicianName: string
   ): Promise<AssessmentRecord | null> {
+    const reviewedAt = new Date();
+
+    try {
+      const existing = await prisma.assessment.findUnique({ where: { id: assessmentId } });
+      if (existing) {
+        const updated = await prisma.assessment.update({
+          where: { id: assessmentId },
+          data: {
+            reviewStatus,
+            reviewedBy: clinicianName,
+            reviewedAt,
+            report: {
+              upsert: {
+                create: {
+                  recommendation: 'Clinical review updated.',
+                  doctorNotes: doctorNotes || ''
+                },
+                update: { doctorNotes: doctorNotes || '' }
+              }
+            }
+          },
+          include: { eyeMetrics: true, voiceMetrics: true, faceMetrics: true, report: true }
+        });
+
+        // Keep the demo/read cache aligned with the persisted record.
+        const cached = inMemoryAssessments.find(a => a.id === assessmentId);
+        if (cached) Object.assign(cached, updated);
+
+        return updated as unknown as AssessmentRecord;
+      }
+    } catch (error) {
+      if (!memoryFallbackAllowed()) throw error;
+      console.warn('Prisma DB error updating assessment review. Falling back to memory:', error);
+    }
+
     const assessment = inMemoryAssessments.find(a => a.id === assessmentId);
     if (!assessment) return null;
 
     assessment.reviewStatus = reviewStatus;
     assessment.reviewedBy = clinicianName;
-    assessment.reviewedAt = new Date();
+    assessment.reviewedAt = reviewedAt;
     if (!assessment.report) {
       assessment.report = {
         id: `rep-${Date.now()}`,
@@ -1257,7 +1319,8 @@ export class HospitalDataStore {
       });
       if (baseline) return baseline as unknown as BaselineRecord;
     } catch (e) {
-      // fallback to memory
+      if (!memoryFallbackAllowed()) throw e;
+      console.warn('Prisma DB error fetching active baseline. Falling back to memory:', e);
     }
     return inMemoryBaselines
       .filter(b => b.userId === userId && b.isActive)
@@ -1276,9 +1339,12 @@ export class HospitalDataStore {
       return updated as unknown as AssessmentRecord;
     } catch (e) {
       const mem = inMemoryAssessments.find(a => a.id === assessmentId);
-      if (!mem) return null;
-      mem.baselineId = baselineId;
-      return mem;
+      if (mem) {
+        mem.baselineId = baselineId;
+        return mem;
+      }
+      if (!memoryFallbackAllowed()) throw e;
+      return null;
     }
   }
 
@@ -1336,6 +1402,8 @@ export class HospitalDataStore {
       });
       return records as unknown as LongitudinalRecordRecord[];
     } catch (e) {
+      if (!memoryFallbackAllowed()) throw e;
+      console.warn('Prisma DB error fetching longitudinal records. Falling back to memory:', e);
       return inMemoryLongitudinalRecords
         .filter(r => r.userId === userId)
         .sort((a, b) => a.recordedAt.getTime() - b.recordedAt.getTime());
@@ -1395,6 +1463,8 @@ export class HospitalDataStore {
       });
       return records as unknown as ChangeDetectionRecord[];
     } catch (e) {
+      if (!memoryFallbackAllowed()) throw e;
+      console.warn('Prisma DB error fetching change detections. Falling back to memory:', e);
       return inMemoryChangeDetections
         .filter(r => r.userId === userId)
         .sort((a, b) => b.detectedAt.getTime() - a.detectedAt.getTime());
@@ -1516,7 +1586,8 @@ export class HospitalDataStore {
       });
       if (profile) return profile as unknown as BrainHealthProfileRecord;
     } catch (e) {
-      // fallback to memory
+      if (!memoryFallbackAllowed()) throw e;
+      console.warn('Prisma DB error fetching brain health profile. Falling back to memory:', e);
     }
     return inMemoryBrainHealthProfiles
       .filter(p => p.userId === userId)

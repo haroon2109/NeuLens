@@ -67,8 +67,8 @@ The MVP stores a prototype composite score and session telemetry for review. Its
 * **Hospital Dual-Portal Architecture (Role-Separated)**:
   * **Patient Portal (`/patient`)**: Patient-facing platform experience designed for elderly users and people with low digital literacy, accessible from any browser. Follows a streamlined **7-Step Journey across 9 calm screens**:
     * **Step 1 (Screen 1 — Welcome Page `/patient`)**: Minimal, spacious homepage with Neulens branding and two large touch targets: "New Patient" and "Existing Patient".
-    * **Step 2 (Screen 2 — Registration `/patient/register` & Screen 3 — Login `/patient/login`)**: Simple registration with essential demographics issuing a collision-resistant Patient ID (`CV-2026-XXXXXX`), or 2-field login with Patient ID + PIN (the PIN is the only accepted factor; the fictional jury demo account is listed under [Jury demo access](#jury-demo-access)).
-    * **Step 3 (Screen 4 — Language Selection `/patient/language`)**: High-contrast regional language selection (English, Tamil, Hindi, Telugu, Kannada, Malayalam) with native script and spoken audio previews powered by Gnani Timbre TTS.
+    * **Step 2 (Screen 2 — Registration `/patient/register` & Screen 3 — Login `/patient/login`)**: Simple registration with essential demographics issuing a collision-resistant Patient ID (`CV-2026-XXXXXX`), or 2-field login with Patient ID + PIN (the PIN is the only accepted factor; the fictional jury demo account is listed under [Jury demo access](#jury-demo-access)). A new account lands on its own dashboard (`/patient/dashboard`) — the same destination as signing in — where starting the assessment is an explicit choice rather than an automatic redirect.
+    * **Step 3 (Screen 4 — Language Selection `/patient/language`)**: High-contrast regional language selection (English, Tamil, Hindi, Telugu, Kannada, Malayalam) with native script and spoken audio previews powered by Gnani Timbre TTS. It is a guided option before a first assessment, not a forced step: language is also set in My profile and Account settings.
     * **Step 4 (Screens 5–6 — Welcome & Screening Battery `/patient/assessment`)**: Calm "Let's Begin" welcome followed by exploratory tasks (*Focus Orbit*, *Cortex Match*, *Vocal Echo*, *Mimic Sync*, *Path Mapper*) with spoken voice guidance, repeat instruction button, and dynamic typography scaling (`A` / `A+` / `A++`). Live facial tracking and audio telemetry execute in the background without exposing raw biometric diagnostics (EAR, yaw/pitch/roll) to the patient.
     * **Step 5 (Screen 7 — Optional Daily-Function Check-in)**: Four large-touch questions about everyday activities, presented in the selected language. Responses can be skipped and are stored with the screening for within-person comparison.
     * **Step 6 (Screen 8 — Patient ID Confirmation `/patient/assessment/complete`)**: Reassuring completion message with prominent Patient ID display, downloadable text confirmation slip, and print layout. The completion screen itself shows no scores or notes.
@@ -124,6 +124,10 @@ deterministic scoring and LLM-written explanations, including the local Ollama
 deployment and guardrails, is in
 [`docs/ai-report-generation.md`](docs/ai-report-generation.md).
 
+The narrow initial clinical use case, pilot/evidence plan, validation and
+regulatory path, and the business model to test are documented in
+[`docs/funding-and-validation/`](docs/funding-and-validation/README.md).
+
 ### Tech Stack At-a-Glance
 
 | Layer | Technologies & Libraries |
@@ -131,17 +135,17 @@ deployment and guardrails, is in
 | **Frontend Framework** | React 18.3, TypeScript 5.9, Vite 5.4 |
 | **Styling & Design System** | Tailwind CSS 3.4, PostCSS, shadcn/ui (Radix primitives + `class-variance-authority`), custom medical-UI tokens |
 | **State & Data Fetching** | Zustand 4.5 (Auth, Face Tracking, Screening, Language, Voice Assistant), TanStack Query 5.107 (portal API queries) |
-| **Forms & Validation** | React Hook Form 7.83, Zod 3.25 with `@hookform/resolvers` |
+| **Forms & Validation** | React Hook Form 7.83, Zod 4.6 with `@hookform/resolvers` |
 | **Icons & Charts** | Lucide React 0.368, Recharts 3.10, Framer Motion 11.18 |
 | **Computer Vision (Client Edge)**| Google MediaPipe Tasks Vision (`@mediapipe/tasks-vision` v1.0.1 Wasm/Float16, BlazeFace, 478 3D Mesh Landmarks) |
 | **Speech-to-Text (STT)** | **Gnani AI Prisma v2.5** (REST v3 endpoint `/stt/v3` via secure backend proxy `/api/v1/voice/transcribe`) |
 | **Text-to-Speech (TTS)** | **Gnani AI Timbre v2.5** (REST endpoint `/api/v1/tts/inference` via backend `/api/v1/voice/synthesize`, 24kHz PCM WAV) |
-| **Acoustic Signal Processing** | Web Audio API (`AudioContext`, `AnalyserNode`, real-time FFT) plus the FastAPI analyser: librosa, Praat via `praat-parselmouth`, optional Silero VAD (energy VAD fallback) |
+| **Acoustic Signal Processing** | Web Audio API (`AudioContext`, `AnalyserNode`, real-time FFT) plus the FastAPI analyser: librosa, Praat via `praat-parselmouth`, Silero VAD for speech/non-speech detection (MIT, CPU `torch`, energy fallback) |
 | **Speech Hotword Navigation** | Web Speech API (continuous keyword recognition for hands-free 'repeat' / 'help' commands) |
 | **Explanation Drafting** | **Ollama** local open-weights model (Qwen/Llama/Gemma/Mistral), constrained to rephrasing deterministic metrics with a template fallback; optional external Evon gateway gated by data-processing approval |
 | **Backend Runtime & Framework**| Node.js 20+, Express 4.19, TypeScript 5.4, Multer (in-memory audio buffer handling) |
 | **Database & ORM** | PostgreSQL 14+, Prisma ORM 5.12, In-Memory Resilient Mock Store Fallback |
-| **Authentication & Security** | JSON Web Tokens (`jsonwebtoken` 9.0), `bcryptjs` 2.4, CORS 2.8, Zod 3.22; Supabase Auth supported as the optional migration path |
+| **Authentication & Security** | JSON Web Tokens (`jsonwebtoken` 9.0), `bcryptjs` 2.4, CORS 2.8, Zod 4.6; Supabase Auth supported as the optional migration path |
 | **AI Service** | FastAPI, Pydantic 2, NumPy; optional scikit-learn / SciPy / statsmodels research extras under `ai-service/requirements-research.txt` |
 | **Testing** | Node.js Test Runner (`node:test`, `node:assert`) for the API, pytest for the AI service |
 

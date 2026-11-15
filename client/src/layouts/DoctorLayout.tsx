@@ -349,7 +349,7 @@ export const DoctorLayout: React.FC = () => {
     .toUpperCase() || 'DR';
 
   // Check if viewing a patient record to bind screening directly
-  const patientPathMatch = location.pathname.match(/\/doctor\/patients\/([^\/]+)/);
+  const patientPathMatch = location.pathname.match(/\/doctor\/patients\/([^/]+)/);
   const currentPatientId = patientPathMatch && patientPathMatch[1] !== 'screen' ? patientPathMatch[1] : null;
   const activeLabel =
     navItems.find(

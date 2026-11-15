@@ -73,8 +73,10 @@ export const PatientRegisterPage: React.FC = () => {
       // Save session in auth store
       login({ ...res.user, role: 'PATIENT' });
 
-      // STEP 3: Proceed to Language Selection
-      navigate('/patient/language');
+      // A new account lands on its own dashboard, the same place a returning
+      // patient lands after signing in. Starting the assessment stays an
+      // explicit choice from there, not something registration forces.
+      navigate('/patient/dashboard', { replace: true });
     } catch (err: any) {
       setErrorMsg(err.message || 'Registration could not be completed. Please speak with clinic staff.');
     } finally {
@@ -237,7 +239,7 @@ export const PatientRegisterPage: React.FC = () => {
             </div>
 
             <button type="submit" disabled={isLoading} className="portal-submit-button">
-              <span>{isLoading ? 'Creating your profile…' : 'Continue to language selection'}</span>
+              <span>{isLoading ? 'Creating your profile…' : 'Create my profile'}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>

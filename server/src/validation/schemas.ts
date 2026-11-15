@@ -105,7 +105,7 @@ const externalContextConsentSchema = z.object({
   recordedAt: z.string().datetime()
 }).strict();
 
-const taskResponsesSchema = z.record(z.any()).superRefine((responses, context) => {
+const taskResponsesSchema = z.record(z.string(), z.any()).superRefine((responses, context) => {
   const checkIn = responses.functionalCheckIn === undefined
     ? null
     : functionalCheckInSchema.safeParse(responses.functionalCheckIn);
@@ -145,7 +145,7 @@ export const patientSubmitAssessmentSchema = z.object({
 
 export const consentRecordSchema = z.object({
   version: z.string().min(1).max(64),
-  scopes: z.record(z.boolean()),
+  scopes: z.record(z.string(), z.boolean()),
 });
 
 export const consentWithdrawSchema = z.object({
@@ -180,7 +180,7 @@ export const doctorCarePlanSchema = z.object({
   followUpDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   notes: z.string().max(2000).default(''),
   // Full clinician-approved plan, stored as entered for audit and display.
-  plan: z.record(z.any()).optional()
+  plan: z.record(z.string(), z.any()).optional()
 });
 
 export type PatientRegisterInput = z.infer<typeof patientRegisterSchema>;

@@ -491,5 +491,76 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       assert.strictEqual(updated.reviewedBy, 'Dr. Sarah Sharma');
       assert.strictEqual(updated.report?.doctorNotes, 'Doctor reviewed: Marked acoustic tremor and trail hesitation noted.');
     });
+
+    it('exports a disclaimer-bearing JSON record for a clinician and refuses non-clinicians', async () => {
+      const { user: patient } = await HospitalDataStore.createPatient({
+        name: 'Export Patient',
+        age: 76,
+        dob: '1950',
+        pin: '9090',
+        gender: 'FEMALE',
+        language: 'en',
+        educationYears: 12,
+        handedness: 'RIGHT'
+      });
+      const submitted = await HospitalDataStore.submitAssessment(patient.id, {
+        overallScore: 74,
+        riskLevel: 'MODERATE',
+        reactionTime: 300,
+        blinkRate: 18,
+        fixationScore: 78,
+        speechRate: 110,
+        pauseScore: 70,
+        jitter: 0.2,
+        shimmer: 2.2,
+        symmetry: 88,
+        tremorScore: 12,
+        taskResponses: {}
+      });
+
+      const capture = () => {
+        const captured: { status?: number; body?: string; headers: Record<string, string> } = { headers: {} };
+        const res: any = {
+          setHeader: (key: string, value: string) => { captured.headers[key] = value; },
+          status(code: number) { captured.status = code; return res; },
+          json(body: unknown) { captured.body = JSON.stringify(body); return res; },
+          send(body: string) { captured.body = body; return res; },
+        };
+        return { captured, res };
+      };
+
+      const baseReq = (user: any) => ({
+        params: { id: submitted.id },
+        user,
+        headers: {},
+        ip: '127.0.0.1',
+        socket: { remoteAddress: '127.0.0.1' },
+      } as any);
+
+      const clinician = capture();
+      await DoctorController.exportAssessment(
+        baseReq({ id: 'clinician-export', email: 'clinician@example.org', role: 'CLINICIAN' }),
+        clinician.res,
+        (err?: unknown) => { throw err instanceof Error ? err : new Error('unexpected error'); }
+      );
+      assert.strictEqual(clinician.captured.status, 200);
+      assert.match(clinician.captured.headers['Content-Disposition'] || '', /neulens-assessment-/);
+      const payload = JSON.parse(clinician.captured.body || '{}');
+      assert.strictEqual(payload.report.assessment.id, submitted.id);
+      assert.strictEqual(payload.report.patient.name, 'Export Patient');
+      assert.match(payload.disclaimer, /Not a diagnosis/);
+
+      const patientAttempt = capture();
+      await DoctorController.exportAssessment(
+        baseReq({ id: patient.id, email: 'patient@example.org', role: 'PATIENT' }),
+        patientAttempt.res,
+        (err?: unknown) => { throw err instanceof Error ? err : new Error('unexpected error'); }
+      );
+      assert.strictEqual(patientAttempt.captured.status, 403);
+      // Non-clinician is rejected before export; body is a JSON error, not the export payload.
+      const denied = JSON.parse(patientAttempt.captured.body || '{}');
+      assert.ok(String(denied.error || '').includes('Clinician access required'));
+      assert.strictEqual(denied.report, undefined);
+    });
   });
 });
