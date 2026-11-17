@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { doctorApi } from '../../services/portalApi';
 import { PatientWorkflowNav } from './portal/ui';
+import { Swap } from '../../components/motion/Reveal';
 
 type TabType = 'info' | 'assessments' | 'reports';
 
@@ -49,6 +50,22 @@ export const DoctorPatientProfilePage: React.FC = () => {
   const [carePlanError, setCarePlanError] = useState<string | null>(null);
   const [savingCarePlan, setSavingCarePlan] = useState(false);
 
+  const [instrumentCatalog, setInstrumentCatalog] = useState<any[]>([]);
+  const [instrumentForm, setInstrumentForm] = useState({
+    instrumentKey: 'RUDAS',
+    instrumentVersion: '',
+    language: 'en',
+    administeredOn: '',
+    administeredBy: '',
+    score: '',
+    licenceConfirmed: false,
+    licenceReference: '',
+    notes: ''
+  });
+  const [instrumentSaving, setInstrumentSaving] = useState(false);
+  const [instrumentMessage, setInstrumentMessage] = useState<string | null>(null);
+  const [instrumentError, setInstrumentError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!id) return;
     const fetchPatient = async () => {
@@ -57,6 +74,12 @@ export const DoctorPatientProfilePage: React.FC = () => {
       try {
         const res = await doctorApi.getPatientProfile(id);
         setData(res);
+        try {
+          const catalog = await doctorApi.getExternalInstrumentCatalog();
+          setInstrumentCatalog(catalog.instruments || []);
+        } catch {
+          // Catalog is advisory; the form still accepts a keyed instrument.
+        }
       } catch (err: any) {
         console.error('Failed to load patient dossier:', err);
         setError(err.message || 'Unable to load patient file');
@@ -82,6 +105,47 @@ export const DoctorPatientProfilePage: React.FC = () => {
     setCarePlanMessage(null);
     setCarePlanError(null);
   }, [data, selectedAssessmentIndex]);
+
+  const handleRecordInstrument = async () => {
+    if (!id) return;
+    setInstrumentSaving(true);
+    setInstrumentError(null);
+    setInstrumentMessage(null);
+    try {
+      const score = Number(instrumentForm.score);
+      const res = await doctorApi.recordExternalInstrument(id, {
+        instrumentKey: instrumentForm.instrumentKey,
+        instrumentVersion: instrumentForm.instrumentVersion || undefined,
+        language: instrumentForm.language,
+        administeredOn: instrumentForm.administeredOn,
+        administeredBy: instrumentForm.administeredBy,
+        score,
+        licenceConfirmed: instrumentForm.licenceConfirmed,
+        licenceReference: instrumentForm.licenceReference || undefined,
+        notes: instrumentForm.notes || undefined
+      });
+      setData((prev: any) =>
+        prev
+          ? { ...prev, externalInstruments: res.records, externalAnchor: res.anchor }
+          : prev
+      );
+      setInstrumentForm((prev) => ({
+        ...prev,
+        instrumentVersion: '',
+        administeredOn: '',
+        administeredBy: '',
+        score: '',
+        licenceConfirmed: false,
+        licenceReference: '',
+        notes: ''
+      }));
+      setInstrumentMessage('External instrument record saved. It is an anchor, not part of the Neulens composite.');
+    } catch (err) {
+      setInstrumentError(err instanceof Error ? err.message : 'Unable to save external instrument record.');
+    } finally {
+      setInstrumentSaving(false);
+    }
+  };
 
   const handleSaveCarePlan = async (assessmentId: string) => {
     setSavingCarePlan(true);
@@ -138,34 +202,39 @@ export const DoctorPatientProfilePage: React.FC = () => {
     household: 'Household tasks'
   };
 
-  const getRiskBadge = (risk: string | null) => {
-    if (!risk) {
+  const getReviewStateBadge = (state: string | null) => {
+    if (!state) {
       return (
         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-warm text-muted border border-line">
           No Screenings
         </span>
       );
     }
-    switch (risk.toUpperCase()) {
-      case 'HIGH':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
-            High Risk Tier
-          </span>
-        );
-      case 'MODERATE':
+    switch (state.toUpperCase()) {
+      case 'REVIEW_PROMPT':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            Moderate Risk Tier
+            Review prompt
+          </span>
+        );
+      case 'NOT_INTERPRETABLE':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-warm text-body border border-line">
+            Not interpretable
+          </span>
+        );
+      case 'CLINICIAN_REVIEWED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Clinician reviewed
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Low Risk Tier
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            Not reviewed
           </span>
         );
     }
@@ -259,9 +328,9 @@ export const DoctorPatientProfilePage: React.FC = () => {
 
           <div className="flex flex-wrap items-center gap-3">
             {currentAssessment ? (
-              getRiskBadge(currentAssessment.riskLevel)
+              getReviewStateBadge(currentAssessment.reviewState)
             ) : (
-              getRiskBadge(null)
+              getReviewStateBadge(null)
             )}
             
             <div className="px-3 py-1 bg-warm border border-line rounded-full text-xs font-bold text-body">
@@ -333,14 +402,19 @@ export const DoctorPatientProfilePage: React.FC = () => {
             ) : (
               <p className="text-xs text-muted">No completed cognitive screens recorded yet.</p>
             )}
-            {changeSummary?.cognitive?.outsideObservedBaseline && (
+            {changeSummary?.cognitive?.declineBeyondReliableChange && (
               <p className="mt-3 text-xs font-semibold text-amber-900">
-                Latest score is below the range of three earlier comparable screens. This is an observed-range flag, not a validated reliable-change threshold.
+                Latest score fell more than ±{changeSummary.cognitive.reliability.reliableChangeThreshold} points below the prior comparable mean — beyond this patient's own measured session-to-session variability.
+              </p>
+            )}
+            {changeSummary?.cognitive?.reliability?.state === 'NOT_ESTABLISHED' && (
+              <p className="mt-3 text-xs text-muted">
+                No score-based change flag: {changeSummary.cognitive.reliability.pairs} comparable repeat pair(s) recorded, three are needed to measure how much this score moves when nothing has changed.
               </p>
             )}
             {changeSummary?.cognitive?.baselineRange && (
               <p className="mt-2 text-xs text-muted">
-                Prior comparable range: {Math.round(changeSummary.cognitive.baselineRange.minimum)}–{Math.round(changeSummary.cognitive.baselineRange.maximum)} across three screens.
+                Observed spread across prior comparable screens: {Math.round(changeSummary.cognitive.baselineRange.minimum)}–{Math.round(changeSummary.cognitive.baselineRange.maximum)}. Descriptive only — it is not a threshold.
               </p>
             )}
             {assessments.length < 2 && (
@@ -445,7 +519,7 @@ export const DoctorPatientProfilePage: React.FC = () => {
             <p className="text-xs text-body mt-1">
               Suggested discussion: {changeSummary?.reviewReasons?.includes('FUNCTIONAL_CHANGE')
                 ? 'Review the activities that became harder and ask what support the patient wants.'
-                : changeSummary?.reviewReasons?.includes('OUTSIDE_OBSERVED_BASELINE')
+                : changeSummary?.reviewReasons?.includes('OUTSIDE_RELIABLE_CHANGE')
                 ? 'Consider repeating the screen under comparable conditions and reviewing whether the change persists.'
                 : changeSummary?.reviewReasons?.includes('CONTEXT_CHANGE')
                 ? 'Review sleep, activity, and mood/stress changes as possible context; this does not establish cause.'
@@ -508,7 +582,7 @@ export const DoctorPatientProfilePage: React.FC = () => {
           </div>
         </div>
         <div className="px-6 pb-5 text-xs text-muted">
-          Review cues: score below the observed range of three earlier comparable screens, increased reported daily-activity difficulty, or worsening self-reported context. These prototype prompts are not validated clinical cutoffs or diagnoses.
+          Review cues: a score decline larger than this patient's own measured session-to-session variability (1.96 × SD of change, provisional), increased reported daily-activity difficulty, or worsening self-reported context. These prototype prompts are not validated clinical cutoffs or diagnoses, and no decline is reported at all until three comparable repeat pairs exist.
         </div>
       </section>
 
@@ -570,6 +644,7 @@ export const DoctorPatientProfilePage: React.FC = () => {
       {/* ---------------------------------------------------------------- */}
       {/* TAB CONTENT 1: PATIENT INFORMATION                               */}
       {/* ---------------------------------------------------------------- */}
+      <Swap key={activeTab} className="space-y-6">
       {activeTab === 'info' && (
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-line p-6 sm:p-8 shadow-card space-y-6">
@@ -669,11 +744,147 @@ export const DoctorPatientProfilePage: React.FC = () => {
                 </span>
                 <p className="text-xs text-body leading-relaxed">
                   {assessments.length > 0 ? (
-                    <>Latest assessment recorded on <span className="font-semibold text-slate-800">{new Date(assessments[0].date).toLocaleDateString()}</span> with a composite score of <span className="font-bold text-slate-800">{Math.round(assessments[0].overallScore)}/100</span>.</>
+                    <>Latest assessment recorded on <span className="font-semibold text-slate-800">{new Date(assessments[0].date).toLocaleDateString()}</span>
+                      {typeof assessments[0].overallScore === 'number'
+                        ? <> with a composite score of <span className="font-bold text-slate-800">{Math.round(assessments[0].overallScore)}/100</span>.</>
+                        : <>; no interpretable composite score was produced for that session.</>}
+                    </>
                   ) : (
                     <>No assessments recorded yet. Initial cognitive baseline is pending administration.</>
                   )}
                 </p>
+              </div>
+            </div>
+
+            {/* External validated instrument anchor */}
+            <div className="pt-4 border-t border-line space-y-4">
+              <div>
+                <h3 className="text-sm font-bold text-ink font-display flex items-center gap-2">
+                  <Award className="w-4 h-4 text-medical-600" />
+                  External validated-instrument record
+                </h3>
+                <p className="text-xs text-muted mt-1 max-w-3xl">
+                  Record a score from a licensed screener the clinician administered outside Neulens (for example MoCA, RUDAS, AD8, MMSE).
+                  This is an anchor for the record, not a Neulens measurement: it is not rescored, not interpreted by the platform, and never
+                  merged into the Neulens composite. Any difference shown between two external administrations is arithmetic only.
+                </p>
+                {data.externalAnchor?.note && (
+                  <p className="text-xs text-body mt-2 p-3 rounded-xl bg-warm border border-line/60">{data.externalAnchor.note}</p>
+                )}
+              </div>
+
+              {Array.isArray(data.externalInstruments) && data.externalInstruments.length > 0 ? (
+                <div className="overflow-x-auto rounded-2xl border border-line">
+                  <table className="w-full text-xs">
+                    <thead className="bg-warm/70 border-b border-line text-muted uppercase tracking-[0.1em]">
+                      <tr>
+                        <th className="text-left py-2.5 px-3 font-bold">Instrument</th>
+                        <th className="text-left py-2.5 px-3 font-bold">Administered</th>
+                        <th className="text-left py-2.5 px-3 font-bold">Language</th>
+                        <th className="text-left py-2.5 px-3 font-bold">Score</th>
+                        <th className="text-left py-2.5 px-3 font-bold">vs prior</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {data.externalInstruments.map((record: any) => (
+                        <tr key={record.id}>
+                          <td className="py-2.5 px-3 font-semibold text-ink">
+                            {record.instrumentName}{record.instrumentVersion ? ` (${record.instrumentVersion})` : ''}
+                            <div className="text-[11px] text-muted font-normal">by {record.administeredBy}</div>
+                          </td>
+                          <td className="py-2.5 px-3 text-body">{new Date(record.administeredOn).toLocaleDateString()}</td>
+                          <td className="py-2.5 px-3 text-body uppercase">{record.language}</td>
+                          <td className="py-2.5 px-3 font-mono font-bold text-ink">{record.score} / {record.maxScore}</td>
+                          <td className="py-2.5 px-3 text-body">
+                            {record.deltaComparability === 'COMPARABLE' && typeof record.deltaFromPrevious === 'number'
+                              ? `${record.deltaFromPrevious > 0 ? '+' : ''}${record.deltaFromPrevious} (arithmetic only)`
+                              : record.deltaComparability === 'FIRST_RECORD'
+                                ? 'First record'
+                                : record.deltaComparability === 'DIFFERENT_INSTRUMENT'
+                                  ? 'Different instrument — not compared'
+                                  : record.deltaComparability === 'DIFFERENT_VERSION'
+                                    ? 'Different version — not compared'
+                                    : 'Different language — not compared'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-xs text-muted">No external validated-instrument score recorded.</p>
+              )}
+
+              <div className="p-4 rounded-2xl border border-line bg-white space-y-3">
+                <h4 className="text-xs font-bold text-slate-800">Record an external administration</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Instrument</span>
+                    <select
+                      className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink bg-white"
+                      value={instrumentForm.instrumentKey}
+                      onChange={(e) => {
+                        const key = e.target.value;
+                        const def = instrumentCatalog.find((i: any) => i.key === key);
+                        setInstrumentForm((p) => ({ ...p, instrumentKey: key, licenceConfirmed: def && !def.licence?.required ? p.licenceConfirmed : false }));
+                      }}
+                    >
+                      {(instrumentCatalog.length ? instrumentCatalog : [{ key: 'MOCA', name: 'MoCA' }, { key: 'RUDAS', name: 'RUDAS' }, { key: 'AD8', name: 'AD8' }, { key: 'MMSE', name: 'MMSE' }]).map((i: any) => (
+                        <option key={i.key} value={i.key}>{i.name || i.key}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Version / form</span>
+                    <input className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink" value={instrumentForm.instrumentVersion} onChange={(e) => setInstrumentForm((p) => ({ ...p, instrumentVersion: e.target.value }))} placeholder="e.g. 8.1, A-RUDAS" />
+                  </label>
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Language</span>
+                    <input className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink" value={instrumentForm.language} onChange={(e) => setInstrumentForm((p) => ({ ...p, language: e.target.value }))} placeholder="e.g. ar, en" />
+                  </label>
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Administered on</span>
+                    <input type="date" className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink" value={instrumentForm.administeredOn} onChange={(e) => setInstrumentForm((p) => ({ ...p, administeredOn: e.target.value }))} />
+                  </label>
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Administered by</span>
+                    <input className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink" value={instrumentForm.administeredBy} onChange={(e) => setInstrumentForm((p) => ({ ...p, administeredBy: e.target.value }))} placeholder="Clinician name" />
+                  </label>
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Total score</span>
+                    <input type="number" step="any" className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink" value={instrumentForm.score} onChange={(e) => setInstrumentForm((p) => ({ ...p, score: e.target.value }))} placeholder="Raw total on its own scale" />
+                  </label>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Licence / certification reference</span>
+                    <input className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink" value={instrumentForm.licenceReference} onChange={(e) => setInstrumentForm((p) => ({ ...p, licenceReference: e.target.value }))} placeholder="If the publisher requires one" />
+                  </label>
+                  <label className="text-xs text-muted space-y-1">
+                    <span className="font-semibold text-slate-700">Notes</span>
+                    <input className="w-full rounded-xl border border-line px-3 py-2 text-sm text-ink" value={instrumentForm.notes} onChange={(e) => setInstrumentForm((p) => ({ ...p, notes: e.target.value }))} placeholder="Optional context (not interpreted by the platform)" />
+                  </label>
+                </div>
+                <label className="flex items-start gap-2 text-xs text-body">
+                  <input type="checkbox" className="mt-0.5" checked={instrumentForm.licenceConfirmed} onChange={(e) => setInstrumentForm((p) => ({ ...p, licenceConfirmed: e.target.checked }))} />
+                  <span>
+                    I confirm I hold the licence/certification required to administer and record this instrument (required for MoCA, AD8, MMSE).
+                    {(() => {
+                      const def = instrumentCatalog.find((i: any) => i.key === instrumentForm.instrumentKey);
+                      return def?.licence?.note ? <span className="block text-muted mt-1">{def.licence.note}</span> : null;
+                    })()}
+                  </span>
+                </label>
+                {instrumentError && <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{instrumentError}</p>}
+                {instrumentMessage && <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">{instrumentMessage}</p>}
+                <button
+                  type="button"
+                  onClick={handleRecordInstrument}
+                  disabled={instrumentSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-medical-600 hover:bg-medical-700 disabled:opacity-50 text-white text-xs font-bold"
+                >
+                  {instrumentSaving ? 'Saving…' : 'Record external instrument score'}
+                </button>
               </div>
             </div>
 
@@ -738,19 +949,19 @@ export const DoctorPatientProfilePage: React.FC = () => {
                       >
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-xs font-bold text-slate-800">
-                            {new Date(a.date).toLocaleDateString('en-US', {
+                            {new Date(a.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric'
                             })}
                           </span>
                           <span className="font-mono text-xs font-semibold text-medical-700">
-                            {Math.round(a.overallScore)}/100
+                            {a.overallScore === null || a.overallScore === undefined ? 'Not interpretable' : `${Math.round(a.overallScore)}/100`}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted">
-                            {a.riskLevel} Risk
+                            {String(a.reviewState || 'NOT_REVIEWED').replace(/_/g, ' ').toLowerCase()}
                           </span>
                           {getReviewBadge(a.reviewStatus)}
                         </div>
@@ -1043,7 +1254,7 @@ export const DoctorPatientProfilePage: React.FC = () => {
                           REP-{a.id.slice(-6).toUpperCase()}
                         </span>
                         <span className="text-xs font-semibold text-muted">
-                          Session Date: {new Date(a.date).toLocaleDateString('en-US', {
+                          Session Date: {new Date(a.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
                             month: 'long',
                             day: 'numeric',
                             year: 'numeric'
@@ -1055,11 +1266,13 @@ export const DoctorPatientProfilePage: React.FC = () => {
                       <div className="flex items-center gap-4 text-xs pt-1">
                         <div>
                           <span className="text-muted">Overall Score: </span>
-                          <span className="font-bold text-ink">{Math.round(a.overallScore)}/100</span>
+                          <span className="font-bold text-ink">
+                            {a.overallScore === null || a.overallScore === undefined ? 'Not interpretable' : `${Math.round(a.overallScore)}/100`}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-muted">Risk Stratification: </span>
-                          <span className="font-bold text-ink">{a.riskLevel} Risk</span>
+                          <span className="text-muted">Review state: </span>
+                          <span className="font-bold text-ink">{String(a.reviewState || 'NOT_REVIEWED').replace(/_/g, ' ').toLowerCase()}</span>
                         </div>
                         {a.reviewedBy && (
                           <div className="text-muted text-xs">
@@ -1086,6 +1299,7 @@ export const DoctorPatientProfilePage: React.FC = () => {
           )}
         </div>
       )}
+      </Swap>
 
     </div>
   );

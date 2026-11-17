@@ -1,21 +1,49 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { prisma } from './config/db';
 import apiRouter from './routes/index';
 import { errorHandler } from './middleware/errorHandler';
-import { describeJwtSecretProblem } from './config/jwt';
+import { createRateLimiter } from './middleware/rateLimit';
+import { describeJwtSecretProblem, verifyJwtSecret } from './config/jwt';
 import { seedDemoAccess } from './services/demoAccess';
+import {
+  httpLogger,
+  requestIp,
+  securityEvent,
+  setLogger,
+  logger,
+  type LogEntry,
+} from './services/logger';
 
 // Ensure environmental variables are loaded
 dotenv.config();
 
+// Structured JSON logger. Every request/response/security event is emitted as
+// a single JSON object on stdout, so log aggregators (Datadog, ELK, etc.)
+// can ingest it without a parser. Human-readable prefixes only when stdout is
+// a TTY (npm run dev).
+let jsonLogger = console.info;
+setLogger((entry: LogEntry) => {
+  const prefix = process.stdout.isTTY && process.env.NODE_ENV !== 'production' ? '[Neulens] ' : '';
+  jsonLogger(prefix + JSON.stringify(entry));
+});
+
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const HOST = process.env.HOST || '0.0.0.0';
+const isProduction = process.env.NODE_ENV === 'production';
+
+app.disable('x-powered-by');
+
+// Attach a request id and log every completed request. This must run before
+// the routers: passing the factory uncalled would swallow the request instead
+// of calling next(), leaving unmatched paths hanging.
+app.use(httpLogger());
 
 // Behind Render/Fly/nginx the TLS terminator is a proxy hop away.
 app.set('trust proxy', 1);
@@ -44,6 +72,52 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
     maxAge: 600
+  })
+);
+
+// Security headers. CSP is enabled in production only: the Vite dev server
+// injects inline scripts/HMR, while the built bundle loads external fonts and
+// the MediaPipe wasm/model CDN used for facial landmarks.
+app.use(
+  helmet({
+    contentSecurityPolicy: isProduction
+      ? {
+          useDefaults: false,
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'wasm-unsafe-eval'", 'https://cdn.jsdelivr.net'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+            fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
+            imgSrc: ["'self'", 'data:', 'blob:'],
+            mediaSrc: ["'self'", 'blob:'],
+            connectSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://storage.googleapis.com'],
+            workerSrc: ["'self'", 'blob:'],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            frameAncestors: ["'none'"],
+            formAction: ["'self'"],
+            upgradeInsecureRequests: [],
+          },
+        }
+      : false,
+    crossOriginEmbedderPolicy: false,
+    // Express already disables the header via app.disable('x-powered-by');
+    // skipping helmet's remover avoids depending on removeHeader.
+    xPoweredBy: false,
+    frameguard: { action: 'deny' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  })
+);
+
+// Coarse per-IP ceiling for every API route. Route-specific limiters (auth,
+// voice) remain stricter and are layered underneath this one.
+app.use(
+  '/api/v1',
+  createRateLimiter({
+    limit: Number(process.env.API_RATE_LIMIT_MAX ?? 300),
+    windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? 60 * 1000),
+    keyPrefix: 'api',
+    message: 'Too many requests. Please slow down and try again shortly.',
   })
 );
 
@@ -131,6 +205,29 @@ app.get('/livez', (_req, res) => {
 });
 
 // Readiness: 503 unless the service can actually serve clinical traffic.
+// In production the signing secret must be present and long enough. Refuse
+// to start (and exit) when it is missing or too short — there is no valid
+// fallback, so the only correct behaviour is to fail loudly.
+if (process.env.NODE_ENV === 'production') {
+  try {
+    verifyJwtSecret();
+  } catch (err) {
+    console.error('[Neulens]: FATAL -', err instanceof Error ? err.message : err);
+    process.exit(1);
+  }
+
+  // Patient records should never cross the network unencrypted. Managed
+  // PostgreSQL providers accept TLS via sslmode=require; warn loudly if the
+  // connection string does not ask for it rather than failing an existing
+  // private-network deployment.
+  const databaseUrl = process.env.DATABASE_URL || '';
+  if (databaseUrl && !/sslmode=(require|verify-ca|verify-full)/.test(databaseUrl)) {
+    console.warn(
+      '[Neulens Security Warning]: DATABASE_URL does not request TLS. Add sslmode=require for any hosted database.'
+    );
+  }
+}
+
 async function sendReadiness(_req: express.Request, res: express.Response) {
   try {
     const result = await checkReadiness();
@@ -157,7 +254,7 @@ const resolvedDistPath = possibleDistPaths.find((p) => fs.existsSync(p));
 
 if (resolvedDistPath) {
   console.log(`[Neulens]: Serving static frontend bundle from ${resolvedDistPath}`);
-  app.use(express.static(resolvedDistPath));
+  app.use(express.static(resolvedDistPath, { dotfiles: 'deny' }));
 
   // SPA fallback for client-side navigation
   app.get('*', (req, res, next) => {
@@ -169,7 +266,7 @@ if (resolvedDistPath) {
 }
 
 // Centralized error routing
-app.use(errorHandler);
+app.use(errorHandler); // logs errors via jsonLogger
 
 // Global route catch-all for unhandled endpoints
 app.use('*', (req, res) => {

@@ -122,13 +122,13 @@ export const TaskLibraryView: React.FC<{
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <h3 className="text-sm font-semibold text-ink">{task.name}</h3>
-                    <span className="rounded-full border border-amber/60 bg-amber/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-900">
+                    <span className="rounded-full border border-amber/60 bg-amber/10 px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide text-amber-900">
                       Research-stage
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-muted">{DOMAIN_LABEL[task.domain]} · {task.subdomain}</p>
+                  <p className="mt-0.5 text-[13px] text-muted">{DOMAIN_LABEL[task.domain]} · {task.subdomain}</p>
                   <p className="mt-1.5 text-xs leading-5 text-body">{task.description}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px]">
                     <span className="inline-flex items-center gap-1 rounded-full bg-warm px-2 py-0.5 font-semibold text-body">
                       <Clock3 className="h-3 w-3" /> {task.durationMinutes} min
                     </span>
@@ -140,7 +140,7 @@ export const TaskLibraryView: React.FC<{
                     type="button"
                     onClick={() => setExpanded(open ? null : task.id)}
                     aria-expanded={open}
-                    className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-forest hover:underline"
+                    className="mt-2 inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline"
                   >
                     Details <ChevronDown className={`h-3.5 w-3.5 transition ${open ? 'rotate-180' : ''}`} />
                   </button>
@@ -148,7 +148,7 @@ export const TaskLibraryView: React.FC<{
               </div>
 
               {open && (
-                <div className="mt-3 space-y-2 rounded-xl border border-line bg-warm/50 p-3 text-[11px] leading-5">
+                <div className="mt-3 space-y-2 rounded-xl border border-line bg-warm/50 p-3 text-[13px] leading-5">
                   <div>
                     <p className="font-bold uppercase tracking-wide text-sage-deep">Instructions</p>
                     <p className="text-body">{task.instructions}</p>
@@ -190,7 +190,7 @@ export const TaskLibraryView: React.FC<{
         })}
       </div>
 
-      <div className="rounded-xl border border-amber/60 bg-amber/10 p-3 text-[11px] leading-5 text-amber-900">
+      <div className="rounded-xl border border-amber/60 bg-amber/10 p-3 text-[13px] leading-5 text-amber-900">
         <p className="flex items-center gap-1.5 font-bold">
           <AlertTriangle className="h-3.5 w-3.5" /> Research-stage library
         </p>

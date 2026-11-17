@@ -469,7 +469,7 @@ export const TowerPlayer: React.FC<PlayerProps<TowerContent>> = ({ content, acco
             {[...peg].reverse().map((disc) => (
               <span
                 key={disc}
-                className="mx-auto h-6 rounded-full bg-forest text-center text-[11px] font-bold leading-6 text-white"
+                className="mx-auto h-6 rounded-full bg-forest text-center text-[13px] font-bold leading-6 text-white"
                 style={{ width: `${35 + disc * 14}%` }}
               >
                 {disc}

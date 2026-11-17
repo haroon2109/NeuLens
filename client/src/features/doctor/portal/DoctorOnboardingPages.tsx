@@ -47,7 +47,7 @@ const DoctorOnboardingShell: React.FC<{
   const isVerified = user?.verificationStatus === 'VERIFIED';
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#FBF7EF] text-slate-800">
+    <div className="min-h-[calc(100vh-64px)] bg-warm text-slate-800">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link to="/" className="flex items-center gap-2.5">
@@ -408,7 +408,7 @@ export const DoctorVerificationPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Verification status</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Verification status</h2>
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="text-muted">Documents</span>
@@ -431,7 +431,7 @@ export const DoctorVerificationPage: React.FC = () => {
           </Card>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Identity and affiliation</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Identity and affiliation</h2>
             <div className="mt-3 space-y-3">
               <div>
                 <label htmlFor="identity-reference" className={labelClass}>Identity reference</label>
@@ -439,7 +439,7 @@ export const DoctorVerificationPage: React.FC = () => {
               </div>
               <div>
                 <label htmlFor="affiliation-name" className={labelClass}>Hospital affiliation</label>
-                <input id="affiliation-name" value={clinic.hospitalName} onChange={(event) => setClinic({ hospitalName: event.target.value })} className={fieldClass} placeholder="e.g. Neulens General Hospital" />
+                <input id="affiliation-name" value={clinic.hospitalName} onChange={(event) => setClinic({ hospitalName: event.target.value })} className={fieldClass} placeholder="e.g. Your hospital or clinic" />
               </div>
             </div>
           </Card>

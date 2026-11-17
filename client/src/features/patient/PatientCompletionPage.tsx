@@ -11,6 +11,8 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { formatDate, formatTime } from './portal/ui';
+import { deploymentConfig } from '../../config/deployment';
 import { NeulensLogoMark } from '../../components/NeulensLogoMark';
 import { NeulensWordmark } from '../../components/NeulensWordmark';
 import { ClinicalIllustration } from '../../components/ClinicalIllustration';
@@ -34,7 +36,7 @@ export const PatientCompletionPage: React.FC = () => {
             patientName: user.name || 'Valued Patient',
             registeredDate: new Date(),
             language: user.language || 'en',
-            hospitalName: 'Neulens Hospital Medical Center',
+            hospitalName: deploymentConfig.isConfigured ? deploymentConfig.clinicName : 'Your clinic',
             instructions: 'Present this Patient ID card to hospital staff or during your follow-up clinical appointments.'
           });
         }
@@ -43,15 +45,8 @@ export const PatientCompletionPage: React.FC = () => {
 
   const displayId = cardData?.patientId || user?.patientId || 'CV-2026-ACTIVE';
   const displayName = cardData?.patientName || user?.name || 'Valued Patient';
-  const completionDate = new Date().toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-  const completionTime = new Date().toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const completionDate = formatDate(new Date(), { month: 'long', day: 'numeric', year: 'numeric' });
+  const completionTime = formatTime(new Date());
 
   const handleDownloadConfirmation = () => {
     // Generate clean printable / downloadable text confirmation slip
@@ -100,7 +95,7 @@ Department of Neurology & Cognitive Health
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF7EF] text-slate-800 flex flex-col justify-between py-12 px-6 selection:bg-medical-500 selection:text-white">
+    <div className="min-h-screen bg-warm text-slate-800 flex flex-col justify-between py-12 px-6 selection:bg-medical-500 selection:text-white">
       
       <main className="max-w-xl mx-auto w-full space-y-6">
         
@@ -124,7 +119,7 @@ Department of Neurology & Cognitive Health
           {/* ----------------------------------------------------------- */}
           {/* CONFIRMATION ID DISPLAY (Printable)                         */}
           {/* ----------------------------------------------------------- */}
-          <div className="bg-warm border-2 border-line rounded-2xl p-6 text-left space-y-4 print:border-slate-800 print:bg-white">
+          <div className="bg-warm border-2 border-line rounded-2xl p-6 text-start space-y-4 print:border-slate-800 print:bg-white">
             
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">

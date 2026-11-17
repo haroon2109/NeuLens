@@ -25,7 +25,7 @@ import {
   ChangePill,
   DoctorPageHeader,
   ReviewPill,
-  RiskPill,
+  ReviewStatePill,
   StatCard,
   formatDate,
   formatDateTime,
@@ -102,7 +102,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Quick search by patient name or hospital ID…"
-          className="w-full rounded-xl border-0 bg-warm py-3 pl-11 pr-24 text-[12px] text-slate-800 outline-none placeholder:text-muted focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+          className="w-full rounded-xl border-0 bg-warm py-3 pl-11 pr-24 text-[14px] text-slate-800 outline-none placeholder:text-muted focus:bg-white focus:ring-2 focus:ring-blue-500/20"
           aria-label="Quick patient search"
         />
         <button type="submit" className={`${primaryButton} absolute right-3 top-1/2 -translate-y-1/2`}>
@@ -127,7 +127,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
         <Card padded={false}>
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="text-[13px] font-semibold text-ink">Recent assessment activity</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Recent assessment activity</h2>
               <p className="mt-0.5 text-xs text-muted">Latest completed screening sessions across your panel.</p>
             </div>
             <Link to="/doctor/patients" className="text-xs font-semibold text-blue-700 hover:text-blue-900">
@@ -148,7 +148,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
               {(stats?.recentAssessments || []).slice(0, 5).map((assessment) => (
                 <li key={assessment.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <Link to={`/doctor/patients/${assessment.patientId}`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
+                    <Link to={`/doctor/patients/${assessment.patientId}`} className="text-[14px] font-semibold text-ink hover:text-blue-700">
                       {assessment.patientName}
                     </Link>
                     <p className="mt-0.5 text-xs text-muted">
@@ -156,8 +156,10 @@ export const DoctorPortalDashboardPage: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-lg bg-warm px-2 py-1 text-xs font-bold text-body">{Math.round(assessment.score)} / 100</span>
-                    <RiskPill risk={assessment.riskLevel} />
+                    <span className="rounded-lg bg-warm px-2 py-1 text-xs font-bold text-body">
+                      {assessment.score === null ? 'Not interpretable' : `${Math.round(assessment.score)} / 100`}
+                    </span>
+                    <ReviewStatePill state={assessment.reviewState} />
                     <ReviewPill status={assessment.reviewStatus} />
                     <Link to={`/doctor/patients/${assessment.patientId}/review?assessment=${assessment.id}`} className="rounded-lg p-1.5 text-muted hover:bg-warm hover:text-body" aria-label={`Review assessment for ${assessment.patientName}`}>
                       <ArrowRight className="h-3.5 w-3.5" />
@@ -172,7 +174,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
         <Card padded={false}>
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600" /> Change alerts
               </h2>
               <p className="mt-0.5 text-xs text-muted">Within-person signals needing acknowledgement.</p>
@@ -194,7 +196,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
                 <li key={alert.patientId} className="px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <Link to={`/doctor/patients/${alert.patientId}/change-detection`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
+                      <Link to={`/doctor/patients/${alert.patientId}/change-detection`} className="text-[14px] font-semibold text-ink hover:text-blue-700">
                         {alert.patientName}
                       </Link>
                       <p className="mt-0.5 text-xs text-muted">{formatDate(alert.latestAssessmentDate)} · {alert.reviewReasons.length} review cue{alert.reviewReasons.length === 1 ? '' : 's'}</p>
@@ -202,7 +204,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
                     <ChangePill status="REVIEW" />
                   </div>
                   <p className="mt-1.5 text-xs leading-4 text-body">
-                    {alert.reviewReasons.includes('OUTSIDE_OBSERVED_BASELINE') && 'Score outside the observed baseline. '}
+                    {alert.reviewReasons.includes('OUTSIDE_RELIABLE_CHANGE') && 'Score decline beyond measured variability. '}
                     {alert.reviewReasons.includes('FUNCTIONAL_CHANGE') && 'Reported daily-function change. '}
                     {alert.reviewReasons.includes('CONTEXT_CHANGE') && 'Health-context contributors changed.'}
                   </p>
@@ -217,7 +219,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
         <Card padded={false}>
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="text-[13px] font-semibold text-ink">Upcoming follow-ups</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Upcoming follow-ups</h2>
               <p className="mt-0.5 text-xs text-muted">Appointments and repeat assessment reminders.</p>
             </div>
             <Link to="/doctor/appointments" className="text-xs font-semibold text-blue-700 hover:text-blue-900">Manage</Link>
@@ -235,7 +237,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
               {upcoming.slice(0, 4).map((appointment) => (
                 <li key={appointment.id} className="flex items-start justify-between gap-3 px-4 py-3">
                   <div>
-                    <p className="text-[12px] font-semibold text-ink">{appointment.title}</p>
+                    <p className="text-[14px] font-semibold text-ink">{appointment.title}</p>
                     <p className="mt-0.5 text-xs text-muted">
                       {appointment.date} at {appointment.time} · {appointment.location}
                     </p>
@@ -252,7 +254,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
         <Card padded={false}>
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
-              <h2 className="text-[13px] font-semibold text-ink">Recent clinical notes</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Recent clinical notes</h2>
               <p className="mt-0.5 text-xs text-muted">Your latest observations and review decisions.</p>
             </div>
             <Link to="/doctor/patients" className="text-xs font-semibold text-blue-700 hover:text-blue-900">Open records</Link>
@@ -271,7 +273,7 @@ export const DoctorPortalDashboardPage: React.FC = () => {
                   <li key={note.id} className="px-4 py-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <Link to={`/doctor/patients/${note.patientId}/notes`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
+                        <Link to={`/doctor/patients/${note.patientId}/notes`} className="text-[14px] font-semibold text-ink hover:text-blue-700">
                           {patient?.name || note.patientId}
                         </Link>
                         <p className="mt-0.5 line-clamp-2 text-xs leading-4 text-muted">{note.observations}</p>
@@ -289,17 +291,17 @@ export const DoctorPortalDashboardPage: React.FC = () => {
       <div className="grid gap-3 sm:grid-cols-3">
         <Link to="/doctor/patients/new" className="group rounded-2xl border border-line bg-white p-4 transition hover:border-blue-300 hover:shadow-card">
           <UserPlus className="h-5 w-5 text-blue-700" />
-          <p className="mt-2 text-[12px] font-semibold text-ink">Register a patient</p>
+          <p className="mt-2 text-[14px] font-semibold text-ink">Register a patient</p>
           <p className="mt-0.5 text-xs leading-4 text-muted">Create a hospital ID, capture consent, and send an invitation.</p>
         </Link>
         <Link to="/doctor/reports" className="group rounded-2xl border border-line bg-white p-4 transition hover:border-blue-300 hover:shadow-card">
           <FileText className="h-5 w-5 text-blue-700" />
-          <p className="mt-2 text-[12px] font-semibold text-ink">Clinical reports</p>
+          <p className="mt-2 text-[14px] font-semibold text-ink">Clinical reports</p>
           <p className="mt-0.5 text-xs leading-4 text-muted">Review printable patient and longitudinal summaries.</p>
         </Link>
         <Link to="/doctor/longitudinal" className="group rounded-2xl border border-line bg-white p-4 transition hover:border-blue-300 hover:shadow-card">
           <TrendingUp className="h-5 w-5 text-blue-700" />
-          <p className="mt-2 text-[12px] font-semibold text-ink">Longitudinal trends</p>
+          <p className="mt-2 text-[14px] font-semibold text-ink">Longitudinal trends</p>
           <p className="mt-0.5 text-xs leading-4 text-muted">Compare cognitive, ocular, vocal, and functional changes.</p>
         </Link>
       </div>

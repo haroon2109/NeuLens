@@ -167,15 +167,15 @@ export const enTranslation: LanguageTranslation = {
     disclaimerNotice:
       'Notice: This assessment measures physiological and cognitive markers for early risk screening. It is NOT a clinical diagnosis of dementia, Alzheimer’s, or any neurological condition. A formal diagnosis requires clinical consultation.',
     lowRiskExplanation:
-      'Your screening result indicates healthy baseline performance across all tested domains. Your cognitive speed and motor responses are well within standard ranges.',
+      'This screening did not show a change outside the range recorded for you earlier. It does not rule out a health condition.',
     moderateRiskExplanation:
-      'Your screening result indicates slight baseline variation. While this is common, further clinical evaluation with a qualified physician is recommended.',
+      'Some observations differed from your earlier sessions. This can happen for many reasons and is a prompt for clinical review, not a diagnosis.',
     highRiskExplanation:
-      'Your screening result indicates notable baseline variations across multiple parameters. We strongly recommend scheduling a comprehensive clinical evaluation with a neurologist.',
+      'Several observations differed from your earlier sessions. Please arrange a review with a qualified clinician. This is not a diagnosis.',
     nextStepsNormal:
-      'Continue engaging in regular mental and physical activities. Routine annual follow-ups are advised.',
+      'Keep up regular physical and mental activity. Repeat screening as advised by your care team.',
     nextStepsFollowup:
-      'You can download your detailed summary report below and share it directly with your healthcare provider.'
+      'You can download your summary and share it with your healthcare provider.'
   },
   contextual: {
     faceNotCentered: 'Please move slightly closer to the camera and keep your head straight.',

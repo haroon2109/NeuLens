@@ -79,7 +79,7 @@ export const PatientAssessmentConditionsPage: React.FC = () => {
               </div>
             ))}
           </dl>
-          <p className="mt-3 flex gap-1.5 text-[11px] leading-5 text-muted">
+          <p className="mt-3 flex gap-1.5 text-[13px] leading-5 text-muted">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             Age and education are used to choose suitable task variants and reference context. They never automatically lower difficulty.
           </p>
@@ -104,7 +104,7 @@ export const PatientAssessmentConditionsPage: React.FC = () => {
               </div>
             ))}
           </dl>
-          <p className="mt-3 rounded-xl border border-mint bg-mint/50 p-2.5 text-[11px] leading-5 text-forest">
+          <p className="mt-3 rounded-xl border border-mint bg-mint/50 p-2.5 text-[13px] leading-5 text-forest">
             These factors are recorded as interpretation context. They do not lower the task difficulty or adjust your score.
           </p>
         </Card>
@@ -162,7 +162,7 @@ export const PatientAssessmentConditionsPage: React.FC = () => {
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[620px] text-left text-xs">
               <thead>
-                <tr className="border-b border-line text-[10px] uppercase tracking-wide text-sage-deep">
+                <tr className="border-b border-line text-[12px] uppercase tracking-wide text-sage-deep">
                   <th className="py-2 pr-3">Date</th>
                   <th className="px-3 py-2">Mode</th>
                   <th className="px-3 py-2">Completed</th>
@@ -196,7 +196,7 @@ export const PatientAssessmentConditionsPage: React.FC = () => {
             </table>
           </div>
         )}
-        <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-5 text-muted">
+        <p className="mt-3 flex items-start gap-1.5 text-[13px] leading-5 text-muted">
           <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           Exploratory and standardized sessions are stored separately. Only standardized sessions within the same protocol can be compared over time.
         </p>
@@ -210,8 +210,8 @@ export const PatientAssessmentConditionsPage: React.FC = () => {
           <p className="mt-1 text-xs leading-5 text-muted">
             Your portal language preference is {context?.language?.toUpperCase() || 'not recorded'}.
           </p>
-          <p className="mt-2 rounded-xl border border-line bg-warm/60 p-3 text-[11px] leading-5 text-muted">
-            This research build administers task instructions in English. Tamil, Hindi, Telugu, Malayalam and Kannada instructions are marked pending linguistic and clinical review, so they are not silently presented as validated translations.
+          <p className="mt-2 rounded-xl border border-line bg-warm/60 p-3 text-[13px] leading-5 text-muted">
+            This research build administers task instructions and stimuli in English. Arabic, Tamil, Hindi, Telugu, Malayalam and Kannada are offered for portal navigation, consent and results, but their task instructions are marked pending independent back-translation, cognitive pretesting and local clinical review. They are never presented as validated translations.
           </p>
         </Card>
         <Card>

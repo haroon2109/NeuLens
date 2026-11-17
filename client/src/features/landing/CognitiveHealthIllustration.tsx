@@ -22,7 +22,7 @@ export const CognitiveHealthIllustration: FC = () => (
         />
 
         <div className="mt-4 flex flex-col gap-3">
-          <div className="inline-flex items-center justify-center gap-2 rounded-full border border-[#DFF3EA] bg-[#F4FBF8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#2F5E4E]">
+          <div className="inline-flex items-center justify-center gap-2 rounded-full border 0 bg-mist px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-forest">
             Multimodal, clinician-guided screening
           </div>
 
@@ -32,7 +32,7 @@ export const CognitiveHealthIllustration: FC = () => (
                 key={label}
                 className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm"
               >
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#2F5E4E]">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-forest">
                   <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={1.8} />
                 </span>
                 <span className="min-w-0">

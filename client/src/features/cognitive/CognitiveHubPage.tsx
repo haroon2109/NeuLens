@@ -215,7 +215,7 @@ export const CognitiveHubPage: React.FC = () => {
                       <Clock3 className="h-3.5 w-3.5" /> {task.durationMinutes} min
                     </span>
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-[13px]">
                     <Pill tone="mint">Form {task.form}</Pill>
                     <Pill tone={plan.mode === 'STANDARDIZED' ? 'sage' : 'amber'}>
                       {plan.mode === 'STANDARDIZED' ? 'Fixed difficulty' : `Adaptive level ${task.difficultyLevel}`}
@@ -271,7 +271,7 @@ export const CognitiveHubPage: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-2 text-[11px] leading-5 text-muted">
+                <p className="mt-2 text-[13px] leading-5 text-muted">
                   These factors are not used to lower the difficulty or change your score.
                 </p>
               </Card>
@@ -288,8 +288,8 @@ export const CognitiveHubPage: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 rounded-xl border border-mint bg-mint/50 p-2.5 text-[11px] leading-5 text-forest">
-                <ShieldCheck className="mr-1 inline h-3.5 w-3.5" />
+              <p className="mt-3 rounded-xl border border-mint bg-mint/50 p-2.5 text-[13px] leading-5 text-forest">
+                <ShieldCheck className="me-1 inline h-3.5 w-3.5" />
                 A clinician reviews these observations. This is a screening support tool, not a diagnosis.
               </p>
             </Card>
@@ -438,7 +438,7 @@ export const CognitiveHubPage: React.FC = () => {
               <p className="mt-2 text-xs leading-5 text-muted">{detail}</p>
               <ul className="mt-2 space-y-1">
                 {points.map((point) => (
-                  <li key={point} className="flex gap-1.5 text-[11px] leading-5 text-body">
+                  <li key={point} className="flex gap-1.5 text-[13px] leading-5 text-body">
                     <Check className="mt-0.5 h-3 w-3 shrink-0 text-forest" /> {point}
                   </li>
                 ))}
@@ -518,6 +518,7 @@ export const CognitiveHubPage: React.FC = () => {
                 className={`${fieldClass} mt-1`}
               >
                 <option value="en">English</option>
+                <option value="ar">العربية — instructions pending</option>
                 <option value="ta">Tamil — instructions pending</option>
                 <option value="hi">Hindi — instructions pending</option>
                 <option value="te">Telugu — instructions pending</option>
@@ -527,7 +528,7 @@ export const CognitiveHubPage: React.FC = () => {
             </label>
           </div>
           {missingFields.length > 0 && (
-            <p className="mt-3 flex gap-2 rounded-xl border border-line bg-warm/60 p-2.5 text-[11px] leading-5 text-muted">
+            <p className="mt-3 flex gap-2 rounded-xl border border-line bg-warm/60 p-2.5 text-[13px] leading-5 text-muted">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Not yet reported: {missingFields.join(', ')}. These remain missing until you or your clinician record them.
             </p>
@@ -630,7 +631,7 @@ export const CognitiveHubPage: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-[11px] leading-5 text-muted">
+              <p className="mt-2 text-[13px] leading-5 text-muted">
                 Exploratory sessions adjust the number and difficulty of activities. Standardized sessions use the fixed six-activity protocol.
               </p>
             </Card>
@@ -655,7 +656,7 @@ export const CognitiveHubPage: React.FC = () => {
         </button>
       </div>
 
-      <p className="flex items-center gap-2 text-[11px] text-muted">
+      <p className="flex items-center gap-2 text-[13px] text-muted">
         <UserRound className="h-3.5 w-3.5" /> Signed in as {user?.name || 'patient'} · Patient ID {user?.patientId || 'not available'}
       </p>
     </div>

@@ -43,7 +43,7 @@ export const BrainHealthPathway: React.FC<{
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Longitudinal care pathway</p>
           <h3 className={`${compact ? 'text-[15px]' : 'text-[17px]'} font-semibold text-slate-900 mt-0.5`}>{title}</h3>
-          <p className="text-[12px] text-slate-600 mt-1">Screening support only — not a diagnosis. Poor-quality sessions are never interpreted as decline; clinicians own care decisions.</p>
+          <p className="text-[14px] text-slate-600 mt-1">Screening support only — not a diagnosis. Poor-quality sessions are never interpreted as decline; clinicians own care decisions.</p>
         </div>
         <ShieldCheck className="h-5 w-5 text-blue-600 flex-shrink-0" aria-hidden="true" />
       </div>
@@ -60,12 +60,12 @@ export const BrainHealthPathway: React.FC<{
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[13px] font-semibold text-slate-900">{stage.stage}. {stage.title}</p>
+                    <p className="text-[14px] font-semibold text-slate-900">{stage.stage}. {stage.title}</p>
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${tone}`}>
                       {prettyState(stage.state)}
                     </span>
                   </div>
-                  <p className="mt-1 text-[12px] leading-5 text-slate-600">{stage.summary}</p>
+                  <p className="mt-1 text-[14px] leading-5 text-slate-600">{stage.summary}</p>
                 </div>
               </div>
             </li>
@@ -77,9 +77,9 @@ export const BrainHealthPathway: React.FC<{
         <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3.5">
           <div className="flex items-center gap-2">
             <HeartPulse className="h-4 w-4 text-emerald-700" aria-hidden="true" />
-            <p className="text-[12px] font-semibold text-emerald-900">Personalized prevention (supportive)</p>
+            <p className="text-[14px] font-semibold text-emerald-900">Personalized prevention (supportive)</p>
           </div>
-          <p className="mt-1 text-[12px] leading-5 text-emerald-900/90">
+          <p className="mt-1 text-[14px] leading-5 text-emerald-900/90">
             {personalizedPrevention.note || 'Supportive, non-diagnostic suggestions to discuss with a clinician; not medical advice or a treatment plan.'}
           </p>
           {personalizedPrevention.signals && personalizedPrevention.signals.length > 0 && (
@@ -119,7 +119,7 @@ export function derivePathwayFromOverview(args: {
       ? 'Recent comparable observations are within the recorded personal range. Poor quality is never treated as decline.'
       : 'Not enough comparable, quality-checked sessions yet to determine meaningful change; continue follow-up.';
 
-  const review = latestChange?.status === 'REVIEW' || brainHealth?.riskTier === 'HIGH';
+  const review = latestChange?.status === 'REVIEW' || brainHealth?.reviewSignal === 'REVIEW_PROMPT';
   const preventionSteps = (brainHealth?.nextSteps || []).filter((s: any) => s?.stage === 4 || s?.type === 'PERSONALIZED_PREVENTION' || s?.type === 'REVIEW_CONTEXT');
 
   return [

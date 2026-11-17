@@ -18,7 +18,7 @@ const createAssessment = (
   userId: 'change-monitor-patient',
   date: new Date(date),
   overallScore,
-  riskLevel: 'LOW',
+  reviewState: 'NOT_REVIEWED',
   status: 'COMPLETED',
   reviewStatus: 'PENDING_REVIEW',
   taskResponses: activities
@@ -43,8 +43,6 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
   describe('Functional check-in validation', () => {
     it('accepts completed check-ins and rejects out-of-range responses', () => {
       const base = {
-        overallScore: 80,
-        riskLevel: 'LOW',
         taskResponses: {
           functionalCheckIn: {
             completedAt: '2026-03-01T00:00:00.000Z',
@@ -116,7 +114,6 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       });
       const assessment = await HospitalDataStore.submitAssessment(patient.id, {
         overallScore: 78,
-        riskLevel: 'LOW',
         reactionTime: 255,
         blinkRate: 15,
         fixationScore: 86,
@@ -160,7 +157,7 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       assert.strictEqual(summary.status, 'INSUFFICIENT_DATA');
     });
 
-    it('flags scores below the observed range of three comparable prior screens', () => {
+    it('flags a decline larger than the patient\'s own measured session-to-session variability', () => {
       const summary = summarizePatientChanges([
         createAssessment('screen-4', '2026-04-01T00:00:00Z', 70, {
           appointments: 0, medication: 0, finances: 0, household: 0
@@ -176,10 +173,15 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
         })
       ]);
 
+      // Three repeat pairs (82→80→76→70) give SD of change 2.0, so the reliable
+      // change threshold is 1.96 × 2.0 = 3.9 points and a 9.3-point decline is
+      // distinguishable from this patient's noise.
       assert.strictEqual(summary.status, 'REVIEW');
-      assert.deepStrictEqual(summary.reviewReasons, ['OUTSIDE_OBSERVED_BASELINE']);
+      assert.deepStrictEqual(summary.reviewReasons, ['OUTSIDE_RELIABLE_CHANGE']);
       assert.strictEqual(summary.cognitive.change, -6);
-      assert.strictEqual(summary.cognitive.outsideObservedBaseline, true);
+      assert.strictEqual(summary.cognitive.declineBeyondReliableChange, true);
+      assert.strictEqual(summary.cognitive.reliability.state, 'PROVISIONAL');
+      assert.strictEqual(summary.cognitive.reliability.pairs, 3);
       assert.deepStrictEqual(summary.cognitive.baselineRange, { minimum: 76, maximum: 82 });
     });
 
@@ -204,7 +206,7 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       assert.deepStrictEqual(summary.function.worsenedActivityIds, ['medication']);
     });
 
-    it('does not flag stable or mixed screening and function reports', () => {
+    it('reports no conclusion, not stability, when variability has not been estimated', () => {
       const summary = summarizePatientChanges([
         createAssessment('screen-2', '2026-02-01T00:00:00Z', 82, {
           appointments: 0,
@@ -220,7 +222,58 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
         })
       ]);
 
+      // One repeat pair is not enough to know what this score does when nothing
+      // has changed, so neither "changed" nor "stable" may be reported.
+      assert.strictEqual(summary.status, 'INSUFFICIENT_DATA');
+      assert.strictEqual(summary.cognitive.reliability.state, 'NOT_ESTABLISHED');
+      assert.strictEqual(summary.cognitive.reliability.pairs, 1);
+      assert.deepStrictEqual(summary.reviewReasons, []);
+    });
+
+    it('reports stability once four comparable sessions establish the variability', () => {
+      const summary = summarizePatientChanges([
+        createAssessment('screen-4', '2026-04-01T00:00:00Z', 81, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        }),
+        createAssessment('screen-3', '2026-03-01T00:00:00Z', 79, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        }),
+        createAssessment('screen-2', '2026-02-01T00:00:00Z', 82, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        }),
+        createAssessment('screen-1', '2026-01-01T00:00:00Z', 80, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        })
+      ]);
+
+      // SD of change across 82→79→81 (2, -2) is 2.8, threshold 5.5; the 0.3-point
+      // difference from the reference is well inside the noise.
+      assert.strictEqual(summary.cognitive.reliability.state, 'PROVISIONAL');
+      assert.strictEqual(summary.cognitive.declineBeyondReliableChange, false);
       assert.strictEqual(summary.status, 'NO_CHANGE');
+    });
+
+    it('does not flag a drop that is smaller than the established variability', () => {
+      const summary = summarizePatientChanges([
+        createAssessment('screen-4', '2026-04-01T00:00:00Z', 74, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        }),
+        createAssessment('screen-3', '2026-03-01T00:00:00Z', 86, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        }),
+        createAssessment('screen-2', '2026-02-01T00:00:00Z', 75, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        }),
+        createAssessment('screen-1', '2026-01-01T00:00:00Z', 88, {
+          appointments: 0, medication: 1, finances: 0, household: 0
+        })
+      ]);
+
+      // This patient swings about 13 points between sessions, so their reliable
+      // change threshold is ~26 points and a 9-point drop is within their noise.
+      assert.strictEqual(summary.cognitive.reliability.state, 'PROVISIONAL');
+      assert.ok((summary.cognitive.reliability.reliableChangeThreshold || 0) > 9);
+      assert.strictEqual(summary.cognitive.declineBeyondReliableChange, false);
       assert.deepStrictEqual(summary.reviewReasons, []);
     });
 
@@ -235,7 +288,7 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
 
       const summary = summarizePatientChanges([current, prior]);
       assert.strictEqual(summary.cognitive.change, null);
-      assert.strictEqual(summary.cognitive.outsideObservedBaseline, false);
+      assert.strictEqual(summary.cognitive.declineBeyondReliableChange, false);
       assert.strictEqual(summary.status, 'INSUFFICIENT_DATA');
     });
 
@@ -355,7 +408,6 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
 
       const submitted = await HospitalDataStore.submitAssessment(patient.id, {
         overallScore: 86.0,
-        riskLevel: 'LOW',
         reactionTime: 235,
         blinkRate: 13,
         fixationScore: 94,
@@ -393,7 +445,6 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       });
       await HospitalDataStore.submitAssessment(patient.id, {
         overallScore: 80,
-        riskLevel: 'LOW',
         reactionTime: 240,
         blinkRate: 14,
         fixationScore: 88,
@@ -426,7 +477,6 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       });
       await HospitalDataStore.submitAssessment(patient.id, {
         overallScore: 79,
-        riskLevel: 'LOW',
         reactionTime: 250,
         blinkRate: 15,
         fixationScore: 85,
@@ -462,7 +512,6 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       });
       const submitted = await HospitalDataStore.submitAssessment(patient.id, {
         overallScore: 58,
-        riskLevel: 'HIGH',
         reactionTime: 380,
         blinkRate: 22,
         fixationScore: 62,
@@ -477,7 +526,9 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       const report = await HospitalDataStore.getScreeningReport(submitted.id);
       assert.ok(report);
       assert.strictEqual(report.patient.name, 'Review Patient');
-      assert.strictEqual(report.assessment.riskLevel, 'HIGH');
+      // A low score no longer produces a risk tier: the record is simply
+      // awaiting review until a clinician reviews it.
+      assert.strictEqual(report.assessment.reviewState, 'NOT_REVIEWED');
 
       const updated = await HospitalDataStore.updateAssessmentReview(
         submitted.id,
@@ -505,7 +556,6 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       });
       const submitted = await HospitalDataStore.submitAssessment(patient.id, {
         overallScore: 74,
-        riskLevel: 'MODERATE',
         reactionTime: 300,
         blinkRate: 18,
         fixationScore: 78,

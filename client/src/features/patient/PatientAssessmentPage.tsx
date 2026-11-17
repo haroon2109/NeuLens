@@ -138,7 +138,7 @@ export const PatientAssessmentPage: React.FC = () => {
               <span className="text-xs font-semibold text-ink block leading-tight truncate">
                 {patientName}
               </span>
-              <span className="mt-0.5 inline-block font-mono text-[11px] font-semibold text-forest bg-mint border border-sage/50 px-2 py-0.5 rounded-md">
+              <span className="mt-0.5 inline-block font-mono text-[13px] font-semibold text-forest bg-mint border border-sage/50 px-2 py-0.5 rounded-md">
                 {patientId}
               </span>
             </div>
@@ -149,7 +149,7 @@ export const PatientAssessmentPage: React.FC = () => {
             
             {/* Font Size Accessibility Toggle */}
             <div className="hidden sm:flex items-center bg-warm p-1 rounded-lg border border-line text-xs font-semibold text-body">
-              <span className="px-2 text-[10px] uppercase tracking-[0.12em] text-sage-deep flex items-center gap-1">
+              <span className="px-2 text-[12px] uppercase tracking-[0.12em] text-sage-deep flex items-center gap-1">
                 <Type className="w-3 h-3" />
                 Text
               </span>

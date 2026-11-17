@@ -3,7 +3,9 @@
  * Official endpoint: POST https://api.vachana.ai/stt/v3
  */
 
+import { spawn } from 'child_process';
 import { GNANI_LANGUAGE_CATALOG, GnaniSttOptions, GnaniSttResult, SupportedLanguageCode } from './types';
+import { withGnaniQueue } from './gnaniQueue';
 
 export class GnaniSttService {
   private baseUrl: string;
@@ -27,6 +29,15 @@ export class GnaniSttService {
   }
 
   /**
+   * Gnani ships no reviewed Arabic STT voice in this build, so Arabic audio
+   * is never routed through a different-language voice. Callers fall back to
+   * on-screen text only.
+   */
+  public isArabicVoiceAvailable(): boolean {
+    return false;
+  }
+
+  /**
    * Resolve language code to standard Gnani BCP-47 tag (e.g., 'ta' -> 'ta-IN')
    */
   public resolveBcp47(lang: string): string {
@@ -39,6 +50,54 @@ export class GnaniSttService {
       return lang;
     }
     return 'en-IN';
+  }
+
+  public needsTranscode(mimeType: string, filename: string): boolean {
+    const mime = (mimeType || '').toLowerCase();
+    const name = (filename || '').toLowerCase();
+    // Gnani accepts ogg/aac/m4a/flac/mp3/wav; browsers record WebM/Opus,
+    // which Gnani rejects, so transcode those (and raw Opus) to 16 kHz WAV.
+    return mime.includes('webm') || mime.includes('opus') || name.endsWith('.webm') || name.endsWith('.opus');
+  }
+
+  public async transcodeToWav(audioBuffer: Buffer): Promise<Buffer> {
+    return new Promise<Buffer>((resolve, reject) => {
+      const ffmpeg = spawn('ffmpeg', [
+        '-hide_banner',
+        '-loglevel', 'error',
+        '-i', 'pipe:0',
+        '-ar', '16000',
+        '-ac', '1',
+        '-c:a', 'pcm_s16le',
+        '-f', 'wav',
+        'pipe:1'
+      ], { stdio: ['pipe', 'pipe', 'pipe'] });
+
+      const chunks: Buffer[] = [];
+      let stderr = '';
+
+      ffmpeg.stdout.on('data', (chunk: Buffer) => {
+        chunks.push(chunk);
+      });
+      ffmpeg.stderr.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+
+      ffmpeg.on('error', (err: Error) => {
+        reject(new Error(`ffmpeg transcode failed to start: ${err.message}`));
+      });
+
+      ffmpeg.on('close', (code: number) => {
+        if (code !== 0) {
+          reject(new Error(`ffmpeg transcode failed (exit ${code}): ${stderr.trim() || 'unknown error'}`));
+          return;
+        }
+        resolve(Buffer.concat(chunks));
+      });
+
+      ffmpeg.stdin.write(audioBuffer);
+      ffmpeg.stdin.end();
+    });
   }
 
   /**
@@ -77,7 +136,31 @@ export class GnaniSttService {
       throw new Error(`Audio file exceeds maximum allowed size of 15MB.`);
     }
 
+    // Arabic is shown on-screen only; never route Arabic audio to STT.
+    if (options.languageCode.toLowerCase() === 'ar' && !this.isArabicVoiceAvailable()) {
+      return {
+        success: false,
+        transcript: '',
+        language: 'en-IN',
+        requestId: undefined,
+        latencyMs: Date.now() - startTime,
+        error: 'No reviewed Arabic voice is configured; Arabic is shown on-screen only.'
+      };
+    }
+
+    let uploadBuffer = audioBuffer;
+    let uploadMime = mimeType || 'audio/wav';
+    let uploadName = originalFilename || 'recording.wav';
+
+    if (this.needsTranscode(uploadMime, uploadName)) {
+      uploadBuffer = await this.transcodeToWav(audioBuffer);
+      uploadMime = 'audio/wav';
+      uploadName = uploadName.replace(/\.[^.]+$/, '') + '.wav';
+      if (!uploadName.endsWith('.wav')) uploadName = `${uploadName}.wav`;
+    }
+
     const bcp47 = this.resolveBcp47(options.languageCode);
+
     const targetUrl = `${this.baseUrl}/stt/v3`;
 
     const controller = new AbortController();
@@ -86,9 +169,9 @@ export class GnaniSttService {
     try {
       // Build standard multipart/form-data payload via native Node 20 FormData & Blob
       const formData = new FormData();
-      const audioBlob = new Blob([audioBuffer], { type: mimeType || 'audio/wav' });
-      
-      formData.append('audio_file', audioBlob, originalFilename || 'recording.wav');
+      const audioBlob = new Blob([uploadBuffer], { type: uploadMime || 'audio/wav' });
+
+      formData.append('audio_file', audioBlob, uploadName);
       formData.append('language_code', bcp47);
       formData.append('preferred_language', bcp47);
       formData.append('format', options.format || 'transcribe');
@@ -105,14 +188,16 @@ export class GnaniSttService {
         };
       }
 
-      const response = await fetch(targetUrl, {
-        method: 'POST',
-        headers: {
-          'X-API-Key-ID': apiKey
-        },
-        body: formData,
-        signal: controller.signal
-      });
+      const response = await withGnaniQueue(() =>
+        fetch(targetUrl, {
+          method: 'POST',
+          headers: {
+            'X-API-Key-ID': apiKey
+          },
+          body: formData,
+          signal: controller.signal
+        })
+      );
 
       const latencyMs = Date.now() - startTime;
 

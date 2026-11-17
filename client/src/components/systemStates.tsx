@@ -91,7 +91,7 @@ export const StatePanel: React.FC<{
         </span>
         <div className="min-w-0 flex-1">
           {eyebrow && (
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">{eyebrow}</p>
+            <p className="text-[14px] font-bold uppercase tracking-[0.12em] text-slate-500">{eyebrow}</p>
           )}
           <h2 className="mt-1 text-[19px] font-semibold leading-snug text-slate-900">{title}</h2>
           <p className="mt-2 max-w-2xl text-[14px] leading-6 text-slate-700">{description}</p>
@@ -251,7 +251,7 @@ export const PermissionDeniedState: React.FC<{
           </>
         }
       />
-      <p className="px-1 text-[13px] leading-6 text-slate-500">
+      <p className="px-1 text-[14px] leading-6 text-slate-500">
         If access stays blocked, this activity can be skipped. A session with skipped activities is marked as
         partially completed and is not compared with your earlier sessions.
       </p>
@@ -562,7 +562,7 @@ export const SessionExpiredDialog: React.FC<{
         <DialogDescription asChild>
           <div>
             <p className="mt-2 text-[14px] leading-6 text-slate-600">{expired || ''}</p>
-            <p className="mt-2 text-[13px] leading-6 text-slate-500">
+            <p className="mt-2 text-[14px] leading-6 text-slate-500">
               Nothing you saved before this point has been lost.
             </p>
           </div>
@@ -582,6 +582,6 @@ export const SessionExpiredDialog: React.FC<{
 export const PartialDataNotice: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
     <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
-    <p className="text-[13px] leading-6 text-amber-900">{children}</p>
+    <p className="text-[14px] leading-6 text-amber-900">{children}</p>
   </div>
 );

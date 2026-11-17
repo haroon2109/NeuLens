@@ -19,6 +19,7 @@ import {
 import { Card, DoctorPageHeader, EmptyState, Notice, Pill, StatCard, formatDate, primaryButton, secondaryButton } from './portal/ui';
 import { doctorApi } from '../../services/portalApi';
 import { TaskLibraryView } from '../cognitive/TaskLibraryView';
+import { Swap } from '../../components/motion/Reveal';
 import { cognitiveApi, type AssessmentPlan, type CognitiveSessionRecord } from '../cognitive/cognitiveApi';
 import { DOMAIN_LABEL } from '../cognitive/types';
 import { COGNITIVE_TASKS } from '../cognitive/taskLibrary';
@@ -162,7 +163,7 @@ export const DoctorCognitivePage: React.FC = () => {
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${
+            className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition ${
               tab === id ? 'bg-mint text-forest' : 'text-body hover:bg-warm'
             }`}
           >
@@ -174,6 +175,7 @@ export const DoctorCognitivePage: React.FC = () => {
 
       {error && <p className="rounded-xl border border-amber/60 bg-amber/10 p-3 text-sm text-amber-900">{error}</p>}
 
+      <Swap key={tab} className="space-y-5">
       {tab === 'library' && <TaskLibraryView compact title="Available cognitive tasks" />}
 
       {tab === 'plan' && (
@@ -216,7 +218,7 @@ export const DoctorCognitivePage: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] text-left text-xs">
                   <thead>
-                    <tr className="border-b border-line text-[10px] uppercase tracking-wide text-sage-deep">
+                    <tr className="border-b border-line text-[12px] uppercase tracking-wide text-sage-deep">
                       <th className="py-2 pr-3">#</th>
                       <th className="px-3 py-2">Activity</th>
                       <th className="px-3 py-2">Domain</th>
@@ -248,7 +250,7 @@ export const DoctorCognitivePage: React.FC = () => {
                     <div key={`${flag.code}-${flag.label}`} className="rounded-xl border border-line bg-warm/60 p-3">
                       <Pill tone={flagTone(flag.severity)}>{flag.severity}</Pill>
                       <p className="mt-1.5 text-xs font-semibold text-ink">{flag.label}</p>
-                      <p className="mt-0.5 text-[11px] leading-5 text-muted">{flag.detail}</p>
+                      <p className="mt-0.5 text-[13px] leading-5 text-muted">{flag.detail}</p>
                     </div>
                   ))}
                 </div>
@@ -256,7 +258,7 @@ export const DoctorCognitivePage: React.FC = () => {
 
               <div className="rounded-2xl border border-line bg-warm/50 p-4">
                 <h3 className="text-sm font-semibold text-ink">Record a plan decision</h3>
-                <p className="mt-1 text-[11px] leading-5 text-muted">
+                <p className="mt-1 text-[13px] leading-5 text-muted">
                   Approval covers this plan only. It does not replace review of the session results.
                 </p>
                 <textarea
@@ -275,7 +277,7 @@ export const DoctorCognitivePage: React.FC = () => {
                   </button>
                 </div>
                 {plan.clinicianApproval && (
-                  <p className="mt-2 rounded-xl border border-line bg-white p-3 text-[11px] leading-5 text-muted">
+                  <p className="mt-2 rounded-xl border border-line bg-white p-3 text-[13px] leading-5 text-muted">
                     <span className="font-semibold text-ink">{plan.clinicianApproval.reviewedBy}</span> recorded{' '}
                     {plan.clinicianApproval.decision.replace('_', ' ')} on {formatDate(plan.clinicianApproval.reviewedAt)}.
                     {plan.clinicianApproval.note ? ` Note: ${plan.clinicianApproval.note}` : ''}
@@ -293,7 +295,7 @@ export const DoctorCognitivePage: React.FC = () => {
             <Card>
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-base font-semibold text-ink">Patient</h2>
-                <span className="text-[11px] text-muted">{filteredPatients.length} records</span>
+                <span className="text-[13px] text-muted">{filteredPatients.length} records</span>
               </div>
               <label className="relative mt-2 block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -316,7 +318,7 @@ export const DoctorCognitivePage: React.FC = () => {
                       }`}
                     >
                       <span>{patient.name}</span>
-                      <span className="text-[10px] font-mono text-muted">{patient.patientId}</span>
+                      <span className="text-[12px] font-mono text-muted">{patient.patientId}</span>
                     </button>
                   </li>
                 ))}
@@ -347,7 +349,7 @@ export const DoctorCognitivePage: React.FC = () => {
                           {session.mode === 'STANDARDIZED' ? 'Std' : 'Expl'}
                         </Pill>
                       </span>
-                      <span className="mt-0.5 flex items-center gap-2 text-[10px] text-muted">
+                      <span className="mt-0.5 flex items-center gap-2 text-[12px] text-muted">
                         <span>{session.tasks.filter((task) => task.completed).length}/{session.tasks.length} completed</span>
                         <span>·</span>
                         <span>{session.quality.comparable ? 'Comparable' : 'Not comparable'}</span>
@@ -391,12 +393,12 @@ export const DoctorCognitivePage: React.FC = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-sage-deep">Descriptive accuracy</p>
+                      <p className="text-[12px] font-bold uppercase tracking-wide text-sage-deep">Descriptive accuracy</p>
                       <p className="text-2xl font-semibold text-ink">{current.compositeAccuracy == null ? '—' : `${current.compositeAccuracy}%`}</p>
                     </div>
                   </div>
 
-                  <p className="mt-3 rounded-xl border border-line bg-warm/60 p-3 text-[11px] leading-5 text-muted">
+                  <p className="mt-3 rounded-xl border border-line bg-warm/60 p-3 text-[13px] leading-5 text-muted">
                     {current.quality.comparableReason}
                   </p>
 
@@ -415,7 +417,7 @@ export const DoctorCognitivePage: React.FC = () => {
                       </p>
                       <ul className="mt-1 space-y-1">
                         {current.confounders.map((flag) => (
-                          <li key={flag.code} className="text-[11px] leading-5 text-amber-900/90">
+                          <li key={flag.code} className="text-[13px] leading-5 text-amber-900/90">
                             <span className="font-semibold">{flag.label}:</span> {flag.detail}
                           </li>
                         ))}
@@ -429,7 +431,7 @@ export const DoctorCognitivePage: React.FC = () => {
                   <div className="mt-2 overflow-x-auto">
                     <table className="w-full min-w-[680px] text-left text-xs">
                       <thead>
-                        <tr className="border-b border-line text-[10px] uppercase tracking-wide text-sage-deep">
+                        <tr className="border-b border-line text-[12px] uppercase tracking-wide text-sage-deep">
                           <th className="py-2 pr-3">Activity</th>
                           <th className="px-2 py-2">Domain</th>
                           <th className="px-2 py-2">Ver / form</th>
@@ -446,7 +448,7 @@ export const DoctorCognitivePage: React.FC = () => {
                           <tr key={task.taskId} className="border-b border-line/70 last:border-0">
                             <td className="py-2.5 pr-3 font-semibold text-ink">
                               {task.taskName}
-                              {task.skipped && <span className="ml-1 rounded bg-amber/20 px-1 text-[9px] font-bold text-amber-900">SKIPPED</span>}
+                              {task.skipped && <span className="ml-1 rounded bg-amber/20 px-1 text-[12px] font-bold text-amber-900">SKIPPED</span>}
                             </td>
                             <td className="px-2 py-2.5 text-muted">{DOMAIN_LABEL[task.domain]}</td>
                             <td className="px-2 py-2.5 text-muted">v{task.version} · {task.form}</td>
@@ -464,7 +466,7 @@ export const DoctorCognitivePage: React.FC = () => {
                   {current.tasks.some((task) => task.notes.length > 0) && (
                     <details className="mt-3 rounded-xl border border-line bg-warm/50 p-3">
                       <summary className="cursor-pointer text-xs font-semibold text-ink">Task notes</summary>
-                      <ul className="mt-2 space-y-1.5 text-[11px] leading-5 text-muted">
+                      <ul className="mt-2 space-y-1.5 text-[13px] leading-5 text-muted">
                         {current.tasks.flatMap((task) =>
                           task.notes.map((note) => (
                             <li key={`${task.taskId}-${note}`}><span className="font-semibold text-ink">{task.taskName}:</span> {note}</li>
@@ -513,7 +515,7 @@ export const DoctorCognitivePage: React.FC = () => {
                         </div>
                       ))}
                     </dl>
-                    <p className="mt-2 text-[10px] leading-4 text-muted">
+                    <p className="mt-2 text-[12px] leading-4 text-muted">
                       Missing values were not reported. Nothing on this page is inferred or imputed.
                     </p>
                   </Card>
@@ -533,13 +535,13 @@ export const DoctorCognitivePage: React.FC = () => {
                     </p>
                   ) : (
                     <>
-                      <p className="mt-1 text-[11px] leading-5 text-muted">
+                      <p className="mt-1 text-[13px] leading-5 text-muted">
                         Compared with the previous standardized session ({formatDate(previous.completedAt)}). Changes are descriptive; no reliable-change threshold has been validated.
                       </p>
                       <div className="mt-2 overflow-x-auto">
                         <table className="w-full min-w-[520px] text-left text-xs">
                           <thead>
-                            <tr className="border-b border-line text-[10px] uppercase tracking-wide text-sage-deep">
+                            <tr className="border-b border-line text-[12px] uppercase tracking-wide text-sage-deep">
                               <th className="py-2 pr-3">Activity</th>
                               <th className="px-2 py-2">Previous</th>
                               <th className="px-2 py-2">Current</th>
@@ -572,7 +574,7 @@ export const DoctorCognitivePage: React.FC = () => {
                 </Card>
 
                 <div className="rounded-xl border border-line bg-white p-4">
-                  <p className="flex items-start gap-2 text-[11px] leading-5 text-muted">
+                  <p className="flex items-start gap-2 text-[13px] leading-5 text-muted">
                     <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" />
                     Clinician interpretation is required. These are descriptive research-stage measurements, not a diagnosis, and no automatic risk category has been assigned. Review alongside prior history, sensory access and the recorded administration conditions.
                   </p>
@@ -582,8 +584,9 @@ export const DoctorCognitivePage: React.FC = () => {
           </div>
         </div>
       )}
+      </Swap>
 
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-warm/60 p-3 text-[11px] leading-5 text-muted">
+      <div className="flex items-center gap-2 rounded-xl border border-line bg-warm/60 p-3 text-[13px] leading-5 text-muted">
         <Info className="h-3.5 w-3.5 shrink-0" />
         Task selection rationale, difficulty decisions, alternate forms and algorithm versions are stored with every plan and session for auditability.
       </div>

@@ -21,6 +21,11 @@ services:
         generateValue: true
       - key: CLIENT_ORIGIN
         value: https://cognivision-ai.onrender.com
+      # Transactional email for signup / password-reset codes.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
       # This instance is the public jury/prototype demo whose fictional logins
       # are documented in the README. Set to "false" on any instance that
       # holds real patient records: demo access is otherwise off in production.

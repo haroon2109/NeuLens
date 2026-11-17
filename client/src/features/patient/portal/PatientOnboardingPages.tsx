@@ -27,7 +27,9 @@ import { MotionReveal } from '../../../components/motion/Reveal';
 import { useAuthStore } from '../../../store/authStore';
 import { usePatientPortalStore, type ConsentKey } from '../../../store/patientPortalStore';
 import { patientPortalApi } from '../../../services/patientPortalApi';
-import { Card, Pill, Toggle, formatDate } from './ui';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { getPortalTranslation } from '../../../services/language/portalTranslations';
+import { Card, Pill, Toggle, formatDate, primaryButton, secondaryButton } from './ui';
 
 const steps = [
   { label: 'Welcome', path: '/patient/welcome' },
@@ -38,13 +40,8 @@ const steps = [
 ];
 
 const fieldClass =
-  'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[13px] text-ink outline-none transition-colors placeholder:text-muted focus:border-forest focus:ring-4 focus:ring-forest/12';
-const labelClass = 'mb-1.5 block text-[12px] font-semibold text-ink';
-const primaryButton =
-  'pp-btn pp-btn-primary pp-btn-sm inline-flex min-h-11 items-center justify-center gap-2 rounded-xl';
-const secondaryButton =
-  'pp-btn pp-btn-secondary pp-btn-sm inline-flex min-h-11 items-center justify-center gap-2';
-
+  'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[14px] text-ink outline-none transition-colors placeholder:text-muted focus:border-forest focus:ring-4 focus:ring-forest/12';
+const labelClass = 'mb-1.5 block text-[14px] font-semibold text-ink';
 /**
  * Onboarding shell — one NeuLens card, sage eyebrow, warm page background,
  * mint/forest progress steps. Preserves all existing step labels and routes.
@@ -89,7 +86,7 @@ const OnboardingShell: React.FC<{
                 }`}
               />
               <span
-                className={`mt-2 block truncate text-[11px] font-semibold ${
+                className={`mt-2 block truncate text-[13px] font-semibold ${
                   state === 'current' ? 'text-forest' : state === 'done' ? 'text-forest' : 'text-muted'
                 }`}
               >
@@ -102,14 +99,14 @@ const OnboardingShell: React.FC<{
 
       {/* Card — NeuLens pp-card with mint header strip */}
       <div className="pp-card-deep p-5 shadow-[0_18px_50px_-42px_rgba(27,51,43,0.4)] sm:p-8">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+        <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-sage-deep">
           <Sparkles className="h-3.5 w-3.5 text-sage-deep" aria-hidden="true" />
           {eyebrow}
         </div>
         <h1 className="mt-2 max-w-2xl text-[26px] font-semibold leading-tight tracking-[-0.035em] text-ink sm:text-[32px]">
           {title}
         </h1>
-        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-body">{description}</p>
+        <p className="mt-2 max-w-2xl text-[14px] leading-6 text-body">{description}</p>
         <div className="mt-6">{children}</div>
       </div>
     </main>
@@ -142,7 +139,7 @@ export const PatientWelcomePage: React.FC = () => {
               animated={false}
             />
           </MotionReveal>
-          <h2 className="text-[13px] font-semibold text-ink">What to expect</h2>
+          <h2 className="text-[14px] font-semibold text-ink">What to expect</h2>
           <ul className="mt-3 space-y-3">
             {[
               { icon: ClipboardCheck, title: 'A short five-part screening', detail: 'Memory, attention, eye movement, voice, and facial movement activities.' },
@@ -155,8 +152,8 @@ export const PatientWelcomePage: React.FC = () => {
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span>
-                  <span className="block text-[12px] font-semibold text-ink">{title}</span>
-                  <span className="mt-0.5 block text-[11px] leading-5 text-muted">{detail}</span>
+                  <span className="block text-[14px] font-semibold text-ink">{title}</span>
+                  <span className="mt-0.5 block text-[13px] leading-5 text-muted">{detail}</span>
                 </span>
               </li>
             ))}
@@ -167,8 +164,8 @@ export const PatientWelcomePage: React.FC = () => {
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-forest shadow-xs">
             <Brain className="h-6 w-6" strokeWidth={1.6} aria-hidden="true" />
           </span>
-          <p className="mt-3 text-[12px] font-semibold text-ink">Before you begin</p>
-          <p className="mt-1 text-[11px] leading-5 text-muted">
+          <p className="mt-3 text-[14px] font-semibold text-ink">Before you begin</p>
+          <p className="mt-1 text-[13px] leading-5 text-muted">
             We will ask a few questions about you, your health background, and your consent. Then you can set up the experience to suit your needs.
           </p>
           <div className="mt-4 flex flex-wrap gap-1.5">
@@ -180,7 +177,7 @@ export const PatientWelcomePage: React.FC = () => {
       </div>
 
       <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <p className="max-w-xl text-[11px] leading-5 text-muted">
+        <p className="max-w-xl text-[13px] leading-5 text-muted">
           NeuLens identifies changes that may warrant further assessment. It does not diagnose disease or replace professional judgement.
         </p>
         <div className="flex flex-wrap gap-2">
@@ -240,7 +237,7 @@ export const PersonalInfoPage: React.FC = () => {
       backTo="/patient/welcome"
     >
       {error && (
-        <p className="mb-4 rounded-xl border border-rose/60 bg-rose/10 px-3.5 py-2.5 text-[12px] font-semibold text-rose-900" role="alert">
+        <p className="mb-4 rounded-xl border border-rose/60 bg-rose/10 px-3.5 py-2.5 text-[14px] font-semibold text-rose-900" role="alert">
           {error}
         </p>
       )}
@@ -280,6 +277,7 @@ export const PersonalInfoPage: React.FC = () => {
             onChange={(event) => setPersonal({ language: event.target.value })}
           >
             <option value="en">English</option>
+            <option value="ar">العربية (Arabic)</option>
             <option value="ta">Tamil</option>
             <option value="hi">Hindi</option>
             <option value="te">Telugu</option>
@@ -331,7 +329,7 @@ export const PersonalInfoPage: React.FC = () => {
         </div>
 
         <div className="rounded-xl border border-line bg-warm/70 p-3.5 sm:col-span-2">
-          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">
+          <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">
             <HeartPulse className="h-3.5 w-3.5" aria-hidden="true" />
             Emergency contact <span className="font-medium normal-case tracking-normal text-muted">(optional)</span>
           </p>
@@ -554,6 +552,7 @@ const consentRows: Array<{ key: ConsentKey; label: string; detail: string; requi
 export const ConsentPrivacyPage: React.FC = () => {
   const navigate = useNavigate();
   const { consent, setConsent, signConsent } = usePatientPortalStore();
+  const pt = getPortalTranslation(useLanguageStore().currentLanguage);
   const [error, setError] = useState('');
 
   const requiredComplete = consentRows
@@ -593,13 +592,13 @@ export const ConsentPrivacyPage: React.FC = () => {
   return (
     <OnboardingShell
       step={3}
-      eyebrow="Screen 18 · Consent & privacy"
-      title="Your data, your choices"
-      description="We explain exactly what is collected and how it is used. Required items keep the screening safe and clinically meaningful; optional sharing is your choice."
+      eyebrow={pt.consent.eyebrow}
+      title={pt.consent.title}
+      description={pt.consent.description}
       backTo="/patient/onboarding/health-background"
     >
       {error && (
-        <p className="mb-4 rounded-xl border border-rose/60 bg-rose/10 px-3.5 py-2.5 text-[12px] font-semibold text-rose-900" role="alert">
+        <p className="mb-4 rounded-xl border border-rose/60 bg-rose/10 px-3.5 py-2.5 text-[14px] font-semibold text-rose-900" role="alert">
           {error}
         </p>
       )}
@@ -627,11 +626,11 @@ export const ConsentPrivacyPage: React.FC = () => {
             />
           </MotionReveal>
           <Card className="bg-warm/70">
-            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">
+            <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">
               <Lock className="h-3.5 w-3.5" aria-hidden="true" />
               How data is handled
             </p>
-            <ul className="mt-3 space-y-2.5 text-[11px] leading-5 text-muted">
+            <ul className="mt-3 space-y-2.5 text-[13px] leading-5 text-muted">
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Raw video and audio are not included in your portal reports.</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Only derived observations and task responses are stored.</li>
               <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Access is limited to verified clinicians in your care team.</li>
@@ -639,11 +638,11 @@ export const ConsentPrivacyPage: React.FC = () => {
             </ul>
           </Card>
           <div className="rounded-xl border border-mint bg-mint/50 p-3.5">
-            <p className="flex items-center gap-1.5 text-[11px] font-bold text-forest">
+            <p className="flex items-center gap-1.5 text-[13px] font-bold text-forest">
               <Info className="h-3.5 w-3.5" aria-hidden="true" />
               A note on clinical use
             </p>
-            <p className="mt-1.5 text-[11px] leading-5 text-forest/80">
+            <p className="mt-1.5 text-[13px] leading-5 text-forest/80">
               NeuLens is a screening support tool. Observations are exploratory and require professional interpretation.
             </p>
           </div>
@@ -656,9 +655,9 @@ export const ConsentPrivacyPage: React.FC = () => {
           Back
         </Link>
         <div className="flex w-full flex-col items-end gap-2 sm:w-auto">
-          {!requiredComplete && <span className="text-[11px] font-medium text-muted">Required items are marked *</span>}
+          {!requiredComplete && <span className="text-[13px] font-medium text-muted">{pt.consent.requiredItemsMarked}</span>}
           <button type="button" className={primaryButton} onClick={() => void handleContinue()} disabled={!requiredComplete}>
-            Accept and continue
+            {pt.consent.acceptAndContinue}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
@@ -700,7 +699,7 @@ export const AccessibilitySetupPage: React.FC = () => {
         <div className="space-y-4">
           <div>
             <label className={labelClass} htmlFor="access-language">
-              <Languages className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+              <Languages className="me-1 inline h-3.5 w-3.5" aria-hidden="true" />
               Language
             </label>
             <select
@@ -710,6 +709,7 @@ export const AccessibilitySetupPage: React.FC = () => {
               onChange={(event) => setAccessibility({ language: event.target.value })}
             >
               <option value="en">English</option>
+              <option value="ar">العربية (Arabic)</option>
               <option value="ta">Tamil</option>
               <option value="hi">Hindi</option>
               <option value="te">Telugu</option>
@@ -720,7 +720,7 @@ export const AccessibilitySetupPage: React.FC = () => {
 
           <div>
             <span className={labelClass}>
-              <Type className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+              <Type className="me-1 inline h-3.5 w-3.5" aria-hidden="true" />
               Text size
             </span>
             <div className="grid grid-cols-3 gap-2">
@@ -741,7 +741,7 @@ export const AccessibilitySetupPage: React.FC = () => {
                   }`}
                 >
                   <span className="block text-[17px] font-bold" style={{ fontFamily: 'var(--nl-font-sans)' }}>{option.label}</span>
-                  <span className="mt-0.5 block text-[11px]">{option.detail}</span>
+                  <span className="mt-0.5 block text-[13px]">{option.detail}</span>
                 </button>
               ))}
             </div>
@@ -777,50 +777,50 @@ export const AccessibilitySetupPage: React.FC = () => {
 
         <div className="space-y-3">
           <Card className="bg-warm/70">
-            <p className="text-[12px] font-semibold text-ink">Camera and microphone check</p>
-            <p className="mt-1 text-[11px] leading-5 text-muted">
+            <p className="text-[14px] font-semibold text-ink">Camera and microphone check</p>
+            <p className="mt-1 text-[13px] leading-5 text-muted">
               A quick check helps avoid technical interruptions. You can skip this and test later.
             </p>
             <div className="mt-3 space-y-2.5">
               <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
-                <span className="flex items-center gap-2 text-[12px] font-semibold text-ink">
+                <span className="flex items-center gap-2 text-[14px] font-semibold text-ink">
                   <Camera className="h-4 w-4 text-sage-deep" aria-hidden="true" />
                   Camera
                 </span>
                 {accessibility.cameraTested ? (
                   <Pill tone="forestSoft" dot>Ready</Pill>
                 ) : (
-                  <button type="button" className="text-[11px] font-bold text-forest" onClick={() => runTest('camera')}>
+                  <button type="button" className="text-[13px] font-bold text-forest" onClick={() => runTest('camera')}>
                     {testing === 'camera' ? 'Checking…' : 'Test camera'}
                   </button>
                 )}
               </div>
               <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
-                <span className="flex items-center gap-2 text-[12px] font-semibold text-ink">
+                <span className="flex items-center gap-2 text-[14px] font-semibold text-ink">
                   <Mic className="h-4 w-4 text-sage-deep" aria-hidden="true" />
                   Microphone
                 </span>
                 {accessibility.micTested ? (
                   <Pill tone="forestSoft" dot>Ready</Pill>
                 ) : (
-                  <button type="button" className="text-[11px] font-bold text-forest" onClick={() => runTest('mic')}>
+                  <button type="button" className="text-[13px] font-bold text-forest" onClick={() => runTest('mic')}>
                     {testing === 'mic' ? 'Checking…' : 'Test microphone'}
                   </button>
                 )}
               </div>
             </div>
-            <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-5 text-muted">
+            <p className="mt-3 flex items-start gap-1.5 text-[13px] leading-5 text-muted">
               <AudioLines className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               Device tests are illustrative in this demonstration environment.
             </p>
           </Card>
 
           <div className="rounded-xl border border-forest/40 bg-mint/50 p-3.5">
-            <p className="flex items-center gap-1.5 text-[11px] font-bold text-forest">
+            <p className="flex items-center gap-1.5 text-[13px] font-bold text-forest">
               <Accessibility className="h-3.5 w-3.5" aria-hidden="true" />
               Built for different needs
             </p>
-            <p className="mt-1.5 text-[11px] leading-5 text-forest/80">
+            <p className="mt-1.5 text-[13px] leading-5 text-forest/80">
               Large controls, spoken guidance, and pause options are available throughout the assessment.
             </p>
           </div>

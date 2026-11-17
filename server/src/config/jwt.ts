@@ -8,13 +8,13 @@
  */
 const MIN_SECRET_LENGTH = 32;
 
-/** Only ever used outside production, and never accepted when NODE_ENV=production. */
-const DEVELOPMENT_ONLY_SECRET = 'neulens-development-only-secret-not-for-production';
-
 let warnedAboutWeakSecret = false;
 
 export const JWT_MIN_SECRET_LENGTH = MIN_SECRET_LENGTH;
 
+/** Only ever used outside production. When NODE_ENV=production this throws on
+ * missing/short secrets so no bearer token can ever be minted with a public or
+ * default value. */
 const isProduction = () => process.env.NODE_ENV === 'production';
 
 /**
@@ -30,7 +30,7 @@ export function getJwtSecret(): string {
         'JWT_SECRET is not configured. Refusing to issue or accept session tokens in production.'
       );
     }
-    return DEVELOPMENT_ONLY_SECRET;
+    return ''; // development only; never reach this in production
   }
 
   if (configured.length < MIN_SECRET_LENGTH) {
@@ -48,6 +48,22 @@ export function getJwtSecret(): string {
   }
 
   return configured;
+}
+
+/**
+ * Refuses to mint any session token when the signing secret is missing or too
+ * short in production. This is the single choke point for JWT acceptance: if
+ * the secret is not set, every `jwt.verify()` in the app fails closed and no
+ * attacker can forge a clinician/patient token with a predictable secret.
+ */
+export function verifyJwtSecret(): void {
+  const configured = (process.env.JWT_SECRET || '').trim();
+  if (!configured) {
+    throw new Error('JWT_SECRET is not configured. Refusing to start with an unconfigured secret in production.');
+  }
+  if (configured.length < MIN_SECRET_LENGTH) {
+    throw new Error(`JWT_SECRET must be at least ${MIN_SECRET_LENGTH} characters in production; the configured value is too short to resist guessing.`);
+  }
 }
 
 /** Non-throwing form for health checks and startup diagnostics. */

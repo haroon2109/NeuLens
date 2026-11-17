@@ -103,7 +103,14 @@ export const TaskPlayer: React.FC<{
           </div>
         </div>
 
-        <p className="mt-4 rounded-xl border border-amber/50 bg-amber/5 p-3 text-xs leading-5 text-amber-900">
+        <p className="mt-4 rounded-xl border border-sage/40 bg-mint/40 p-3 text-xs leading-5 text-forest">
+          <span className="font-bold">No camera, microphone or movement sensor is used in this activity.</span>{' '}
+          It is completed only with on-screen buttons and the keyboard, so it can be administered when a camera
+          or microphone is unavailable, declined, or unsuited to the person. Instructions can be read aloud by
+          the device where that is available.
+        </p>
+
+        <p className="mt-2 rounded-xl border border-amber/50 bg-amber/5 p-3 text-xs leading-5 text-amber-900">
           {task.validationNote} This activity is labelled research-stage and is interpreted only by your clinician, alongside other information.
         </p>
 

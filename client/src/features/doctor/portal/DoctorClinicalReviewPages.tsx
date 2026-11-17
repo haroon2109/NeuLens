@@ -37,6 +37,7 @@ import {
   ScoreDial,
   TrendLine,
   formatDate,
+  formatScore,
   iconForDomain,
   primaryButton,
   secondaryButton
@@ -79,10 +80,14 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
   if (quality.comprehension === 'UNCERTAIN') warnings.push('Task comprehension was recorded as uncertain.');
   if (quality.interruptions > 0) warnings.push(`${quality.interruptions} interruption${quality.interruptions === 1 ? '' : 's'} occurred during the session.`);
 
-  const scoreDelta = assessment && previous ? Math.round(assessment.overallScore) - Math.round(previous.overallScore) : null;
+  const scoreDelta = assessment && previous
+    && typeof assessment.overallScore === 'number'
+    && typeof previous.overallScore === 'number'
+    ? Math.round(assessment.overallScore) - Math.round(previous.overallScore)
+    : null;
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading assessment…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading assessment…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
 
   return (
     <div className="space-y-5">
@@ -136,23 +141,37 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
             <Card>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-[13px] font-semibold text-ink">Session summary</h2>
+                  <h2 className="text-[14px] font-semibold text-ink">Session summary</h2>
                   <p className="mt-0.5 text-xs text-muted">
                     {formatDate(assessment.date)} · {assessment.assessmentType || 'Full screening battery'}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Pill tone={assessment.riskLevel === 'HIGH' ? 'rose' : assessment.riskLevel === 'MODERATE' ? 'amber' : 'green'} dot>
-                      {assessment.riskLevel === 'HIGH' ? 'Higher concern tier' : assessment.riskLevel === 'MODERATE' ? 'Monitor tier' : 'Lower concern tier'}
+                    <Pill tone={assessment.reviewState === 'REVIEW_PROMPT' ? 'amber' : assessment.reviewState === 'NOT_INTERPRETABLE' ? 'slate' : 'green'} dot>
+                      {assessment.reviewState === 'REVIEW_PROMPT'
+                        ? 'Review prompt'
+                        : assessment.reviewState === 'NOT_INTERPRETABLE'
+                          ? 'Not interpretable'
+                          : assessment.reviewState === 'CLINICIAN_REVIEWED'
+                            ? 'Clinician reviewed'
+                            : 'No review cue'}
                     </Pill>
                     <Pill tone={quality.comparable ? 'green' : 'amber'}>{quality.comparable ? 'Comparable session' : 'Limited comparability'}</Pill>
                     <Pill tone="slate">{assessment.reviewStatus?.replace(/_/g, ' ').toLowerCase() || 'Not reviewed'}</Pill>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <ScoreDial value={assessment.overallScore} label="Composite" />
+                  {typeof assessment.overallScore === 'number' ? (
+                    <ScoreDial value={assessment.overallScore} label="Composite" />
+                  ) : (
+                    <p className="max-w-[9rem] text-xs font-semibold text-amber-700">
+                      Not interpretable — no score recorded for this session.
+                    </p>
+                  )}
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Previous valid</p>
-                    <p className="mt-1 text-[16px] font-semibold text-ink">{previous ? Math.round(previous.overallScore) : '—'}</p>
+                    <p className="mt-1 text-[16px] font-semibold text-ink">
+                      {previous && typeof previous.overallScore === 'number' ? Math.round(previous.overallScore) : '—'}
+                    </p>
                     <p className={`mt-1 text-xs font-semibold ${scoreDelta === null ? 'text-muted' : scoreDelta < -3 ? 'text-amber-700' : scoreDelta > 3 ? 'text-emerald-700' : 'text-muted'}`}>
                       {scoreDelta === null ? 'No previous session' : `${scoreDelta > 0 ? '+' : ''}${scoreDelta} vs previous`}
                     </p>
@@ -172,7 +191,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
                 >
                   {ordered.map((item, index) => (
                     <option key={item.id} value={index}>
-                      {formatDate(item.date)} · {Math.round(item.overallScore)} / 100 {index === 0 ? '(latest)' : ''}
+                      {formatDate(item.date)} · {formatScore(item.overallScore)} {index === 0 ? '(latest)' : ''}
                     </option>
                   ))}
                 </select>
@@ -180,7 +199,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="text-[13px] font-semibold text-ink">Task completion</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Task completion</h2>
               <p className="mt-0.5 text-xs text-muted">Missing tasks limit interpretation.</p>
               <ul className="mt-3 space-y-2">
                 {tasks.map((task) => (
@@ -199,14 +218,14 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <MetricTile label="Comparable sessions" value={String(changeSummary?.cognitive.comparableAssessments ?? ordered.filter((item) => item.taskResponses?.quality?.comparable !== false).length)} detail="Used for baseline comparison" />
             <MetricTile label="Observed baseline" value={changeSummary?.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not yet available'} detail="Within-person observed range" />
-            <MetricTile label="Previous score" value={previous ? `${Math.round(previous.overallScore)} / 100` : 'No prior session'} detail={previous ? formatDate(previous.date) : 'Establishing history'} />
+            <MetricTile label="Previous score" value={previous ? formatScore(previous.overallScore) : 'No prior session'} detail={previous ? formatDate(previous.date) : 'Establishing history'} />
             <MetricTile label="Overall change cue" value={changeSummary?.status === 'REVIEW' ? 'Review suggested' : changeSummary?.status === 'NO_CHANGE' ? 'No current cue' : 'Insufficient data'} detail="Not a diagnostic conclusion" />
           </div>
 
           <Card>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-[13px] font-semibold text-ink">Domain observations</h2>
+                <h2 className="text-[14px] font-semibold text-ink">Domain observations</h2>
                 <p className="mt-0.5 text-xs text-muted">Raw and derived signals from this session. Missing values are shown explicitly.</p>
               </div>
               <Activity className="h-4 w-4 text-muted" />
@@ -235,7 +254,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <h2 className="text-[13px] font-semibold text-ink">Session quality</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Session quality</h2>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {[
                   ['Audio', qualityLabel(quality.audio)],
@@ -255,7 +274,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="text-[13px] font-semibold text-ink">Baseline comparison</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Baseline comparison</h2>
               {changeSummary ? (
                 <dl className="mt-3 space-y-2 text-xs">
                   <div className="flex justify-between gap-3 border-b border-line pb-2">
@@ -267,12 +286,28 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
                     <dd className="font-semibold text-ink">{changeSummary.cognitive.previousScore !== null ? `${changeSummary.cognitive.previousScore} / 100` : 'Unavailable'}</dd>
                   </div>
                   <div className="flex justify-between gap-3 border-b border-line pb-2">
-                    <dt className="text-muted">Observed range</dt>
+                    <dt className="text-muted">Observed spread</dt>
                     <dd className="font-semibold text-ink">{changeSummary.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not yet established'}</dd>
                   </div>
+                  <div className="flex justify-between gap-3 border-b border-line pb-2">
+                    <dt className="text-muted">Reliable-change threshold</dt>
+                    <dd className="font-semibold text-ink">
+                      {changeSummary.cognitive.reliability.reliableChangeThreshold != null
+                        ? `±${changeSummary.cognitive.reliability.reliableChangeThreshold} pts`
+                        : 'Not established'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-3 border-b border-line pb-2">
+                    <dt className="text-muted">Threshold basis</dt>
+                    <dd className="text-right font-semibold text-ink">
+                      {changeSummary.cognitive.reliability.state === 'PROVISIONAL'
+                        ? `1.96 × SD ${changeSummary.cognitive.reliability.standardDeviationOfChange} over ${changeSummary.cognitive.reliability.pairs} repeat pairs`
+                        : `${changeSummary.cognitive.reliability.pairs} repeat pair(s); 3 needed`}
+                    </dd>
+                  </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted">Outside observed baseline</dt>
-                    <dd className="font-semibold text-ink">{changeSummary.cognitive.outsideObservedBaseline ? 'Yes' : 'No'}</dd>
+                    <dt className="text-muted">Decline beyond measured variability</dt>
+                    <dd className="font-semibold text-ink">{changeSummary.cognitive.declineBeyondReliableChange ? 'Yes' : 'No'}</dd>
                   </div>
                 </dl>
               ) : (
@@ -325,7 +360,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
       unit: ' / 100',
       color: '#2F5E4E',
       points: chronological
-        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.overallScore) }))
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), { day: '2-digit', month: 'short' }), value: getNumeric(assessment.overallScore) }))
         .filter((point): point is { label: string; value: number } => point.value !== null)
     },
     {
@@ -335,7 +370,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
       unit: '%',
       color: '#7FA692',
       points: chronological
-        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task1?.fixationHoldPct) }))
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task1?.fixationHoldPct) }))
         .filter((point): point is { label: string; value: number } => point.value !== null)
     },
     {
@@ -345,7 +380,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
       unit: ' wpm',
       color: '#0E7490',
       points: chronological
-        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task3?.wpm) }))
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task3?.wpm) }))
         .filter((point): point is { label: string; value: number } => point.value !== null)
     },
     {
@@ -355,7 +390,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
       unit: ' s',
       color: '#B45309',
       points: chronological
-        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task5?.trailBCompletionSec) }))
+        .map((assessment) => ({ label: new Date(assessment.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), { day: '2-digit', month: 'short' }), value: getNumeric(assessment.taskResponses?.task5?.trailBCompletionSec) }))
         .filter((point): point is { label: string; value: number } => point.value !== null)
     }
   ];
@@ -364,7 +399,9 @@ export const DoctorLongitudinalPage: React.FC = () => {
   const latestOf = (item: TrendSeries) => item.points[item.points.length - 1]?.value ?? null;
   const previousOf = (item: TrendSeries) => item.points.length > 1 ? item.points[item.points.length - 2].value : null;
 
-  const arraySessionsOutsideBaseline = useMemo(() => {
+  // Descriptive count only: how many recent scores sit outside the observed
+  // spread. This is not a threshold and does not itself trigger a prompt.
+  const sessionsOutsideObservedRange = useMemo(() => {
     const range = changeSummary?.cognitive.baselineRange;
     if (!range) return 0;
     return chronological.slice(-3).filter((assessment) => {
@@ -374,8 +411,8 @@ export const DoctorLongitudinalPage: React.FC = () => {
     }).length;
   }, [changeSummary, chronological]);
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading longitudinal record…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading longitudinal record…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
 
   return (
     <div className="space-y-5">
@@ -409,8 +446,8 @@ export const DoctorLongitudinalPage: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <MetricTile label="Sessions on file" value={String(assessments.length)} detail={`${chronological.filter((item) => item.taskResponses?.quality?.comparable !== false).length} comparable`} />
             <MetricTile label="Baseline status" value={changeSummary?.cognitive.baselineRange ? 'Established' : 'Building'} detail={changeSummary?.cognitive.baselineRange ? `Observed ${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Needs more valid sessions'} />
-            <MetricTile label="Latest overall" value={`${Math.round(chronological[chronological.length - 1].overallScore)} / 100`} detail={formatDate(chronological[chronological.length - 1].date)} />
-            <MetricTile label="Persistence" value={changeSummary?.status === 'REVIEW' ? `${arraySessionsOutsideBaseline} of last 3` : 'No current cue'} detail="Sessions outside observed range" />
+            <MetricTile label="Latest overall" value={formatScore(chronological[chronological.length - 1].overallScore)} detail={formatDate(chronological[chronological.length - 1].date)} />
+            <MetricTile label="Persistence" value={changeSummary?.status === 'REVIEW' ? `${sessionsOutsideObservedRange} of last 3` : 'No current cue'} detail="Sessions outside the observed spread (descriptive)" />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -423,7 +460,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
                 <Card key={item.id}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="flex items-center gap-1.5 text-[12px] font-semibold text-ink">
+                      <p className="flex items-center gap-1.5 text-[14px] font-semibold text-ink">
                         <Icon className="h-3.5 w-3.5 text-blue-700" /> {item.title}
                       </p>
                       <p className="mt-0.5 text-xs text-muted">
@@ -452,7 +489,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
 
           <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <Card>
-              <h2 className="text-[13px] font-semibold text-ink">Previous session comparison</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Previous session comparison</h2>
               <p className="mt-0.5 text-xs text-muted">Latest observation minus the preceding valid observation.</p>
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full text-left text-xs">
@@ -487,7 +524,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
 
             <div className="space-y-4">
               <Card>
-                <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
+                <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink">
                   <AlertTriangle className="h-3.5 w-3.5 text-amber-600" /> Missing data
                 </h2>
                 {missing.length === 0 ? (
@@ -510,10 +547,10 @@ export const DoctorLongitudinalPage: React.FC = () => {
               </Card>
 
               <Card>
-                <h2 className="text-[13px] font-semibold text-ink">Change persistence</h2>
+                <h2 className="text-[14px] font-semibold text-ink">Change persistence</h2>
                 <p className="mt-2 text-xs leading-5 text-body">
                   {changeSummary?.status === 'REVIEW'
-                    ? `${arraySessionsOutsideBaseline} of the last three comparable sessions fall outside the observed baseline range. Persistence across sessions carries more weight than a single result.`
+                    ? `${sessionsOutsideObservedRange} of the last three comparable sessions fall outside the observed spread. Persistence across sessions is worth a second look, but the prompt is the decline beyond measured variability, not the spread itself.`
                     : changeSummary?.status === 'NO_CHANGE'
                       ? 'The current comparison does not flag a persistent change. Continue routine monitoring.'
                       : 'Insufficient comparable history is available to assess persistence.'}
@@ -521,7 +558,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {changeSummary?.reviewReasons.map((reason) => (
                     <Pill key={reason} tone="amber">
-                      {reason === 'OUTSIDE_OBSERVED_BASELINE' ? 'Score outside baseline' : reason === 'FUNCTIONAL_CHANGE' ? 'Functional change' : 'Context change'}
+                      {reason === 'OUTSIDE_RELIABLE_CHANGE' ? 'Decline beyond variability' : reason === 'FUNCTIONAL_CHANGE' ? 'Functional change' : 'Context change'}
                     </Pill>
                   ))}
                   {(!changeSummary || changeSummary.reviewReasons.length === 0) && <Pill tone="slate">No current cue</Pill>}

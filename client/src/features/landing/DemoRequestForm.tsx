@@ -174,7 +174,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             aria-invalid={form.name.error ? true : undefined}
           />
           {form.name.error ? (
-            <p id="demo-name-error" className="mt-1.5 text-xs text-[#b42332]" role="alert">
+            <p id="demo-name-error" className="mt-1.5 text-xs text-rose" role="alert">
               {form.name.error}
             </p>
           ) : null}
@@ -197,7 +197,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             aria-invalid={form.email.error ? true : undefined}
           />
           {form.email.error ? (
-            <p id="demo-email-error" className="mt-1.5 text-xs text-[#b42332]" role="alert">
+            <p id="demo-email-error" className="mt-1.5 text-xs text-rose" role="alert">
               {form.email.error}
             </p>
           ) : null}
@@ -220,7 +220,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             aria-invalid={form.organization.error ? true : undefined}
           />
           {form.organization.error ? (
-            <p id="demo-organization-error" className="mt-1.5 text-xs text-[#b42332]" role="alert">
+            <p id="demo-organization-error" className="mt-1.5 text-xs text-rose" role="alert">
               {form.organization.error}
             </p>
           ) : null}
@@ -249,7 +249,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             ))}
           </select>
           {form.role.error ? (
-            <p id="demo-role-error" className="mt-1.5 text-xs text-[#b42332]" role="alert">
+            <p id="demo-role-error" className="mt-1.5 text-xs text-rose" role="alert">
               {form.role.error}
             </p>
           ) : null}
@@ -272,7 +272,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
           aria-invalid={form.message.error ? true : undefined}
         />
         {form.message.error ? (
-          <p id="demo-message-error" className="mt-1.5 text-xs text-[#b42332]" role="alert">
+          <p id="demo-message-error" className="mt-1.5 text-xs text-rose" role="alert">
             {form.message.error}
           </p>
         ) : null}

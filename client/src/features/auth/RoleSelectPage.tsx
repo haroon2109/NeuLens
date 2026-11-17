@@ -19,7 +19,7 @@ const roles: RoleOption[] = [
     title: 'Patient or family member',
     detail: 'Create a personal brain-health profile, take guided screenings, and follow your progress over time.',
     tag: 'Immediate access after verification',
-    ring: 'bg-[#DFF3EA] text-[#2F5E4E]',
+    ring: '0 text-forest',
   },
   {
     role: 'doctor',
@@ -27,7 +27,7 @@ const roles: RoleOption[] = [
     title: 'Doctor or clinician',
     detail: 'Review patient screening histories, meaningful change, and care-context information in one workspace.',
     tag: 'Requires credential review',
-    ring: 'bg-[#E9F5F1] text-[#0D9488]',
+    ring: 'bg-mint-veil text-health-teal',
   },
   {
     role: 'institution',
@@ -35,7 +35,7 @@ const roles: RoleOption[] = [
     title: 'Healthcare institution',
     detail: 'Represent a hospital, clinic, or research site and manage professional access for your care team.',
     tag: 'Requires institutional approval',
-    ring: 'bg-[#F5EFE6] text-[#A06C42]',
+    ring: 'bg-clay text-clay-deep',
   },
 ];
 

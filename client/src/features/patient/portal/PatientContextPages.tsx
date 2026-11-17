@@ -21,15 +21,13 @@ import { HealthcareScene } from '../../../components/illustrations/HealthcareSce
 import { MotionReveal } from '../../../components/motion/Reveal';
 import { usePatientPortalStore } from '../../../store/patientPortalStore';
 import { usePatientOverview } from './usePatientOverview';
-import { Card, InfoRow, Pill, PortalPageHeader, SectionTitle, formatDate } from './ui';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { getPortalTranslation } from '../../../services/language/portalTranslations';
+import { Card, InfoRow, Pill, PortalPageHeader, SectionTitle, formatDate, primaryButton, secondaryButton } from './ui';
 
-const primaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-primary';
-const secondaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-secondary';
 const fieldClass =
-  'w-full rounded-xl border border-line-strong bg-warm/70 px-3.5 py-2.5 text-[13px] text-ink outline-none transition focus:border-forest focus:bg-white focus:ring-4 focus:ring-forest/12';
-const labelClass = 'mb-1.5 block text-[12px] font-semibold text-ink';
+  'w-full rounded-xl border border-line-strong bg-warm/70 px-3.5 py-2.5 text-[14px] text-ink outline-none transition focus:border-forest focus:bg-white focus:ring-4 focus:ring-forest/12';
+const labelClass = 'mb-1.5 block text-[14px] font-semibold text-ink';
 
 const rangeLabels = ['Very low', 'Low', 'Moderate', 'Good', 'Very good'];
 
@@ -72,14 +70,15 @@ const RangeField: React.FC<{
 export const HealthContextOverviewPage: React.FC = () => {
   const { sleep, wellbeing, health } = usePatientPortalStore();
   const { context } = usePatientOverview();
+  const pt = getPortalTranslation(useLanguageStore().currentLanguage);
   const clinical = context.find((item) => item.source === 'clinical_metabolic');
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 34 · Health context"
-        title="What may be shaping your results"
-        description="Sleep, activity, wellbeing, and clinical information help your care team interpret screening observations in context. These do not change your score."
+        eyebrow={pt.context.overview.eyebrow}
+        title={pt.context.overview.title}
+        description={pt.context.overview.description}
         actions={<Link to="/patient/context/sleep" className={primaryButton}>Update context</Link>}
       />          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -92,7 +91,7 @@ export const HealthContextOverviewPage: React.FC = () => {
             <span className={`flex h-8 w-8 items-center justify-center rounded-lg pp-icon-chip ${chip}`}>
               <Icon className="h-4 w-4" />
             </span>
-            <p className="mt-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</p>
+            <p className="mt-2.5 text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</p>
             <p className="mt-1 text-[17px] font-semibold text-ink">{value}</p>
             <p className="mt-0.5 text-xs text-muted">{detail}</p>
             <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-forest">
@@ -115,6 +114,8 @@ export const HealthContextOverviewPage: React.FC = () => {
                     ? 'Clinical measurements'
                     : item.source === 'sleep'
                     ? 'Sleep record'
+                    : item.source === 'wearable'
+                    ? 'Wearable summary'
                     : 'Activity record',
                 source: 'Patient-recorded / imported',
                 date: formatDate(item.recordedAt),
@@ -137,7 +138,17 @@ export const HealthContextOverviewPage: React.FC = () => {
           </ul>
         </Card>
 
-        <div className="space-y-4">          <Card>
+        <div className="space-y-4">
+          <Card>
+            <SectionTitle title="Wearables & devices" detail="Optional connected data." />
+            <p className="text-xs leading-5 text-muted">
+              Wearable summaries (activity, sleep, heart rate) can be linked as context with your consent. They are used for discussion only and never change your screening score.
+            </p>
+            <Link to="/patient/privacy" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline">
+              Manage connected devices <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Card>
+          <Card>
           <SectionTitle title="Family & medical history" detail="Shared during onboarding." />
             <div className="flex flex-wrap gap-1.5">
               {health.conditions.length ? health.conditions.map((item) => <Pill key={item} tone="sage">{item}</Pill>) : <Pill tone="sage">No conditions shared</Pill>}
@@ -164,7 +175,24 @@ export const HealthContextOverviewPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const SleepLifestylePage: React.FC = () => {
   const { sleep, setSleep } = usePatientPortalStore();
+  const pt = getPortalTranslation(useLanguageStore().currentLanguage);
   const [saved, setSaved] = useState(false);
+  const [wearableConsent, setWearableConsent] = useState(false);
+  const [wearable, setWearable] = useState({ restingHr: '', steps: 0, sleepHours: 0 });
+  const [wearableSaved, setWearableSaved] = useState(false);
+
+  const saveWearable = async () => {
+    if (!wearableConsent) return;
+    await patientPortalApi.saveContextInput('wearable', {
+      restingHeartRate: wearable.restingHr ? Number(wearable.restingHr) : null,
+      steps: wearable.steps,
+      sleepHours: wearable.sleepHours,
+      reportedBy: 'PATIENT',
+      source: 'wearable-summary'
+    });
+    setWearableSaved(true);
+    window.setTimeout(() => setWearableSaved(false), 2600);
+  };
 
   const save = async () => {
     await patientPortalApi.saveContextInput('sleep', {
@@ -184,9 +212,9 @@ export const SleepLifestylePage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 35 · Sleep & lifestyle"
-        title="Sleep, movement, and daily life"
-        description="Small context updates help your clinician interpret a session. Share as much or as little as you like."
+        eyebrow={pt.context.sleep.eyebrow}
+        title={pt.context.sleep.title}
+        description={pt.context.sleep.description}
         actions={<Pill tone="blue" dot>Last updated today</Pill>}
       />
 
@@ -222,7 +250,7 @@ export const SleepLifestylePage: React.FC = () => {
                   onChange={(event) => setSleep({ durationHours: Number(event.target.value) })}
                   className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-line accent-forest"
                 />
-                <span className="w-16 text-[12px] font-bold text-forest">{sleep.durationHours} hrs</span>
+                <span className="w-16 text-[14px] font-bold text-forest">{sleep.durationHours} hrs</span>
               </div>
             </div>
             <RangeField id="sleep-quality" label="Sleep quality" value={sleep.quality} onChange={(value) => setSleep({ quality: value })} low="Poor" high="Excellent" />
@@ -263,6 +291,76 @@ export const SleepLifestylePage: React.FC = () => {
         </Card>
       </div>
 
+      {wearableSaved && (
+        <div className="pp-success">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Wearable summary saved for your care team.</span>
+        </div>
+      )}
+
+      <Card>
+        <SectionTitle title="Wearable summary (optional)" detail="Shared only with your consent." />
+        <label className="flex items-start gap-2 text-xs leading-5 text-body" htmlFor="wearable-consent">
+          <input
+            id="wearable-consent"
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-forest"
+            checked={wearableConsent}
+            onChange={(event) => setWearableConsent(event.target.checked)}
+          />
+          <span>I consent to share a summary from my wearable device. NeuLens does not diagnose from wearable data.</span>
+        </label>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div>
+            <label className={labelClass} htmlFor="wearable-hr">Resting heart rate (bpm)</label>
+            <input
+              id="wearable-hr"
+              type="number"
+              min="40"
+              max="120"
+              disabled={!wearableConsent}
+              value={wearable.restingHr}
+              onChange={(event) => setWearable({ ...wearable, restingHr: event.target.value })}
+              className={fieldClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="wearable-steps">Avg daily steps</label>
+            <input
+              id="wearable-steps"
+              type="number"
+              min="0"
+              max="50000"
+              step="100"
+              disabled={!wearableConsent}
+              value={wearable.steps}
+              onChange={(event) => setWearable({ ...wearable, steps: Number(event.target.value) })}
+              className={fieldClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="wearable-sleep">Avg sleep (hrs)</label>
+            <input
+              id="wearable-sleep"
+              type="number"
+              min="0"
+              max="14"
+              step="0.5"
+              disabled={!wearableConsent}
+              value={wearable.sleepHours}
+              onChange={(event) => setWearable({ ...wearable, sleepHours: Number(event.target.value) })}
+              className={fieldClass}
+            />
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button type="button" className={primaryButton} onClick={() => void saveWearable()} disabled={!wearableConsent}>
+            <Save className="h-4 w-4" /> Save wearable summary
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-muted">Wearable data is context only and does not change your screening observations.</p>
+      </Card>
+
       <Card>
         <SectionTitle title="Anything else you would like to note?" detail="Optional. For example, a disrupted routine or a busy week." />
         <textarea
@@ -293,6 +391,7 @@ export const SleepLifestylePage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const MentalWellbeingPage: React.FC = () => {
   const { wellbeing, setWellbeing } = usePatientPortalStore();
+  const pt = getPortalTranslation(useLanguageStore().currentLanguage);
   const [saved, setSaved] = useState(false);
 
   const save = async () => {
@@ -308,9 +407,9 @@ export const MentalWellbeingPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 36 · Mental wellbeing"
-        title="How have you been feeling?"
-        description="A short self-report helps put a screening session in context. It is not a mood diagnosis or a validated screening instrument."
+        eyebrow={pt.context.wellbeing.eyebrow}
+        title={pt.context.wellbeing.title}
+        description={pt.context.wellbeing.description}
         actions={<Pill tone="sage">Optional</Pill>}
       />
 
@@ -358,7 +457,7 @@ export const MentalWellbeingPage: React.FC = () => {
             <p className="flex items-center gap-1.5 text-xs font-bold text-sage-deep">
               <Brain className="h-3.5 w-3.5" /> A gentle reminder
             </p>
-            <p className="mt-2 text-[12px] leading-6 text-body">
+            <p className="mt-2 text-[14px] leading-6 text-body">
               Memory complaints and mood can influence each other. Your clinician will consider this alongside your screening observations and history.
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -396,22 +495,60 @@ export const MentalWellbeingPage: React.FC = () => {
 export const ClinicalFamilyHistoryPage: React.FC = () => {
   const { health, setHealth } = usePatientPortalStore();
   const { context } = usePatientOverview();
+  const pt = getPortalTranslation(useLanguageStore().currentLanguage);
   const clinical = context.find((item) => item.source === 'clinical_metabolic');
+  const genomicRecord = context.find((item) => item.source === 'genomic');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Both records are saved as context inputs with the patient's consent. The
+  // genomic record is only written when the patient has explicitly opted in.
+  const saveContext = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await patientPortalApi.saveContextInput('family_history', {
+        familyHistory: health.familyHistory,
+        conditions: health.conditions,
+        medications: health.medications,
+        reportedBy: 'PATIENT'
+      });
+      if (health.genomicConsent) {
+        await patientPortalApi.saveContextInput('genomic', {
+          genomicSummary: health.genomicSummary,
+          reportedBy: 'PATIENT',
+          interpretationByNeuLens: 'NONE'
+        });
+      }
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2600);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'History could not be saved to the clinical record.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 37 · Clinical & family history"
-        title="Clinical information and family history"
-        description="You control what is shared here. Imported clinical information is labelled with its source and last update date."
+        eyebrow={pt.context.clinical.eyebrow}
+        title={pt.context.clinical.title}
+        description={pt.context.clinical.description}
         actions={<Pill tone="blue" dot>Patient-maintained</Pill>}
       />
 
       {saved && (
         <div className="pp-success">
           <CheckCircle2 className="h-4 w-4" />
-          <span>History updated.</span>
+          <span>History updated and shared with your care team.</span>
+        </div>
+      )}
+      {error && (
+        <div className="pp-notice" role="alert">
+          <Info className="h-3.5 w-3.5" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -446,12 +583,10 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
           <button
             type="button"
             className={`${primaryButton} mt-4`}
-            onClick={() => {
-              setSaved(true);
-              window.setTimeout(() => setSaved(false), 2600);
-            }}
+            onClick={saveContext}
+            disabled={saving}
           >
-            <Save className="h-4 w-4" /> Save history
+            <Save className="h-4 w-4" /> {saving ? 'Saving…' : 'Save history'}
           </button>
         </Card>
 
@@ -477,6 +612,47 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
                 No clinical measurements are linked. Ask your care team about sharing recent measurements if relevant.
               </p>
             )}
+          </Card>
+
+          <Card>
+            <SectionTitle title="Genomic context (optional)" detail="Shared only with your consent." />
+            {genomicRecord ? (
+              <p className="mb-3 text-xs leading-5 text-muted">
+                Last shared {formatDate(genomicRecord.recordedAt)}. You can withdraw sharing at any time from Privacy & sharing.
+              </p>
+            ) : (
+              <p className="mb-3 text-xs leading-5 text-muted">
+                No genomic information has been shared. This is optional and not needed to use NeuLens.
+              </p>
+            )}
+            <label className="flex items-start gap-2 text-xs leading-5 text-body" htmlFor="genomic-consent">
+              <input
+                id="genomic-consent"
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-forest"
+                checked={health.genomicConsent}
+                onChange={(event) => setHealth({ genomicConsent: event.target.checked })}
+              />
+              <span>
+                I agree to share a genomic result with my care team as context. NeuLens does not interpret variants, calculate genetic risk, or change my screening observations.
+              </span>
+            </label>
+            <div className="mt-3">
+              <label className={labelClass} htmlFor="genomic-summary">What was reported</label>
+              <textarea
+                id="genomic-summary"
+                rows={3}
+                disabled={!health.genomicConsent}
+                value={health.genomicSummary}
+                onChange={(event) => setHealth({ genomicSummary: event.target.value })}
+                className={`${fieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
+                placeholder="For example: gene and result exactly as reported by the testing laboratory"
+              />
+            </div>
+            <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-muted">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              Genomic context is shown to a qualified clinician for discussion only. It is never used to score this screening or to infer a diagnosis.
+            </p>
           </Card>
 
           <Card>

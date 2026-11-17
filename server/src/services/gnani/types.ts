@@ -3,7 +3,9 @@
  * Neulens
  */
 
-export type SupportedLanguageCode = 'en' | 'ta' | 'hi' | 'te' | 'ml' | 'kn';
+export type SupportedLanguageCode = 'en' | 'ta' | 'hi' | 'te' | 'ml' | 'kn' | 'ar';
+
+export const GNANI_ARABIC_LANGUAGE_CODE: SupportedLanguageCode = 'ar';
 
 export interface LanguageVoiceMapping {
   languageCode: SupportedLanguageCode;
@@ -55,6 +57,13 @@ export const GNANI_LANGUAGE_CATALOG: Record<SupportedLanguageCode, LanguageVoice
     languageName: 'Malayalam',
     defaultVoice: 'Reshma',
     availableVoices: ['Reshma', 'Riyaan']
+  },
+  ar: {
+    languageCode: 'ar',
+    bcp47: 'ar-AE',
+    languageName: 'Arabic (UAE)',
+    defaultVoice: 'Zahira',
+    availableVoices: ['Zahira', 'Zayan']
   }
 };
 
@@ -73,6 +82,7 @@ export interface GnaniSttResult {
   confidence?: number;
   durationSeconds?: number;
   latencyMs?: number;
+  error?: string;
 }
 
 export interface GnaniTtsOptions {

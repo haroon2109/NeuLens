@@ -1,8 +1,10 @@
+import { MIN_PAIRS_FOR_RELIABLE_CHANGE } from '../changeMonitor';
 import { collectPreventionSignals } from './clinicalContextEngine';
 import type { ClinicalDocumentationResult, FollowUpCoordinationResult, LongitudinalIntelligenceResult, SafetyAccessibilityResult } from './types';
 
 function buildPathway(args: {
   baselineCreated: boolean;
+  hasBaseline: boolean;
   status: 'INSUFFICIENT_DATA' | 'NO_CHANGE' | 'REVIEW';
   comparable: boolean;
   assessmentsCount: number;
@@ -10,10 +12,12 @@ function buildPathway(args: {
   requiresClinicalReview: boolean;
   reviewStatus: string;
 }) {
-  const { baselineCreated, status, comparable, assessmentsCount, hasContext, requiresClinicalReview, reviewStatus } = args;
+  const { baselineCreated, hasBaseline, status, comparable, assessmentsCount, hasContext, requiresClinicalReview, reviewStatus } = args;
   const baselineStage = baselineCreated
     ? { state: 'PROVISIONAL', summary: 'First comparable-quality screening established a provisional personal brain-health baseline.' }
-    : { state: 'ACTIVE', summary: 'Personal brain-health baseline is available for within-person comparison.' };
+    : hasBaseline
+      ? { state: 'ACTIVE', summary: 'Personal brain-health baseline is available for within-person comparison.' }
+      : { state: 'NOT_ESTABLISHED', summary: 'No personal baseline is established yet: this session has no recorded comparison point.' };
 
   const changeStage = !comparable
     ? { state: 'SAFETY_GATED', summary: 'This session did not meet quality/comparability gates, so it was not interpreted as change.' }
@@ -181,6 +185,7 @@ function buildNextSteps(args: {
 
 export function buildClinicalDocumentation(args: {
   baselineCreated: boolean;
+  hasBaseline: boolean;
   status: 'INSUFFICIENT_DATA' | 'NO_CHANGE' | 'REVIEW';
   safety: SafetyAccessibilityResult;
   longitudinal: LongitudinalIntelligenceResult;
@@ -190,23 +195,36 @@ export function buildClinicalDocumentation(args: {
   taskResponses: unknown;
   contextInputs: any[];
 }): ClinicalDocumentationResult & { followUp: FollowUpCoordinationResult } {
-  const { baselineCreated, status, safety, longitudinal, assessmentsCount, hasContext, reviewStatus, taskResponses, contextInputs } = args;
+  const { baselineCreated, hasBaseline, status, safety, longitudinal, assessmentsCount, hasContext, reviewStatus, taskResponses, contextInputs } = args;
   const comparable = safety.sessionQuality.comparable;
   const preventionSignals = collectPreventionSignals(taskResponses, contextInputs);
   const requiresClinicalReview = status === 'REVIEW' || safety.urgentFlags.length > 0;
+
+  // Whether this record's own variability supports a change claim at all. When it
+  // does not, the draft says so instead of reporting "within range" as though a
+  // range set a threshold.
+  const changeReliability = longitudinal.reliability;
+  const changeReliabilityLimitation = !changeReliability
+    ? null
+    : changeReliability.state === 'NOT_ESTABLISHED'
+      ? `Change detection is inactive for this record: ${changeReliability.pairs} comparable repeat pair(s) available, ${MIN_PAIRS_FOR_RELIABLE_CHANGE} needed to estimate this patient's session-to-session variability. No score-based decline is reported until then.`
+      : `Decline must exceed ${changeReliability.reliableChangeThreshold} points to be reported, derived as 1.96 × SD of change (${changeReliability.standardDeviationOfChange}) across ${changeReliability.pairs} repeat pairs. This is the patient's own measured variability, and it is provisional at this sample size.`;
 
   const interpretation = baselineCreated
     ? 'Provisional personal baseline established from this first completed screening. Repeat comparable, quality-checked sessions over time to enable meaningful within-person change detection. This is not a diagnosis.'
     : !comparable
       ? 'This session did not meet quality/comparability safety gates, so it is not interpreted as brain-health change. A repeat screening under comparable conditions is recommended.'
       : status === 'REVIEW'
-        ? 'A meaningful review signal was detected relative to your personal baseline and recent comparable history. A clinician should interpret this in context of health, function, and measurement quality. This is not a diagnosis.'
+        ? 'A review signal was recorded: a decline larger than this record can distinguish from measurement variability, a reported functional change, or a change in sleep, activity or mood/stress context. A clinician should interpret this in context of health, function, and measurement quality. This is not a diagnosis.'
         : status === 'INSUFFICIENT_DATA'
-          ? 'Not enough comparable, quality-checked sessions are available yet to determine meaningful change. Continue longitudinal follow-up to build a reliable personal record.'
-          : 'Observations are within your recorded personal range across comparable sessions. Continue routine longitudinal monitoring and clinician follow-up as planned.';
+          ? changeReliability?.state === 'NOT_ESTABLISHED'
+            ? 'No change conclusion is possible from these sessions: too few comparable repeats exist to know how much this score moves when nothing has changed, so no decline is reported from it. Continue longitudinal follow-up to build a reliable personal record.'
+            : 'Not enough comparable, quality-checked sessions are available yet to determine meaningful change. Continue longitudinal follow-up to build a reliable personal record.'
+          : 'No decline larger than the variability this record can distinguish was observed across comparable sessions. This is not evidence of stability beyond that threshold. Continue routine longitudinal monitoring and clinician follow-up as planned.';
 
   const pathway = buildPathway({
     baselineCreated,
+    hasBaseline,
     status,
     comparable,
     assessmentsCount,
@@ -223,24 +241,85 @@ export function buildClinicalDocumentation(args: {
     preventionSignals,
   });
 
+  // Language provenance recorded at submission: which language the session was
+  // administered in, and whether its task wording had completed review. A
+  // clinician reading the draft should not have to infer this from the portal.
+  const languageReadiness = (taskResponses as { languageReadiness?: {
+    language?: string;
+    taskAdministrationReady?: boolean;
+    acknowledged?: boolean;
+    pendingStages?: string[];
+  } } | null | undefined)?.languageReadiness;
+  const languageLimitations: string[] = [];
+  if (languageReadiness?.language) {
+    if (languageReadiness.taskAdministrationReady) {
+      languageLimitations.push(`Tasks were administered in ${languageReadiness.language}, a language with reviewed task wording.`);
+    } else {
+      languageLimitations.push(
+        `Tasks were administered in ${languageReadiness.language}, whose task wording has not completed linguistic/clinical review (${
+          (languageReadiness.pendingStages || []).join(', ') || 'review pending'
+        }). Scores should not be compared across language versions.`
+      );
+    }
+  }
+
+  // Which cognitive domains this session actually has a measurement for. An
+  // activity that could not run (no camera, no microphone, skipped, timed out)
+  // leaves its domain unmeasured; nothing is filled in to make the battery look
+  // complete.
+  const administration = (taskResponses as {
+    administration?: {
+      measured?: string[];
+      notMeasured?: Array<{ task?: string; reason?: string }>;
+      unmeasuredDomains?: string[];
+    };
+  } | null | undefined)?.administration;
+  const REASON_LABELS: Record<string, string> = {
+    CAMERA_UNAVAILABLE: 'no camera',
+    MICROPHONE_UNAVAILABLE: 'no microphone',
+    SKIPPED: 'skipped',
+    TIME_LIMIT: 'time limit reached',
+    NOT_COMPLETED: 'not completed',
+    NO_RECORDING: 'no recording',
+    NOT_RECORDED: 'not recorded',
+  };
+  const coverageLimitations: string[] = [];
+  if (administration?.unmeasuredDomains?.length) {
+    const reasons = Array.from(
+      new Set((administration.notMeasured || []).map((item) => REASON_LABELS[item.reason || ''] || 'not recorded'))
+    );
+    coverageLimitations.push(
+      `Domains not measured in this session: ${administration.unmeasuredDomains.join(', ')}${
+        reasons.length ? ` (${reasons.join('; ')})` : ''
+      }. No score was substituted for a missing domain.`
+    );
+  }
+
   const evidence = {
     sources: [
       'assessment.overallScore_and_taskResponses (recorded session)',
+      ...(administration ? ['taskResponses.administration (measured / not measured coverage)'] : []),
       'baseline (personal, when available)',
       'comparable completed assessment history',
       ...(contextInputs.length ? ['context_inputs (recorded, consented as provided)'] : []),
+      ...(languageReadiness?.language ? ['taskResponses.languageReadiness (administration language)'] : []),
     ],
     limitations: [
       'Deterministic, non-diagnostic screening workflow; not a diagnosis and not a substitute for clinical evaluation.',
       'Change interpretation is safety-gated by session quality/comparability; poor quality is never treated as decline.',
       'Missing data remains missing and is not imputed.',
+      ...(changeReliabilityLimitation ? [changeReliabilityLimitation] : []),
+      ...coverageLimitations,
+      ...languageLimitations,
       ...(safety.urgentFlags.length ? ['Urgent/safety flags detected from recorded inputs require clinician attention.'] : []),
     ],
     uncertainty: !comparable
       ? 'High uncertainty for change interpretation due to quality/comparability gating.'
       : status === 'INSUFFICIENT_DATA'
-        ? 'Insufficient comparable history for a reliable change conclusion.'
-        : 'Within-person comparison based on available comparable, quality-gated records.',
+        ? changeReliability?.state === 'NOT_ESTABLISHED'
+          ? 'No reliable-change threshold exists for this record, so no change is asserted in either direction.'
+          : 'Insufficient comparable history for a reliable change conclusion.'
+        : 'Within-person comparison against this record\'s own measured variability; not a validated reliable-change statistic for the population.',
   };
 
   return {

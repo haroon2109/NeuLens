@@ -60,7 +60,9 @@ does not expose data through the other.
    `model_inference: false` until validated models are configured.
 2. **First assessment is a provisional baseline.** `baselines.is_active` is
    unique per patient; `change_detections` requires a baseline and at least
-   three comparable sessions before describing a range.
+   three comparable repeat pairs before a reliable-change threshold exists. With
+   fewer, no score-based change is reported and the record states that reliability
+   is not established; the observed spread is never used as a threshold.
 3. **Poor quality is never a decline.** Non-comparable sessions are excluded
    from the comparison window and the status becomes `INSUFFICIENT_DATA`.
 4. **Clinicians own actions.** AI writes observations and review prompts;

@@ -13,7 +13,9 @@ router.post('/login', PatientController.login);
 // Protected patient session endpoints
 router.get('/session', authenticateToken, PatientController.getSession);
 router.get('/assessments', authenticateToken, PatientController.listAssessments);
-router.post('/assessment/submit', authenticateToken, PatientController.submitAssessment);
+// Assessment submission has exactly one entry point: POST /patient/assessment
+// (routes/assessmentcomplete.routes.ts). The former /assessment/submit duplicate
+// ran a different code path for the same record and has been removed.
 router.get('/confirmation-card', authenticateToken, PatientController.getConfirmationCard);
 
 // Consent records and appointments are persisted server-side

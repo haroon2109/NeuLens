@@ -34,7 +34,7 @@ export const DoctorDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'HIGH_RISK' | 'REVIEWED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'REVIEW_PROMPT' | 'REVIEWED'>('ALL');
 
   const fetchStats = async () => {
     setLoading(true);
@@ -54,27 +54,32 @@ export const DoctorDashboardPage: React.FC = () => {
     fetchStats();
   }, []);
 
-  const getRiskBadge = (risk: string) => {
-    switch (risk?.toUpperCase()) {
-      case 'HIGH':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
-            High Risk
-          </span>
-        );
-      case 'MODERATE':
+  const getReviewStateBadge = (state: string) => {
+    switch (state?.toUpperCase()) {
+      case 'REVIEW_PROMPT':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            Moderate
+            Review prompt
+          </span>
+        );
+      case 'NOT_INTERPRETABLE':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-warm text-body border border-line">
+            Not interpretable
+          </span>
+        );
+      case 'CLINICIAN_REVIEWED':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Clinician reviewed
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Low Risk
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            Not reviewed
           </span>
         );
     }
@@ -113,7 +118,7 @@ export const DoctorDashboardPage: React.FC = () => {
     if (!matchesSearch) return false;
 
     if (statusFilter === 'PENDING') return item.reviewStatus === 'PENDING_REVIEW';
-    if (statusFilter === 'HIGH_RISK') return item.riskLevel === 'HIGH';
+    if (statusFilter === 'REVIEW_PROMPT') return item.reviewState === 'REVIEW_PROMPT';
     if (statusFilter === 'REVIEWED') return item.reviewStatus === 'REVIEWED';
     return true;
   });
@@ -128,7 +133,7 @@ export const DoctorDashboardPage: React.FC = () => {
         <div className="flex flex-col justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF4EF] text-[#2F5E4E] border border-[#DFF3EA] flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-mint-haze text-forest border 0 flex items-center gap-1">
                 <Stethoscope className="w-3 h-3" />
                 Department of Neurology
               </span>
@@ -150,7 +155,7 @@ export const DoctorDashboardPage: React.FC = () => {
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               Refresh Data
             </button>
-            <Link to="/doctor/review-queue" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#2F5E4E] hover:bg-[#24493D] text-white text-xs font-bold shadow-card transition-all">
+            <Link to="/doctor/review-queue" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-forest hover:bg-forest-deep text-white text-xs font-bold shadow-card transition-all">
               <ClipboardCheck className="w-4 h-4" /> Clinical Review Queue
             </Link>
             <Link to="/doctor/change-detection" className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-line bg-white hover:bg-warm text-body text-xs font-bold transition-all">
@@ -285,9 +290,9 @@ export const DoctorDashboardPage: React.FC = () => {
                   </Link>
                   <span className="ml-2 font-mono text-xs text-muted">{cue.patientId}</span>
                   <div className="flex flex-wrap gap-2 mt-1.5">
-                    {cue.reviewReasons.includes('OUTSIDE_OBSERVED_BASELINE') && (
+                    {cue.reviewReasons.includes('OUTSIDE_RELIABLE_CHANGE') && (
                       <span className="text-xs font-semibold text-amber-800">
-                        Below observed range on 3 comparable prior screens
+                        Decline beyond this patient's measured session-to-session variability
                       </span>
                     )}
                     {cue.reviewReasons.includes('FUNCTIONAL_CHANGE') && (
@@ -332,7 +337,7 @@ export const DoctorDashboardPage: React.FC = () => {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-white/20 text-white flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-[#DFF3EA]" />
+              <Sparkles className="w-3 h-3 0" />
               Neulens v2.5 Protocol
             </span>
             <span className="text-xs text-slate-300">Biometric & Speech Pipeline Active</span>
@@ -409,14 +414,14 @@ export const DoctorDashboardPage: React.FC = () => {
                 Pending
               </button>
               <button
-                onClick={() => setStatusFilter('HIGH_RISK')}
+                onClick={() => setStatusFilter('REVIEW_PROMPT')}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
-                  statusFilter === 'HIGH_RISK'
-                    ? 'bg-white text-rose-700 shadow-card font-bold'
+                  statusFilter === 'REVIEW_PROMPT'
+                    ? 'bg-white text-amber-700 shadow-card font-bold'
                     : 'text-body hover:text-ink'
                 }`}
               >
-                High Risk
+                Review prompt
               </button>
               <button
                 onClick={() => setStatusFilter('REVIEWED')}
@@ -453,7 +458,7 @@ export const DoctorDashboardPage: React.FC = () => {
                   <th className="py-3 px-6">Patient Name & Age</th>
                   <th className="py-3 px-6">Screening Date</th>
                   <th className="py-3 px-6">Cognitive Score</th>
-                  <th className="py-3 px-6">AI Risk Tier</th>
+                  <th className="py-3 px-6">Review state</th>
                   <th className="py-3 px-6">Review Status</th>
                   <th className="py-3 px-6 text-right">Clinical Actions</th>
                 </tr>
@@ -480,7 +485,7 @@ export const DoctorDashboardPage: React.FC = () => {
 
                     {/* Date */}
                     <td className="py-4 px-6 text-muted font-medium">
-                      {new Date(item.date).toLocaleDateString('en-US', {
+                      {new Date(item.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
@@ -491,16 +496,22 @@ export const DoctorDashboardPage: React.FC = () => {
                     {/* Score */}
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-ink text-sm">
-                          {Math.round(item.score)}
-                        </span>
-                        <span className="text-xs text-muted">/ 100</span>
+                        {item.score === null ? (
+                          <span className="text-xs font-semibold text-muted">Not interpretable</span>
+                        ) : (
+                          <>
+                            <span className="font-semibold text-ink text-sm">
+                              {Math.round(item.score)}
+                            </span>
+                            <span className="text-xs text-muted">/ 100</span>
+                          </>
+                        )}
                       </div>
                     </td>
 
-                    {/* Risk Tier */}
+                    {/* Administrative review state */}
                     <td className="py-4 px-6">
-                      {getRiskBadge(item.riskLevel)}
+                      {getReviewStateBadge(item.reviewState)}
                     </td>
 
                     {/* Review Status */}

@@ -36,6 +36,7 @@ model User {
   carePlans          CarePlan[]
   appointments       Appointment[]
   referrals          ReferralOutcome[]
+  externalInstruments ExternalInstrumentRecord[]
   auditLogs          AuditLog[]
 
   @@index([role])
@@ -47,8 +48,8 @@ model Assessment {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   date          DateTime @default(now())
-  overallScore  Float
-  riskLevel     String // LOW, MODERATE, HIGH
+  overallScore  Float? // null when the session produced no interpretable score
+  reviewState   String   @default("NOT_REVIEWED") // NOT_REVIEWED, NOT_INTERPRETABLE, REVIEW_PROMPT, CLINICIAN_REVIEWED
   status        String @default("COMPLETED") // ASSIGNED, IN_PROGRESS, COMPLETED
   reviewStatus  String @default("PENDING_REVIEW") // PENDING_REVIEW, REVIEWED, FOLLOWUP_REQUIRED
   reviewedBy    String?
@@ -142,8 +143,10 @@ model ChangeDetection {
   id               String      @id @default(uuid())
   userId           String
   user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  baselineId       String
-  baseline         Baseline    @relation(fields: [baselineId], references: [id], onDelete: Cascade)
+  // Null when no personal baseline exists: a session that could not establish one
+  // has nothing to compare against, and an empty-string id would imply otherwise.
+  baselineId       String?
+  baseline         Baseline?   @relation(fields: [baselineId], references: [id], onDelete: Cascade)
   detectedAt       DateTime    @default(now())
   status           String // NO_CHANGE, REVIEW, INSUFFICIENT_DATA
   cognitiveChange  Float?
@@ -175,8 +178,8 @@ model BrainHealthProfile {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   changeDetectionId  String   @unique
   changeDetection    ChangeDetection @relation(fields: [changeDetectionId], references: [id], onDelete: Cascade)
-  profileScore       Float // Composite brain-health score 0-100
-  riskTier           String // LOW, MODERATE, HIGH
+  profileScore       Float? // null when the session was not interpretable
+  reviewSignal       String   @default("NOT_REVIEWED") // administrative review state; never a risk tier
   interpretation     String  @db.Text // Risk/change interpretation text
   nextSteps          Json // Personalized next steps array
   generatedAt        DateTime @default(now())
@@ -263,6 +266,34 @@ model ReferralOutcome {
   updatedAt     DateTime @updatedAt
 
   @@index([patientId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// A score produced by a validated instrument administered by a clinician
+// outside Neulens (MoCA, RUDAS, AD8, MMSE). It is stored, never computed:
+// the platform does not administer these, does not rescore them, and does not
+// fold them into its own composite. The record exists so a clinician has an
+// externally validated anchor next to the platform's own longitudinal output,
+// and so the record states which language and version produced it.
+// ---------------------------------------------------------------------------
+model ExternalInstrumentRecord {
+  id                String   @id @default(uuid())
+  patientId         String
+  patient           User     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  instrumentKey     String // allowlisted registry key, e.g. MOCA
+  instrumentVersion String? // publisher edition/version as entered by the clinician
+  language          String // language of administration, e.g. ar, en
+  administeredOn    DateTime // date the instrument was administered
+  administeredBy    String // clinician who administered it, as entered
+  score             Float
+  maxScore          Float // total for the version used, from the registry at record time
+  licenceConfirmed  Boolean  @default(false) // administering clinician holds the required licence
+  licenceReference  String? // certification or purchase reference, when the publisher requires one
+  notes             String?  @db.Text
+  recordedBy        String? // clinician user id that entered the record
+  createdAt         DateTime @default(now())
+
+  @@index([patientId, administeredOn])
 }
 
 model Appointment {

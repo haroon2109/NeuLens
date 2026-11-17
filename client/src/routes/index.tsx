@@ -33,6 +33,7 @@ const PatientLoginPage = lazyPage(() => import('../features/patient/PatientLogin
 const PatientLanguagePage = lazyPage(() => import('../features/patient/PatientLanguagePage'), 'PatientLanguagePage');
 const PatientAssessmentPage = lazyPage(() => import('../features/patient/PatientAssessmentPage'), 'PatientAssessmentPage');
 const PatientCompletionPage = lazyPage(() => import('../features/patient/PatientCompletionPage'), 'PatientCompletionPage');
+const AccessibleArabicCheckinPage = lazyPage(() => import('../features/accessible/AccessibleArabicCheckinPage'), 'AccessibleArabicCheckinPage');
 
 // Patient portal (screens 15–45)
 const PatientWelcomePage = lazyPage(() => import('../features/patient/portal/PatientOnboardingPages'), 'PatientWelcomePage');
@@ -129,6 +130,7 @@ const DoctorClinicalReviewQueuePage = lazyPage(() => import('../features/doctor/
 const DoctorQualityEquityPage = lazyPage(() => import('../features/doctor/portal/DoctorRequestedScreens'), 'DoctorQualityEquityPage');
 const DoctorEvidenceDataQualityPage = lazyPage(() => import('../features/doctor/portal/DoctorRequestedScreens'), 'DoctorEvidenceDataQualityPage');
 const DoctorClinicalApprovalPage = lazyPage(() => import('../features/doctor/portal/DoctorRequestedScreens'), 'DoctorClinicalApprovalPage');
+const DoctorAssessmentReadinessPage = lazyPage(() => import('../features/doctor/portal/DoctorAssessmentReadinessPage'), 'DoctorAssessmentReadinessPage');
 
 const AboutPage = lazyPage(() => import('../features/about/AboutPage'), 'AboutPage');
 
@@ -239,6 +241,10 @@ export const router = createBrowserRouter([
           {
             path: 'assessment/complete',
             element: <PatientCompletionPage />
+          },
+          {
+            path: 'accessible-checkin',
+            element: <AccessibleArabicCheckinPage />
           }
         ]
       },
@@ -478,6 +484,10 @@ export const router = createBrowserRouter([
           {
             path: 'evidence-quality',
             element: <DoctorEvidenceDataQualityPage />
+          },
+          {
+            path: 'assessment-readiness',
+            element: <DoctorAssessmentReadinessPage />
           },
           {
             path: 'clinical-approval',

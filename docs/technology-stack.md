@@ -154,10 +154,13 @@ The five engine boundaries are already reflected in the API:
 | River | Incremental learning experiments | Later |
 
 The current rule is intentionally conservative: only comparable sessions count,
-at least three earlier sessions are required before a range is described, and a
-poor-quality session is reported as `INSUFFICIENT_DATA`, never as decline. A
-small change is not labelled decline; thresholds require clinical validation,
-test-retest reliability and practice-effect correction.
+and a poor-quality session is reported as `INSUFFICIENT_DATA`, never as decline.
+A score is compared against the mean of up to three prior comparable scores, and
+a decline is reported only when it exceeds 1.96 × the SD of that patient's own
+consecutive within-person differences — a reliable change index estimated from
+three or more repeat pairs. Below three pairs no change is reported at all. A
+small change is never labelled decline; a population threshold still requires
+clinical validation, test–retest reliability and practice-effect correction.
 
 ## Installing research extras
 

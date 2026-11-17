@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 
-const SUPPORTED_LANG_CODES = ['en', 'ta', 'hi', 'te', 'ml', 'kn', 'en-IN', 'ta-IN', 'hi-IN', 'te-IN', 'kn-IN', 'ml-IN'] as const;
+const SUPPORTED_LANG_CODES = ['en', 'ta', 'hi', 'te', 'ml', 'kn', 'ar', 'en-IN', 'ta-IN', 'hi-IN', 'te-IN', 'kn-IN', 'ml-IN', 'ar-AE'] as const;
 
 export const transcribeQuerySchema = z.object({
   language: z.enum(SUPPORTED_LANG_CODES).default('en'),

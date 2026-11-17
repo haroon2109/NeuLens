@@ -107,8 +107,8 @@ export interface ContextInputRecord {
 export interface BrainHealthProfileRecord {
   id: string;
   generatedAt: string;
-  profileScore: number;
-  riskTier: string;
+  profileScore: number | null;
+  reviewSignal: string;
   interpretation: string;
   nextSteps: string[];
   reviewedAt: string | null;

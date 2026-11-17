@@ -49,6 +49,7 @@ client/.env.local
 client/.env.*.local
 server/.env
 server/.env.*
+!server/.env.example
 server/.env.local
 server/.env.*.local
 
@@ -74,6 +75,9 @@ server/prisma/.env
 server/prisma/dev.db
 server/prisma/dev.db-journal
 
+# Arabic model weights (downloaded locally, not committed)
+server/models/
+
 # Research datasets and experiment artifacts (do not commit)
 research/mri_alzheimers/data/
 research/mri_alzheimers/runs/
@@ -82,3 +86,4 @@ research/**/data/
 research/**/runs/
 *.pt
 *.pth
+/backups/

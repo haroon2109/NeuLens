@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../config/db';
 import { summarizePatientChanges } from '../services/changeMonitor';
+import { isInterpretableScore, toReviewState, type ReviewState } from '../services/reviewState';
+import { isDemoAssessment, isDemoUserId } from '../services/demoRecords';
 
 export interface UserRecord {
   id: string;
@@ -28,8 +30,8 @@ export interface AssessmentRecord {
   id: string;
   userId: string;
   date: Date;
-  overallScore: number;
-  riskLevel: string; // 'LOW' | 'MODERATE' | 'HIGH'
+  overallScore: number | null; // null when the session produced no interpretable score
+  reviewState: string; // administrative review state — never a clinical risk tier
   status: string;    // 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED'
   reviewStatus: string; // 'PENDING_REVIEW' | 'REVIEWED' | 'FOLLOWUP_REQUIRED'
   reviewedBy?: string | null;
@@ -92,7 +94,7 @@ export interface LongitudinalRecordRecord {
 export interface ChangeDetectionRecord {
   id: string;
   userId: string;
-  baselineId: string;
+  baselineId: string | null; // null when no personal baseline exists to compare against
   detectedAt: Date;
   status: string; // NO_CHANGE | REVIEW | INSUFFICIENT_DATA
   cognitiveChange: number | null;
@@ -115,8 +117,8 @@ export interface BrainHealthProfileRecord {
   id: string;
   userId: string;
   changeDetectionId: string;
-  profileScore: number;
-  riskTier: string;
+  profileScore: number | null;
+  reviewSignal: string;
   interpretation: string;
   nextSteps: any[];
   generatedAt: Date;
@@ -170,6 +172,28 @@ export interface AppointmentRecord {
   createdBy: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * A score from a validated instrument administered by a clinician outside the
+ * platform. Written by hand, never computed here; see
+ * `services/externalInstruments.ts` for the registry and the rules.
+ */
+export interface ExternalInstrumentRecord {
+  id: string;
+  patientId: string; // internal user id
+  instrumentKey: string;
+  instrumentVersion: string | null;
+  language: string;
+  administeredOn: Date;
+  administeredBy: string;
+  score: number;
+  maxScore: number;
+  licenceConfirmed: boolean;
+  licenceReference: string | null;
+  notes: string | null;
+  recordedBy: string | null;
+  createdAt: Date;
 }
 
 export interface ReferralOutcomeRecord {
@@ -233,6 +257,7 @@ export const inMemoryChangeDetections: ChangeDetectionRecord[] = [];
 export const inMemoryContextInputs: ContextInputRecord[] = [];
 export const inMemoryBrainHealthProfiles: BrainHealthProfileRecord[] = [];
 export const inMemoryReferrals: ReferralOutcomeRecord[] = [];
+export const inMemoryExternalInstruments: ExternalInstrumentRecord[] = [];
 
 export class HospitalDataStore {
   // --------------------------------------------------------------------------
@@ -465,7 +490,7 @@ export class HospitalDataStore {
   // --------------------------------------------------------------------------
   // DOCTOR & CLINICAL MANAGEMENT METHODS
   // --------------------------------------------------------------------------
-  public static async getDoctorDashboardStats(): Promise<{
+  public static async getDoctorDashboardStats(options: { includeDemo?: boolean } = {}): Promise<{
     totalPatients: number;
     assessmentsToday: number;
     completedAssessments: number;
@@ -477,7 +502,7 @@ export class HospitalDataStore {
       latestAssessmentDate: string;
       cognitiveChange: number | null;
       worsenedActivityIds: string[];
-      reviewReasons: Array<'OUTSIDE_OBSERVED_BASELINE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
+      reviewReasons: Array<'OUTSIDE_RELIABLE_CHANGE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
     }>;
     recentAssessments: Array<{
       id: string;
@@ -486,8 +511,8 @@ export class HospitalDataStore {
       age: number;
       date: string;
       assessmentType: string;
-      score: number;
-      riskLevel: string;
+      score: number | null;
+      reviewState: string;
       reviewStatus: string;
     }>;
   }> {
@@ -521,12 +546,16 @@ export class HospitalDataStore {
       }
       return Array.from(merged.values());
     };
+    // Demonstration records are invented. They are shown only inside the demo
+    // workspace; a clinical dashboard must never count them as patients.
+    if (!options.includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
     const totalPatients = patients.length;
 
     // Assessments
     const completed = Array.from(new Map(
       patients.flatMap(patient => assessmentsForPatient(patient.id))
         .filter(assessment => assessment.status === 'COMPLETED')
+        .filter(assessment => options.includeDemo || !isDemoAssessment(assessment))
         .map(assessment => [assessment.id, assessment])
     ).values());
     const assessmentsToday = completed.filter(a => new Date(a.date).getTime() >= todayStart.getTime()).length;
@@ -563,7 +592,7 @@ export class HospitalDataStore {
           date: assess.date.toISOString(),
           assessmentType: 'Multimodal Cognitive Battery',
           score: assess.overallScore,
-          riskLevel: assess.riskLevel,
+          reviewState: toReviewState(assess.reviewState),
           reviewStatus: assess.reviewStatus
         };
       });
@@ -579,7 +608,11 @@ export class HospitalDataStore {
     };
   }
 
-  public static async listPatients(query = '', riskFilter = 'ALL'): Promise<Array<{
+  public static async listPatients(
+    query = '',
+    reviewFilter = 'ALL',
+    options: { includeDemo?: boolean } = {}
+  ): Promise<Array<{
     id: string;
     patientId: string;
     name: string;
@@ -589,7 +622,7 @@ export class HospitalDataStore {
     registrationDate: string;
     lastScreeningDate: string | null;
     compositeScore: number | null;
-    riskLevel: string;
+    reviewState: ReviewState;
     reviewStatus: string;
     assessmentCount: number;
   }>> {
@@ -613,6 +646,8 @@ export class HospitalDataStore {
       console.warn('Prisma DB error fetching patient directory. Falling back to memory:', error);
     }
 
+    if (!options.includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
+
     const result = patients.map(patient => {
       const merged = new Map<string, AssessmentRecord>();
       for (const assessment of patientAssessments.get(patient.id) || []) merged.set(assessment.id, assessment);
@@ -634,7 +669,7 @@ export class HospitalDataStore {
         registrationDate: patient.createdAt.toISOString(),
         lastScreeningDate: latest ? latest.date.toISOString() : null,
         compositeScore: latest ? latest.overallScore : null,
-        riskLevel: latest ? latest.riskLevel : 'PENDING',
+        reviewState: latest ? toReviewState(latest.reviewState) : 'NOT_REVIEWED',
         reviewStatus: latest ? latest.reviewStatus : 'NOT_SCREENED',
         assessmentCount: assessments.length,
         changeStatus: changeSummary.status,
@@ -648,9 +683,9 @@ export class HospitalDataStore {
         item.patientId.toUpperCase().includes(q) ||
         item.name.toUpperCase().includes(q);
 
-      const matchesRisk = riskFilter === 'ALL' || item.riskLevel === riskFilter;
+      const matchesReview = reviewFilter === 'ALL' || item.reviewState === reviewFilter;
 
-      return matchesQuery && matchesRisk;
+      return matchesQuery && matchesReview;
     });
   }
 
@@ -742,6 +777,24 @@ export class HospitalDataStore {
         handedness: patient.handedness
       }
     };
+  }
+
+  /**
+   * Persists the administrative review state derived by the deterministic rules.
+   * Never called with a clinical risk tier; see services/reviewState.ts.
+   */
+  public static async setAssessmentReviewState(
+    assessmentId: string,
+    reviewState: ReviewState
+  ): Promise<void> {
+    const cached = inMemoryAssessments.find(a => a.id === assessmentId);
+    if (cached) cached.reviewState = reviewState;
+    try {
+      await prisma.assessment.update({ where: { id: assessmentId }, data: { reviewState } });
+    } catch (error) {
+      if (!memoryFallbackAllowed()) throw error;
+      console.warn('Prisma DB error updating assessment review state. Memory copy updated only:', error);
+    }
   }
 
   public static async updateAssessmentReview(
@@ -1091,48 +1144,66 @@ export class HospitalDataStore {
     }
   }
 
+  /**
+   * Persists a screening submission.
+   *
+   * The caller never supplies a risk tier. A session with no interpretable score
+   * is stored as NOT_INTERPRETABLE; a recorded score is NOT_REVIEWED until a
+   * deterministic rule fires or a clinician reviews it.
+   */
   public static async submitAssessment(userId: string, data: {
-    overallScore: number;
-    riskLevel: string;
-    reactionTime: number;
-    blinkRate: number;
-    fixationScore: number;
-    speechRate: number;
-    pauseScore: number;
-    jitter: number;
-    shimmer: number;
-    symmetry: number;
-    tremorScore: number;
+    overallScore: number | null;
+    reactionTime: number | null;
+    blinkRate: number | null;
+    fixationScore: number | null;
+    speechRate: number | null;
+    pauseScore: number | null;
+    jitter: number | null;
+    shimmer: number | null;
+    symmetry: number | null;
+    tremorScore: number | null;
     taskResponses?: any;
     recommendation?: string;
   }): Promise<AssessmentRecord> {
+    const overallScore = isInterpretableScore(data.overallScore) ? data.overallScore : null;
+    const reviewState: ReviewState = overallScore === null ? 'NOT_INTERPRETABLE' : 'NOT_REVIEWED';
+    // A session with no interpretable score must not carry a caller-supplied
+    // "completed" recommendation: that is how a skipped battery reads as a
+    // normal result downstream.
+    const storedRecommendation = overallScore === null
+      ? 'Session recorded without an interpretable score. No interpretation is available; clinician review required.'
+      : (data.recommendation || 'Standard cognitive screening battery completed.');
+    const hasEye = data.reactionTime != null && data.blinkRate != null && data.fixationScore != null;
+    const hasVoice = data.speechRate != null && data.pauseScore != null && data.jitter != null && data.shimmer != null;
+    const hasFace = data.symmetry != null && data.tremorScore != null;
+
     const newRecord: AssessmentRecord = {
       id: `assess-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       userId,
       date: new Date(),
-      overallScore: data.overallScore,
-      riskLevel: data.riskLevel,
+      overallScore,
+      reviewState,
       status: 'COMPLETED',
       reviewStatus: 'PENDING_REVIEW',
       taskResponses: data.taskResponses || {},
-      eyeMetrics: {
-        reactionTime: data.reactionTime,
-        blinkRate: data.blinkRate,
-        fixationScore: data.fixationScore
-      },
-      voiceMetrics: {
-        speechRate: data.speechRate,
-        pauseScore: data.pauseScore,
-        jitter: data.jitter,
-        shimmer: data.shimmer
-      },
-      faceMetrics: {
-        symmetry: data.symmetry,
-        tremorScore: data.tremorScore
-      },
+      eyeMetrics: hasEye ? {
+        reactionTime: data.reactionTime as number,
+        blinkRate: data.blinkRate as number,
+        fixationScore: data.fixationScore as number
+      } : null,
+      voiceMetrics: hasVoice ? {
+        speechRate: data.speechRate as number,
+        pauseScore: data.pauseScore as number,
+        jitter: data.jitter as number,
+        shimmer: data.shimmer as number
+      } : null,
+      faceMetrics: hasFace ? {
+        symmetry: data.symmetry as number,
+        tremorScore: data.tremorScore as number
+      } : null,
       report: {
         id: `rep-${Date.now()}`,
-        recommendation: data.recommendation || 'Standard cognitive screening battery completed.',
+        recommendation: storedRecommendation,
         doctorNotes: ''
       }
     };
@@ -1141,35 +1212,41 @@ export class HospitalDataStore {
       const created = await prisma.assessment.create({
         data: {
           userId,
-          overallScore: data.overallScore,
-          riskLevel: data.riskLevel,
+          overallScore,
+          reviewState,
           status: 'COMPLETED',
           reviewStatus: 'PENDING_REVIEW',
           taskResponses: data.taskResponses || {},
-          eyeMetrics: {
-            create: {
-              reactionTime: data.reactionTime,
-              blinkRate: data.blinkRate,
-              fixationScore: data.fixationScore
+          ...(hasEye ? {
+            eyeMetrics: {
+              create: {
+                reactionTime: data.reactionTime as number,
+                blinkRate: data.blinkRate as number,
+                fixationScore: data.fixationScore as number
+              }
             }
-          },
-          voiceMetrics: {
-            create: {
-              speechRate: data.speechRate,
-              pauseScore: data.pauseScore,
-              jitter: data.jitter,
-              shimmer: data.shimmer
+          } : {}),
+          ...(hasVoice ? {
+            voiceMetrics: {
+              create: {
+                speechRate: data.speechRate as number,
+                pauseScore: data.pauseScore as number,
+                jitter: data.jitter as number,
+                shimmer: data.shimmer as number
+              }
             }
-          },
-          faceMetrics: {
-            create: {
-              symmetry: data.symmetry,
-              tremorScore: data.tremorScore
+          } : {}),
+          ...(hasFace ? {
+            faceMetrics: {
+              create: {
+                symmetry: data.symmetry as number,
+                tremorScore: data.tremorScore as number
+              }
             }
-          },
+          } : {}),
           report: {
             create: {
-              recommendation: data.recommendation || 'Standard cognitive screening battery completed.',
+              recommendation: storedRecommendation,
               doctorNotes: ''
             }
           }
@@ -1197,19 +1274,20 @@ export class HospitalDataStore {
    * Persists a cognitive assessment session as an Assessment record.
    *
    * `overallScore` is the deterministic descriptive task accuracy (0–100), not a
-   * clinical score. No diagnostic risk tier is assigned: riskLevel is UNRATED
-   * until a clinician reviews the session.
+   * clinical score. A session the scoring engine could not interpret is stored
+   * with a null score and NOT_INTERPRETABLE; nothing is imputed.
    */
   public static async createCognitiveAssessment(
     userId: string,
     data: { overallScore: number | null; taskResponses: Record<string, unknown>; recommendation?: string }
   ): Promise<AssessmentRecord> {
+    const overallScore = isInterpretableScore(data.overallScore) ? data.overallScore : null;
     const newRecord: AssessmentRecord = {
       id: `assess-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       userId,
       date: new Date(),
-      overallScore: data.overallScore ?? 0,
-      riskLevel: 'UNRATED',
+      overallScore,
+      reviewState: overallScore === null ? 'NOT_INTERPRETABLE' : 'NOT_REVIEWED',
       status: 'COMPLETED',
       reviewStatus: 'PENDING_REVIEW',
       taskResponses: data.taskResponses,
@@ -1229,8 +1307,8 @@ export class HospitalDataStore {
       const created = await prisma.assessment.create({
         data: {
           userId,
-          overallScore: data.overallScore ?? 0,
-          riskLevel: 'UNRATED',
+          overallScore,
+          reviewState: overallScore === null ? 'NOT_INTERPRETABLE' : 'NOT_REVIEWED',
           status: 'COMPLETED',
           reviewStatus: 'PENDING_REVIEW',
           taskResponses: data.taskResponses as Prisma.InputJsonValue,
@@ -1415,7 +1493,7 @@ export class HospitalDataStore {
 
   public static async createChangeDetection(data: {
     userId: string;
-    baselineId: string;
+    baselineId: string | null;
     status: string;
     cognitiveChange?: number | null;
     outsideBaseline?: boolean;
@@ -1436,6 +1514,7 @@ export class HospitalDataStore {
       const created = await prisma.changeDetection.create({
         data: {
           userId: data.userId,
+          // Absent baseline is an absent relation, never an empty-string id.
           baselineId: data.baselineId,
           status: data.status,
           cognitiveChange: data.cognitiveChange ?? null,
@@ -1534,20 +1613,28 @@ export class HospitalDataStore {
   // NEW METHODS — Brain Health Profile
   // --------------------------------------------------------------------------
 
+  /**
+   * Stores the clinician-facing profile draft.
+   * `reviewSignal` is an administrative review flag; this record never carries a
+   * clinical risk tier, because no validated classification exists.
+   */
   public static async createBrainHealthProfile(data: {
     userId: string;
     changeDetectionId: string;
-    profileScore: number;
-    riskTier: string;
+    profileScore: number | null;
+    reviewSignal?: ReviewState;
     interpretation: string;
     nextSteps: any[];
   }): Promise<BrainHealthProfileRecord> {
+    const profileScore = isInterpretableScore(data.profileScore) ? data.profileScore : null;
+    const reviewSignal: ReviewState = data.reviewSignal
+      ?? (profileScore === null ? 'NOT_INTERPRETABLE' : 'NOT_REVIEWED');
     const newRecord: BrainHealthProfileRecord = {
       id: `bhprofile-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       userId: data.userId,
       changeDetectionId: data.changeDetectionId,
-      profileScore: data.profileScore,
-      riskTier: data.riskTier,
+      profileScore,
+      reviewSignal,
       interpretation: data.interpretation,
       nextSteps: data.nextSteps,
       generatedAt: new Date(),
@@ -1560,8 +1647,8 @@ export class HospitalDataStore {
         data: {
           userId: data.userId,
           changeDetectionId: data.changeDetectionId,
-          profileScore: data.profileScore,
-          riskTier: data.riskTier,
+          profileScore,
+          reviewSignal,
           interpretation: data.interpretation,
           nextSteps: data.nextSteps,
         },
@@ -1605,10 +1692,21 @@ export class HospitalDataStore {
       return { baseline: existing, created: false };
     }
 
+    // A baseline can only be formed from a session that produced an interpretable
+    // score and a recorded functional check-in. Absent data never becomes a
+    // placeholder score (the old behaviour imputed 50 for functional function).
+    const recordedActivities = assessment.taskResponses?.functionalCheckIn?.activities as
+      | Record<string, number>
+      | undefined;
+    if (!isInterpretableScore(assessment.overallScore) || !recordedActivities) {
+      return { baseline: null, created: false };
+    }
+
     const cognitiveScore = assessment.overallScore;
-    const functionalScore = assessment.taskResponses?.functionalCheckIn?.activities
-      ? Object.values(assessment.taskResponses.functionalCheckIn.activities as Record<string, number>).reduce((a: number, b: number) => a + b, 0) / 4
-      : 50;
+    const functionalScore = Object.values(recordedActivities).reduce(
+      (total, value) => total + Number(value || 0),
+      0
+    ) / Object.keys(recordedActivities).length;
     const eyeScore = assessment.eyeMetrics ? (100 - Math.min(100, (assessment.eyeMetrics.reactionTime / 5))) : null;
     const voiceScore = assessment.voiceMetrics ? (100 - Math.min(100, assessment.voiceMetrics.jitter * 200)) : null;
     const faceScore = assessment.faceMetrics ? assessment.faceMetrics.symmetry : null;
@@ -1707,6 +1805,80 @@ export class HospitalDataStore {
           patientPublicId: inMemoryUsers.find(user => user.id === row.patientId)?.patientId ?? null,
         }));
     }
+  }
+
+  // --------------------------------------------------------------------------
+  // METHODS — External validated instruments (clinician-entered scores)
+  // --------------------------------------------------------------------------
+
+  public static async createExternalInstrument(data: {
+    patientId: string;
+    instrumentKey: string;
+    instrumentVersion?: string | null;
+    language: string;
+    administeredOn: Date;
+    administeredBy: string;
+    score: number;
+    maxScore: number;
+    licenceConfirmed: boolean;
+    licenceReference?: string | null;
+    notes?: string | null;
+    recordedBy?: string | null;
+  }): Promise<ExternalInstrumentRecord> {
+    const record: ExternalInstrumentRecord = {
+      id: `ext-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      patientId: data.patientId,
+      instrumentKey: data.instrumentKey,
+      instrumentVersion: data.instrumentVersion ?? null,
+      language: data.language,
+      administeredOn: data.administeredOn,
+      administeredBy: data.administeredBy,
+      score: data.score,
+      maxScore: data.maxScore,
+      licenceConfirmed: data.licenceConfirmed,
+      licenceReference: data.licenceReference ?? null,
+      notes: data.notes ?? null,
+      recordedBy: data.recordedBy ?? null,
+      createdAt: new Date(),
+    };
+    try {
+      const created = await prisma.externalInstrumentRecord.create({
+        data: {
+          patientId: record.patientId,
+          instrumentKey: record.instrumentKey,
+          instrumentVersion: record.instrumentVersion,
+          language: record.language,
+          administeredOn: record.administeredOn,
+          administeredBy: record.administeredBy,
+          score: record.score,
+          maxScore: record.maxScore,
+          licenceConfirmed: record.licenceConfirmed,
+          licenceReference: record.licenceReference,
+          notes: record.notes,
+          recordedBy: record.recordedBy,
+        },
+      });
+      return { ...record, ...(created as unknown as ExternalInstrumentRecord) };
+    } catch (e) {
+      if (!memoryFallbackAllowed()) throw e;
+    }
+    inMemoryExternalInstruments.push(record);
+    return record;
+  }
+
+  public static async listExternalInstruments(patientId: string): Promise<ExternalInstrumentRecord[]> {
+    try {
+      const rows = await prisma.externalInstrumentRecord.findMany({
+        where: { patientId },
+        orderBy: { administeredOn: 'asc' },
+      });
+      return rows as unknown as ExternalInstrumentRecord[];
+    } catch (e) {
+      if (!memoryFallbackAllowed()) throw e;
+    }
+    return inMemoryExternalInstruments
+      .filter(row => row.patientId === patientId)
+      .sort((a, b) => a.administeredOn.getTime() - b.administeredOn.getTime());
   }
 
   public static async listReferrals(patientId: string): Promise<ReferralOutcomeRecord[]> {

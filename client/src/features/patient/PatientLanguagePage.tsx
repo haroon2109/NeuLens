@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -13,6 +13,7 @@ import { SUPPORTED_LANGUAGES } from '../../services/language/translations';
 import { SupportedLanguage } from '../../services/language/types';
 import { useVoiceAssistantStore } from '../../services/voice/VoiceInstructionEngine';
 import { useScreeningStore } from '../../store/screeningStore';
+import { patientApi, type LanguageReadinessEntry } from '../../services/portalApi';
 import { ClinicalIllustration } from '../../components/ClinicalIllustration';
 
 export const PatientLanguagePage: React.FC = () => {
@@ -22,7 +23,41 @@ export const PatientLanguagePage: React.FC = () => {
 
   const [activeSpeakingLang, setActiveSpeakingLang] = useState<SupportedLanguage | null>(null);
 
-  const handleSelectLanguage = (langId: SupportedLanguage) => {
+  // Which languages can actually administer the tasks. The registry is the same
+  // one the server enforces on submission, so the screen cannot promise more than
+  // the API will accept.
+  const [readiness, setReadiness] = useState<LanguageReadinessEntry[] | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    patientApi
+      .getLanguageReadiness()
+      .then((response) => {
+        if (!cancelled) setReadiness(response?.languages ?? null);
+      })
+      .catch(() => {
+        // If readiness cannot be read, the screen must not imply that every
+        // language is ready — the server will refuse an unacknowledged one.
+        if (!cancelled) setReadiness([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedReadiness = useMemo(
+    () => readiness?.find((entry) => entry.id === currentLanguage) ?? null,
+    [readiness, currentLanguage]
+  );
+
+  const tasksNotReady = selectedReadiness ? !selectedReadiness.taskAdministrationReady : false;
+  const readyUnknown = readiness === null;
+
+  // Changing language resets the acknowledgement: it was given for one language.
+  const selectLanguage = (langId: SupportedLanguage) => {
+    const entry = readiness?.find((item) => item.id === langId);
+    if (!entry || !entry.taskAdministrationReady) setAcknowledged(false);
     setLanguage(langId);
     handlePlayGreeting(langId);
   };
@@ -37,13 +72,20 @@ export const PatientLanguagePage: React.FC = () => {
   };
 
   const handleContinue = () => {
+    if (readyUnknown) return;
+    if (tasksNotReady && !acknowledged) return;
     stopSpeaking();
+    useScreeningStore.getState().setLanguagePreference({
+      language: currentLanguage,
+      acknowledged: tasksNotReady ? acknowledged : false,
+      acknowledgedAt: tasksNotReady && acknowledged ? new Date().toISOString() : null
+    });
     useScreeningStore.getState().setStep('intro');
     navigate('/patient/assessment');
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF7EF] text-slate-800 py-10 px-6 flex flex-col justify-between selection:bg-medical-500 selection:text-white">
+    <div className="min-h-screen bg-warm text-slate-800 py-10 px-6 flex flex-col justify-between selection:bg-medical-500 selection:text-white">
       
       {/* ------------------------------------------------------------- */}
       {/* TOP NAVIGATION                                                */}
@@ -86,7 +128,7 @@ export const PatientLanguagePage: React.FC = () => {
         {/* ------------------------------------------------------------- */}
         {/* CLEAN, LIGHT LANGUAGE SELECTION BUTTONS                       */}
         {/* ------------------------------------------------------------- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-start">
           {SUPPORTED_LANGUAGES.map((lang) => {
             const isSelected = currentLanguage === lang.id;
             const isCurrentlySpeaking = activeSpeakingLang === lang.id && isSpeaking;
@@ -94,7 +136,7 @@ export const PatientLanguagePage: React.FC = () => {
             return (
               <div
                 key={lang.id}
-                onClick={() => handleSelectLanguage(lang.id)}
+                onClick={() => selectLanguage(lang.id)}
                 className={`p-6 rounded-2xl border-2 transition-all duration-150 flex flex-col justify-between min-h-[120px] cursor-pointer relative group ${
                   isSelected
                     ? 'bg-blue-50/70 border-medical-600 shadow-card ring-2 ring-medical-600/10'
@@ -132,11 +174,24 @@ export const PatientLanguagePage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Bottom Row: Selected Checkmark indicator */}
-                <div className="pt-3 mt-3 border-t border-line flex items-center justify-between">
+                {/* Bottom Row: readiness + selection indicator */}
+                <div className="pt-3 mt-3 border-t border-line flex items-center justify-between gap-2">
                   <span className="text-xs font-bold text-muted">
                     {isSelected ? 'Selected' : 'Tap to choose'}
                   </span>
+                  {readiness && (() => {
+                    const entry = readiness.find((item) => item.id === lang.id);
+                    if (!entry) return null;
+                    return entry.taskAdministrationReady ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                        Tasks ready
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                        Wording under review
+                      </span>
+                    );
+                  })()}
                   
                   {isSelected && (
                     <div className="w-6 h-6 rounded-full bg-medical-600 text-white flex items-center justify-center shadow-card">
@@ -150,17 +205,52 @@ export const PatientLanguagePage: React.FC = () => {
         </div>
 
         {/* ------------------------------------------------------------- */}
+        {/* LANGUAGE READINESS NOTICE                                     */}
+        {/* ------------------------------------------------------------- */}
+        {tasksNotReady && selectedReadiness && (
+          <div className="max-w-xl mx-auto text-start bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+            <p className="text-sm font-bold text-amber-900">
+              {selectedReadiness.nativeName} task wording is still being reviewed
+            </p>
+            <p className="text-sm text-amber-900/90 leading-relaxed">
+              {selectedReadiness.participantNotice}
+            </p>
+            <ul className="text-xs text-amber-900/80 list-disc ps-5 space-y-1">
+              {selectedReadiness.pendingStages.map((stage) => (
+                <li key={stage.key}>{stage.label}</li>
+              ))}
+            </ul>
+            <label className="flex items-start gap-3 text-sm text-amber-900 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(event) => setAcknowledged(event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-amber-600"
+              />
+              <span>
+                I understand that the task wording in this language has not completed linguistic and
+                clinical review, and I want to continue in {selectedReadiness.nativeName}.
+              </span>
+            </label>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
         {/* ONE LARGE "CONTINUE" BUTTON                                   */}
         {/* ------------------------------------------------------------- */}
         <div className="pt-4 max-w-md mx-auto">
           <button
             type="button"
             onClick={handleContinue}
-            className="w-full py-4 px-8 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white text-base sm:text-lg font-bold rounded-2xl shadow-md shadow-medical-600/20 transition-all flex items-center justify-center gap-3 cursor-pointer"
+            disabled={readyUnknown || (tasksNotReady && !acknowledged)}
+            className="w-full py-4 px-8 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white text-base sm:text-lg font-bold rounded-2xl shadow-md shadow-medical-600/20 transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-medical-600"
           >
             <span>Continue to Assessment</span>
             <ArrowRight className="w-5 h-5" />
           </button>
+          {readyUnknown && (
+            <p className="mt-3 text-xs text-muted">Checking which languages can run the tasks…</p>
+          )}
         </div>
 
       </main>

@@ -35,6 +35,7 @@ import {
   fieldClass,
   formatDate,
   formatDateTime,
+  formatScore,
   labelClass,
   primaryButton,
   secondaryButton
@@ -65,7 +66,7 @@ const contextLabels: Record<string, string> = {
 };
 
 const reasonLabel: Record<string, string> = {
-  OUTSIDE_OBSERVED_BASELINE: 'A score fell outside the patient’s observed personal range.',
+  OUTSIDE_RELIABLE_CHANGE: 'A score declined further than this patient’s measured session-to-session variability.',
   FUNCTIONAL_CHANGE: 'The patient reported a change in daily function.',
   CONTEXT_CHANGE: 'Sleep, activity, stress, or mood context changed.'
 };
@@ -139,8 +140,8 @@ export const DoctorChangeDetectionPage: React.FC = () => {
   const patientAcks = changeAcknowledgements.filter((item) => item.patientId === patient?.patientId);
   const latestAck = patientAcks[0];
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading change review…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading change review…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
 
   const status = changeSummary?.status || 'INSUFFICIENT_DATA';
   const quality = getQuality(latest);
@@ -175,12 +176,17 @@ export const DoctorChangeDetectionPage: React.FC = () => {
       <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Evidence</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Evidence</h2>
             <p className="mt-0.5 text-xs text-muted">What triggered or did not trigger a review prompt.</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <MetricTile label="Cognitive change" value={changeSummary?.cognitive.change != null ? `${changeSummary.cognitive.change > 0 ? '+' : ''}${changeSummary.cognitive.change} pts` : 'Unavailable'} detail="Latest vs previous comparable" />
-              <MetricTile label="Observed range" value={changeSummary?.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not established'} detail={`${comparable} comparable sessions`} />
-              <MetricTile label="Outside range" value={changeSummary?.cognitive.outsideObservedBaseline ? 'Yes' : 'No'} detail="Latest observation" />
+              <MetricTile label="Observed spread" value={changeSummary?.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not established'} detail={`Descriptive only, ${comparable} comparable sessions`} />
+              <MetricTile
+                label="Reliable-change threshold"
+                value={changeSummary?.cognitive.reliability.reliableChangeThreshold != null ? `±${changeSummary.cognitive.reliability.reliableChangeThreshold} pts` : 'Not established'}
+                detail="1.96 × this patient’s SD of change"
+              />
+              <MetricTile label="Decline beyond threshold" value={changeSummary?.cognitive.declineBeyondReliableChange ? 'Yes' : 'No'} detail={changeSummary?.cognitive.reliability.state === 'PROVISIONAL' ? 'Latest vs prior mean' : 'No threshold yet'} />
             </div>
 
             {(changeSummary?.reviewReasons || []).length > 0 ? (
@@ -200,7 +206,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>
-              <h2 className="text-[13px] font-semibold text-ink">Confidence & uncertainty</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Confidence & uncertainty</h2>
               <p className="mt-2 text-xs font-semibold text-slate-800">{confidenceLabel}</p>
               <ul className="mt-2 space-y-1.5 text-xs leading-4 text-body">
                 <li>• Comparison uses {comparable} comparable session{comparable === 1 ? '' : 's'}.</li>
@@ -211,7 +217,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="text-[13px] font-semibold text-ink">Quality warnings</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Quality warnings</h2>
               {quality.comparable && quality.completion === 'FULL' ? (
                 <p className="mt-2 flex items-start gap-1.5 text-xs leading-4 text-emerald-800">
                   <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" /> No session-quality warning is recorded for the latest assessment.
@@ -228,7 +234,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
           </div>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Contextual contributors</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Contextual contributors</h2>
             <p className="mt-0.5 text-xs text-muted">Context can explain a change but does not establish cause.</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <div>
@@ -266,7 +272,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Acknowledge review</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Acknowledge review</h2>
             <p className="mt-0.5 text-xs leading-4 text-muted">
               Record that you reviewed this prompt. Acknowledgement does not change the underlying assessment data.
             </p>
@@ -291,7 +297,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
           </Card>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Review history</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Review history</h2>
             {latestAck ? (
               <div className="mt-2 rounded-xl border border-line bg-warm p-3">
                 <div className="flex items-center justify-between gap-2">
@@ -310,7 +316,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
           </Card>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Related notes</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Related notes</h2>
             {notes.filter((item) => item.patientId === patient.patientId).length === 0 ? (
               <p className="mt-2 text-xs text-muted">No notes recorded.</p>
             ) : (
@@ -378,7 +384,7 @@ export const ChangeDetectionQueuePage: React.FC = () => {
             {queue.map((item) => (
               <li key={item.patientId} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <Link to={`/doctor/patients/${item.patientId}/change-detection`} className="text-[12px] font-semibold text-ink hover:text-blue-700">
+                  <Link to={`/doctor/patients/${item.patientId}/change-detection`} className="text-[14px] font-semibold text-ink hover:text-blue-700">
                     {item.patientName}
                   </Link>
                   <p className="mt-0.5 text-xs text-muted">
@@ -406,21 +412,23 @@ export const ChangeDetectionQueuePage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const DoctorHealthContextPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { patient, assessments, isLoading } = useDoctorPatient(id);
+  const { patient, assessments, isLoading, contextInputs = [] } = useDoctorPatient(id);
   const { clinicalContexts } = useDoctorPortalStore();
   const latest = latestAssessmentOf(assessments);
   const stored = patient ? clinicalContexts[patient.patientId] : undefined;
   const sharedContext = latest?.taskResponses?.healthContext || latest?.taskResponses?.functionalCheckIn?.context || null;
+  const familyHistoryRecord = contextInputs.find((input) => input.source === 'family_history');
+  const genomicRecord = contextInputs.find((input) => input.source === 'genomic' && input.consentGranted);
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading health context…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading health context…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
 
   const sleepHours = stored?.sleepHours ?? sharedContext?.sleepHours ?? null;
   const sleepQuality = stored?.sleepQuality ?? sharedContext?.sleepQuality ?? null;
   const activityLevel = stored?.activityLevel ?? sharedContext?.activityLevel ?? null;
   const stressLevel = stored?.stressLevel ?? sharedContext?.stressLevel ?? null;
   const mood = stored?.mood ?? sharedContext?.mood ?? null;
-  const hasContext = Boolean(stored || sharedContext);
+  const hasContext = Boolean(stored || sharedContext || contextInputs.length);
 
   return (
     <div className="space-y-5">
@@ -449,7 +457,7 @@ export const DoctorHealthContextPage: React.FC = () => {
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Moon className="h-3.5 w-3.5 text-blue-700" /> Sleep & lifestyle</h2>
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Moon className="h-3.5 w-3.5 text-blue-700" /> Sleep & lifestyle</h2>
               <dl className="mt-2">
                 <InfoRow label="Typical sleep" value={sleepHours != null ? `${sleepHours} hours` : 'Not shared'} />
                 <InfoRow label="Sleep quality" value={sleepQuality != null ? `${sleepQuality} / 5` : 'Not shared'} />
@@ -459,7 +467,7 @@ export const DoctorHealthContextPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Users className="h-3.5 w-3.5 text-blue-700" /> Mental wellbeing</h2>
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Users className="h-3.5 w-3.5 text-blue-700" /> Mental wellbeing</h2>
               <dl className="mt-2">
                 <InfoRow label="Stress level" value={stressLevel != null ? `${stressLevel} / 5` : 'Not shared'} />
                 <InfoRow label="Mood" value={mood != null ? `${mood} / 5` : 'Not shared'} />
@@ -469,14 +477,14 @@ export const DoctorHealthContextPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Droplets className="h-3.5 w-3.5 text-blue-700" /> Metabolic</h2>
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Droplets className="h-3.5 w-3.5 text-blue-700" /> Metabolic</h2>
               <p className="mt-2 text-xs leading-5 text-body">
                 {stored?.metabolic || 'No recent metabolic information is available in the shared record.'}
               </p>
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Stethoscope className="h-3.5 w-3.5 text-blue-700" /> Medical history</h2>
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Stethoscope className="h-3.5 w-3.5 text-blue-700" /> Medical history</h2>
               <dl className="mt-2">
                 <InfoRow label="Conditions" value={stored?.conditions?.length ? stored.conditions.join(', ') : 'None recorded'} />
                 <InfoRow label="Medications" value={stored?.medications?.length ? stored.medications.join(', ') : 'None recorded'} />
@@ -485,14 +493,36 @@ export const DoctorHealthContextPage: React.FC = () => {
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Users className="h-3.5 w-3.5 text-blue-700" /> Family history</h2>
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Users className="h-3.5 w-3.5 text-blue-700" /> Family history</h2>
               <p className="mt-2 text-xs leading-5 text-body">
-                {stored?.familyHistory || 'No family history has been shared.'}
+                {stored?.familyHistory || familyHistoryRecord?.values?.familyHistory || 'No family history has been shared.'}
               </p>
+              {familyHistoryRecord && (
+                <p className="mt-2 text-xs leading-4 text-muted">Patient-reported · {formatDate(familyHistoryRecord.recordedAt)}</p>
+              )}
             </Card>
 
             <Card>
-              <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><Database className="h-3.5 w-3.5 text-blue-700" /> Imported sources</h2>
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Database className="h-3.5 w-3.5 text-blue-700" /> Genomic context</h2>
+              {genomicRecord ? (
+                <>
+                  <p className="mt-2 text-xs leading-5 text-body">
+                    {genomicRecord.values?.genomicSummary || 'Shared without a written summary.'}
+                  </p>
+                  <p className="mt-2 text-xs leading-4 text-muted">
+                    Patient-shared with consent · {formatDate(genomicRecord.recordedAt)}
+                  </p>
+                  <p className="mt-2 rounded-lg bg-warm px-2.5 py-2 text-xs leading-4 text-muted">
+                    Context only. Not interpreted by NeuLens, not used in scoring, and not a genetic risk assessment. Confirm against the source laboratory report.
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-xs leading-4 text-muted">No genomic context has been shared with consent.</p>
+              )}
+            </Card>
+
+            <Card>
+              <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Database className="h-3.5 w-3.5 text-blue-700" /> Imported sources</h2>
               {stored?.sources?.length ? (
                 <ul className="mt-2 space-y-2">
                   {stored.sources.map((source) => (
@@ -512,7 +542,7 @@ export const DoctorHealthContextPage: React.FC = () => {
             <div className="flex items-start gap-3">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
               <div>
-                <h2 className="text-[12px] font-semibold text-ink">Limitations of this context view</h2>
+                <h2 className="text-[14px] font-semibold text-ink">Limitations of this context view</h2>
                 <p className="mt-1 text-xs leading-5 text-muted">
                   Self-report can be incomplete or affected by recall. Imported device and EHR values depend on external data quality and consent. This view does not establish causality or replace a clinical history.
                 </p>
@@ -557,8 +587,8 @@ export const DoctorClinicalNotesPage: React.FC = () => {
     if (!assessmentId && ordered[0]?.id) setAssessmentId(ordered[0].id);
   }, [assessmentId, ordered]);
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading clinical notes…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading clinical notes…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
 
   const patientId = patient.patientId;
   const patientNotes = notes.filter((item) => item.patientId === patientId);
@@ -621,7 +651,7 @@ export const DoctorClinicalNotesPage: React.FC = () => {
                 <option value="">No specific assessment</option>
                 {ordered.map((assessment) => (
                   <option key={assessment.id} value={assessment.id}>
-                    {formatDate(assessment.date)} · {Math.round(assessment.overallScore)} / 100
+                    {formatDate(assessment.date)} · {formatScore(assessment.overallScore)}
                   </option>
                 ))}
               </select>
@@ -666,7 +696,7 @@ export const DoctorClinicalNotesPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Finding summary</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Finding summary</h2>
             <dl className="mt-2">
               <InfoRow label="Patient" value={patient.name} />
               <InfoRow label="Latest assessment" value={ordered[0] ? formatDate(ordered[0].date) : 'None'} />
@@ -680,7 +710,7 @@ export const DoctorClinicalNotesPage: React.FC = () => {
 
           <Card>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-[13px] font-semibold text-ink">Notes history</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Notes history</h2>
               <span className="text-xs text-muted">{patientNotes.length} total</span>
             </div>
             {patientNotes.length === 0 ? (

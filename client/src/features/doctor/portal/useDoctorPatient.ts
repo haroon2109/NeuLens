@@ -21,9 +21,9 @@ export interface DoctorAssessment {
   id: string;
   userId: string;
   date: string;
-  overallScore: number;
+  overallScore: number | null;
   assessmentType?: string;
-  riskLevel: string;
+  reviewState: string;
   status: string;
   reviewStatus: string;
   reviewedBy?: string | null;
@@ -41,9 +41,18 @@ export interface PatientChangeSummary {
     latestScore: number | null;
     previousScore: number | null;
     change: number | null;
+    /** Mean of up to three prior comparable scores — the comparison point. */
+    referenceScore: number | null;
+    /** Descriptive spread only. Not a threshold, and not what triggers a prompt. */
     baselineRange: { minimum: number; maximum: number } | null;
     comparableAssessments: number;
-    outsideObservedBaseline: boolean;
+    declineBeyondReliableChange: boolean;
+    reliability: {
+      state: 'NOT_ESTABLISHED' | 'PROVISIONAL';
+      pairs: number;
+      standardDeviationOfChange: number | null;
+      reliableChangeThreshold: number | null;
+    };
   };
   function: {
     currentActivityLevels: Record<string, number>;
@@ -55,13 +64,23 @@ export interface PatientChangeSummary {
     currentFactors: Record<string, number>;
     changedFactors: string[];
   };
-  reviewReasons: Array<'OUTSIDE_OBSERVED_BASELINE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
+  reviewReasons: Array<'OUTSIDE_RELIABLE_CHANGE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
+}
+
+export interface PatientContextInput {
+  id: string;
+  source: string;
+  values: Record<string, any>;
+  recordedAt: string;
+  consentGranted: boolean;
 }
 
 export interface DoctorPatientDetail {
   patient: DoctorPatient;
   assessments: DoctorAssessment[];
   changeSummary: PatientChangeSummary | null;
+  /** Patient-shared context, including family history and consent-gated genomic context. */
+  contextInputs?: PatientContextInput[];
   isLocal?: boolean;
 }
 
@@ -84,6 +103,7 @@ const synthesizeLocalPatient = (patientId: string): DoctorPatientDetail | null =
     },
     assessments: [],
     changeSummary: null,
+    contextInputs: [],
     isLocal: true
   };
 };
@@ -110,7 +130,8 @@ const fetchPatientDetail = async (patientId: string): Promise<DoctorPatientDetai
     return {
       patient: data.patient,
       assessments: data.assessments || [],
-      changeSummary: data.changeSummary || null
+      changeSummary: data.changeSummary || null,
+      contextInputs: data.contextInputs || []
     };
   } catch (err) {
     const local = synthesizeLocalPatient(patientId);
@@ -131,7 +152,7 @@ export const useDoctorPatient = (patientId?: string) => {
   }, [refetch]);
 
   return {
-    ...(data || { patient: null, assessments: [], changeSummary: null }),
+    ...(data || { patient: null, assessments: [], changeSummary: null, contextInputs: [] }),
     isLoading: Boolean(patientId) && isPending,
     error: error ? (error instanceof Error ? error.message : 'Unable to load this patient record.') : null,
     refresh
@@ -169,7 +190,12 @@ export const domainObservations = (assessment?: DoctorAssessment | null) => {
       domain: 'Cognitive',
       icon: 'Brain',
       values: [
-        { label: 'Overall screening score', value: assessment ? `${Math.round(assessment.overallScore)} / 100` : 'Unavailable' },
+        {
+          label: 'Overall screening score',
+          value: assessment
+            ? (typeof assessment.overallScore === 'number' ? `${Math.round(assessment.overallScore)} / 100` : 'Not interpretable')
+            : 'Unavailable'
+        },
         { label: 'Matched pairs', value: tasks.task2?.matchedPairs !== undefined ? `${tasks.task2.matchedPairs} of 8` : 'Missing' },
         { label: 'Mismatches', value: tasks.task2?.mismatches !== undefined ? String(tasks.task2.mismatches) : 'Missing' },
         { label: 'Completion time', value: tasks.task2?.completionTimeSec !== undefined ? `${tasks.task2.completionTimeSec}s` : 'Missing' }

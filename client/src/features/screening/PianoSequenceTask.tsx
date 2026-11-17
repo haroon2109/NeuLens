@@ -5,8 +5,73 @@ type Props = {
   patientMode?: boolean;
   onComplete: (result: any) => void;
   speak?: (text: string) => void;
+  /** Session language, so the instructions are read in the language being assessed. */
+  language?: string;
   t?: any;
 };
+
+type PianoStrings = {
+  badge: string;
+  title: string;
+  introMessage: string;
+  watchMessage: string;
+  turnMessage: string;
+  correctMessage: string;
+  incorrectMessage: string;
+  roundInfo: (current: number, total: number, length: number) => string;
+  startButton: string;
+  listenWatch: string;
+  yourTurn: string;
+  preparing: string;
+  completeTitle: string;
+  completeBody: string;
+  footerNote: string;
+  keyAria: (label: string) => string;
+};
+
+const ENGLISH: PianoStrings = {
+  badge: 'Fixed observation · Sequence memory',
+  title: 'Piano Sequence',
+  introMessage: 'Watch the piano keys light up, then repeat the sequence in the same order.',
+  watchMessage: 'Watch the sequence carefully.',
+  turnMessage: 'Now tap the keys in the same order.',
+  correctMessage: 'Correct sequence.',
+  incorrectMessage: 'That sequence was different. Continue to the next round.',
+  roundInfo: (current, total, length) => `Round ${current} of ${total} · Length ${length}`,
+  startButton: 'Start sequence',
+  listenWatch: 'Listen and watch',
+  yourTurn: 'Your turn',
+  preparing: 'Preparing next round',
+  completeTitle: 'Piano Sequence Complete',
+  completeBody: 'Fixed-observation sequencing recorded.',
+  footerNote:
+    'Standardized fixed-observation activity (same form). Results may be used for within-person comparison only when quality/comparability gates pass. This is not adaptive practice.',
+  keyAria: (label) => `Piano key ${label}`
+};
+
+// Arabic instructions for the same fixed protocol. The task itself is non-verbal
+// (lights and tones), so only the surrounding instruction must be translated.
+const ARABIC: PianoStrings = {
+  badge: 'ملاحظة ثابتة · ذاكرة التسلسل',
+  title: 'تسلسل البيانو',
+  introMessage: 'راقب مفاتيح البيانو وهي تضيء، ثم أعد التسلسل بالترتيب نفسه.',
+  watchMessage: 'راقب التسلسل بتركيز.',
+  turnMessage: 'الآن اضغط على المفاتيح بالترتيب نفسه.',
+  correctMessage: 'تسلسل صحيح.',
+  incorrectMessage: 'كان هذا التسلسل مختلفًا. تابع إلى الجولة التالية.',
+  roundInfo: (current, total, length) => `الجولة ${current} من ${total} · الطول ${length}`,
+  startButton: 'ابدأ التسلسل',
+  listenWatch: 'استمع وراقب',
+  yourTurn: 'دورك الآن',
+  preparing: 'جارٍ التحضير للجولة التالية',
+  completeTitle: 'اكتمل تسلسل البيانو',
+  completeBody: 'تم تسجيل التسلسل ثابت الملاحظة.',
+  footerNote:
+    'نشاط موحّد ثابت الملاحظة (النموذج نفسه). لا تُستخدم النتائج للمقارنة داخل الشخص إلا عند استيفاء شروط الجودة وقابلية المقارنة. هذا ليس تدريبًا تكيفيًا.',
+  keyAria: (label) => `مفتاح بيانو ${label}`
+};
+
+type MessageKey = 'introMessage' | 'watchMessage' | 'turnMessage' | 'correctMessage' | 'incorrectMessage';
 
 const KEYS = [
   { id: 0, label: 'C', color: 'bg-rose-500', light: 'bg-rose-300', freq: 261.63 },
@@ -18,7 +83,8 @@ const KEYS = [
 // Fixed-observation rounds (standardized): same structure for every administration of this form version.
 const ROUNDS = [3, 4, 5];
 
-export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComplete, speak }) => {
+export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComplete, speak, language }) => {
+  const s = language === 'ar' ? ARABIC : ENGLISH;
   const [phase, setPhase] = useState<'intro' | 'showing' | 'input' | 'feedback' | 'done'>('intro');
   const [roundIndex, setRoundIndex] = useState(0);
   const [sequence, setSequence] = useState<number[]>([]);
@@ -26,7 +92,7 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
   const [activeKey, setActiveKey] = useState<number | null>(null);
   const [correctRounds, setCorrectRounds] = useState(0);
   const [roundResults, setRoundResults] = useState<any[]>([]);
-  const [message, setMessage] = useState('Watch the piano keys light up, then repeat the sequence in the same order.');
+  const [messageKey, setMessageKey] = useState<MessageKey>('introMessage');
   const timers = useRef<number[]>([]);
   const audioCtx = useRef<AudioContext | null>(null);
 
@@ -71,7 +137,7 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
     clearTimers();
     setPhase('showing');
     setInputIndex(0);
-    setMessage('Watch the sequence carefully.');
+    setMessageKey('watchMessage');
     seq.forEach((keyId, i) => {
       const t1 = window.setTimeout(() => {
         setActiveKey(keyId);
@@ -83,7 +149,7 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
     const done = window.setTimeout(() => {
       setActiveKey(null);
       setPhase('input');
-      setMessage('Now tap the keys in the same order.');
+      setMessageKey('turnMessage');
       speak?.('Now repeat the sequence.');
     }, 600 + seq.length * 700 + 200);
     timers.current.push(done);
@@ -143,7 +209,7 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
       setRoundResults(newResults);
       setCorrectRounds(newCorrect);
       setPhase('feedback');
-      setMessage(roundCorrect ? 'Correct sequence.' : 'That sequence was different. Continue to the next round.');
+      setMessageKey(roundCorrect ? 'correctMessage' : 'incorrectMessage');
       speak?.(roundCorrect ? 'Correct.' : 'Let us try the next one.');
 
       const t = window.setTimeout(() => {
@@ -173,8 +239,8 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
         <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
           <CheckCircle className="w-8 h-8" />
         </div>
-        <h3 className="text-xl font-black text-slate-900">Piano Sequence Complete</h3>
-        <p className="text-sm text-slate-600">Fixed-observation sequencing recorded.</p>
+        <h3 className="text-xl font-black text-slate-900">{s.completeTitle}</h3>
+        <p className="text-sm text-slate-600">{s.completeBody}</p>
       </div>
     );
   }
@@ -183,12 +249,14 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
     <div className={patientMode ? 'bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm' : 'glass-card p-6 space-y-5'}>
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-bold border border-violet-200">
-          <Music className="w-4 h-4" /> Fixed observation · Sequence memory
+          <Music className="w-4 h-4" /> {s.badge}
         </div>
-        <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">Piano Sequence</h3>
-        <p className="text-sm text-slate-600 max-w-xl mx-auto">{message}</p>
+        <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">{s.title}</h3>
+        <p className="text-sm text-slate-600 max-w-xl mx-auto">{s[messageKey]}</p>
         {phase !== 'intro' && (
-          <p className="text-xs font-semibold text-slate-500">Round {Math.min(roundIndex + 1, ROUNDS.length)} of {ROUNDS.length} · Length {ROUNDS[roundIndex] || ROUNDS[0]}</p>
+          <p className="text-xs font-semibold text-slate-500">
+            {s.roundInfo(Math.min(roundIndex + 1, ROUNDS.length), ROUNDS.length, ROUNDS[roundIndex] || ROUNDS[0])}
+          </p>
         )}
       </div>
 
@@ -204,7 +272,7 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
               className={`relative w-16 sm:w-20 h-40 sm:h-52 rounded-b-2xl rounded-t-lg border-2 transition-all shadow-sm flex items-end justify-center pb-4 select-none ${
                 active ? `${k.light} border-slate-400 scale-[1.02]` : 'bg-white border-slate-300 hover:border-slate-400'
               } ${phase === 'input' ? 'cursor-pointer active:scale-[0.98]' : 'cursor-default opacity-95'}`}
-              aria-label={`Piano key ${k.label}`}
+              aria-label={s.keyAria(k.label)}
             >
               <span className={`absolute top-3 w-8 h-8 rounded-full ${active ? k.color : 'bg-slate-200'} transition-colors`} />
               <span className="text-sm font-bold text-slate-700">{k.label}</span>
@@ -216,18 +284,18 @@ export const PianoSequenceTask: React.FC<Props> = ({ patientMode = false, onComp
       <div className="flex items-center justify-center gap-3">
         {phase === 'intro' ? (
           <button type="button" onClick={start} className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-medical-600 hover:bg-medical-700 text-white font-bold shadow-md">
-            <Play className="w-4 h-4 fill-white" /> Start sequence
+            <Play className="w-4 h-4 fill-white" /> {s.startButton}
           </button>
         ) : (
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Volume2 className="w-4 h-4" />
-            <span>{phase === 'showing' ? 'Listen and watch' : phase === 'input' ? 'Your turn' : 'Preparing next round'}</span>
+            <span>{phase === 'showing' ? s.listenWatch : phase === 'input' ? s.yourTurn : s.preparing}</span>
           </div>
         )}
       </div>
 
       <p className="text-xs text-center text-slate-400 max-w-xl mx-auto">
-        Standardized fixed-observation activity (same form). Results may be used for within-person comparison only when quality/comparability gates pass. This is not adaptive practice.
+        {s.footerNote}
       </p>
     </div>
   );

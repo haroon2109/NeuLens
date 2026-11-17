@@ -30,20 +30,17 @@ import {
   ScoreDial,
   SectionTitle,
   TrendLine,
-  formatDate
+  formatDate,
+  primaryButton,
+  secondaryButton
 } from './ui';
-
-const primaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl pp-btn-primary pp-btn-sm text-[#ffffff]';
-const secondaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl pp-btn-secondary pp-btn-sm';
 
 const statusCopy = (status?: string) => {
   switch (status) {
     case 'NO_CHANGE':
       return { label: 'Stable', tone: 'forestSoft' as const, detail: 'No review prompt was raised at this check.' };
     case 'REVIEW':
-      return { label: 'Review suggested', tone: 'amber' as const, detail: 'At least one observation fell outside the recorded personal range.' };
+      return { label: 'Review suggested', tone: 'amber' as const, detail: 'A change was recorded that is worth a clinician looking at.' };
     case 'INSUFFICIENT_DATA':
       return { label: 'Insufficient data', tone: 'sage' as const, detail: 'Not enough comparable sessions to interpret change.' };
     default:
@@ -52,7 +49,7 @@ const statusCopy = (status?: string) => {
 };
 
 const reasonLabel = (reason: string) => {
-  if (reason === 'OUTSIDE_OBSERVED_BASELINE') return 'An observation fell outside the recorded personal range';
+  if (reason === 'OUTSIDE_RELIABLE_CHANGE') return 'A score declined more than this record can explain by normal variation';
   if (reason === 'FUNCTIONAL_CHANGE') return 'A daily-function response changed';
   if (reason === 'CONTEXT_CHANGE') return 'Sleep, activity, or mood context changed';
   return reason.replace(/_/g, ' ').toLowerCase();
@@ -133,11 +130,11 @@ export const BrainHealthOverviewPage: React.FC = () => {
           <div className="mt-3">
             <Pill tone={status.tone} dot>{status.label}</Pill>
           </div>
-          <p className="mt-2 max-w-[250px] text-[11px] leading-5 text-muted">
+          <p className="mt-2 max-w-[250px] text-[13px] leading-5 text-muted">
             {brainHealth?.interpretation ||
               'A monitoring summary will appear after enough comparable sessions and a clinician context review.'}
           </p>
-          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">
+          <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">
             Prototype summary · not a diagnosis
           </p>
         </Card>
@@ -146,8 +143,8 @@ export const BrainHealthOverviewPage: React.FC = () => {
           <Card>
             <SectionTitle title="Monitoring status" detail={latestChange ? `Last check ${formatDate(latestChange.detectedAt)}` : 'Not yet assessed'} />
             <div className={`rounded-xl border p-3 ${status.label === 'Review suggested' ? 'border-amber/60 bg-amber/10' : 'border-forest/40 bg-mint/50'}`}>
-              <p className="text-[12px] font-semibold text-ink">{status.detail}</p>
-              <p className="mt-1 text-[11px] leading-5 text-muted">
+              <p className="text-[14px] font-semibold text-ink">{status.detail}</p>
+              <p className="mt-1 text-[13px] leading-5 text-muted">
                 A review prompt is not a diagnosis. Your clinician considers it with your history, context, and other sessions.
               </p>
             </div>
@@ -165,13 +162,13 @@ export const BrainHealthOverviewPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-2.5">
                 {domainDeltas.map((item) => (
                   <div key={item.label} className="rounded-xl border border-line bg-warm/70 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-sage-deep">{item.label}</p>
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-sage-deep">{item.label}</p>
                     <p className={`mt-1 text-[17px] font-semibold ${
                       item.direction === 'up' ? 'text-forest' : item.direction === 'down' ? 'text-amber-900' : 'text-muted'
                     }`}>
                       {item.value}
                     </p>
-                    <p className="mt-0.5 text-[10px] text-sage-dark">points from baseline</p>
+                    <p className="mt-0.5 text-[12px] text-sage-dark">points from baseline</p>
                   </div>
                 ))}
               </div>
@@ -192,7 +189,7 @@ export const BrainHealthOverviewPage: React.FC = () => {
                 }
               />
             )}
-            <p className="mt-3 text-[11px] leading-5 text-muted">
+            <p className="mt-3 text-[13px] leading-5 text-muted">
               Higher is not always better; some observations are descriptive. Values are exploratory prototype outputs.
             </p>
           </Card>
@@ -215,13 +212,13 @@ export const BrainHealthOverviewPage: React.FC = () => {
           <div className="flex items-start gap-2.5 rounded-xl border border-mint bg-mint/50 p-3">
             <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-forest" aria-hidden="true" />
             <div>
-              <p className="text-[12px] font-semibold text-ink">Next assessment</p>
-              <p className="mt-0.5 text-[11px] leading-5 text-forest/80">
+              <p className="text-[14px] font-semibold text-ink">Next assessment</p>
+              <p className="mt-0.5 text-[13px] leading-5 text-forest/80">
                 Aim for {formatDate(carePlan.nextReview)}. A similar time of day and environment helps comparison.
               </p>
             </div>
           </div>
-          <ul className="mt-3 space-y-2 text-[11px] leading-5 text-muted">
+          <ul className="mt-3 space-y-2 text-[13px] leading-5 text-muted">
             {carePlan.steps.slice(0, 2).map((step) => (
               <li key={step.id} className="flex gap-2">
                 <CheckCircle2 className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${step.done ? 'text-forest' : 'text-sage-dark'}`} aria-hidden="true" />
@@ -229,21 +226,21 @@ export const BrainHealthOverviewPage: React.FC = () => {
               </li>
             ))}
           </ul>
-          <Link to="/patient/care-plan" className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-forest hover:underline">
+          <Link to="/patient/care-plan" className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline">
             Open care plan <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </Card>
 
         <Card>
           <SectionTitle title="Clinician context" />
-          <p className="text-[12px] font-semibold text-ink">{treatmentTeam.doctor}</p>
-          <p className="mt-0.5 text-[11px] text-muted">{treatmentTeam.role}</p>
-          <p className="mt-2 text-[11px] leading-5 text-muted">
+          <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
+          <p className="mt-0.5 text-[13px] text-muted">{treatmentTeam.role}</p>
+          <p className="mt-2 text-[13px] leading-5 text-muted">
             {brainHealth?.reviewedAt
               ? `Reviewed ${formatDate(brainHealth.reviewedAt)}. ${brainHealth.reviewedBy || treatmentTeam.doctor} considers this summary alongside your history and context.`
               : 'A clinician has not reviewed this monitoring summary yet.'}
           </p>
-          <Link to="/patient/appointments" className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-forest hover:underline">
+          <Link to="/patient/appointments" className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline">
             View follow-up <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </Card>
@@ -287,17 +284,17 @@ export const AssessmentHistoryPage: React.FC = () => {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="pp-card p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Sessions</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Sessions</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">{assessments.length}</p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Reviewed</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Reviewed</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">
                 {assessments.filter((item) => item.reviewStatus === 'REVIEWED').length}
               </p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Awaiting review</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Awaiting review</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">
                 {assessments.filter((item) => item.reviewStatus === 'PENDING_REVIEW').length}
               </p>
@@ -305,7 +302,7 @@ export const AssessmentHistoryPage: React.FC = () => {
           </div>
 
           <Card className="overflow-hidden p-0">
-            <div className="hidden grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-line bg-warm/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep md:grid">
+            <div className="hidden grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-line bg-warm/70 px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep md:grid">
               <span>Session</span><span>Date</span><span>Status</span><span>Vs baseline</span><span>Report</span>
             </div>
             <ul className="divide-y divide-line">
@@ -316,19 +313,19 @@ export const AssessmentHistoryPage: React.FC = () => {
                 return (
                   <li key={assessment.id} className="grid gap-2 px-4 py-3 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto] md:items-center md:gap-3">
                     <div>
-                      <p className="text-[12px] font-semibold text-ink">{isCognitive ? 'Cognitive assessment' : 'Five-part screening'}</p>
-                      <p className="mt-0.5 truncate text-[11px] text-muted">
+                      <p className="text-[14px] font-semibold text-ink">{isCognitive ? 'Cognitive assessment' : 'Five-part screening'}</p>
+                      <p className="mt-0.5 truncate text-[13px] text-muted">
                         {isCognitive
                           ? `${assessment.taskResponses?.cognitiveSummary?.mode === 'STANDARDIZED' ? 'Standardized' : 'Exploratory'} · ${assessment.taskResponses?.cognitiveSummary?.completedCount ?? 0} activities`
                           : assessment.id}
                       </p>
                     </div>
-                    <p className="text-[11px] text-muted">{formatDate(assessment.date)}</p>
+                    <p className="text-[13px] text-muted">{formatDate(assessment.date)}</p>
                     <div><AssessmentStatusPill reviewStatus={assessment.reviewStatus} status={assessment.status} /></div>
-                    <p className="text-[11px] text-muted">
+                    <p className="text-[13px] text-muted">
                       {isCognitive ? 'Not compared' : change == null ? '—' : `${change >= 0 ? '+' : ''}${change.toFixed(1)} pts`}
                     </p>
-                    <Link to={isCognitive ? `/patient/cognitive/history/${assessment.id}` : `/patient/assessment/report?id=${assessment.id}`} className="inline-flex items-center gap-1 text-[11px] font-bold text-forest hover:underline">
+                    <Link to={isCognitive ? `/patient/cognitive/history/${assessment.id}` : `/patient/assessment/report?id=${assessment.id}`} className="inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline">
                       <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                       View
                     </Link>
@@ -404,15 +401,15 @@ export const LongitudinalTrendsPage: React.FC = () => {
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="pp-card p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Sessions plotted</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Sessions plotted</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">{valid.length}</p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Direction</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Direction</p>
               <p className="mt-1 text-[16px] font-semibold capitalize text-ink">{trendDirection?.toLowerCase() || 'Building'}</p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Baseline</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Baseline</p>
               <p className="mt-1 text-[16px] font-semibold text-ink">{baseline ? `${Math.round(baseline.overallScore)}` : 'Not established'}</p>
             </div>
           </div>
@@ -421,24 +418,24 @@ export const LongitudinalTrendsPage: React.FC = () => {
             <Card>
               <SectionTitle title="Cognitive trend" detail="Exploratory composite across sessions." action={<Pill tone="mint">Composite</Pill>} />
               <TrendLine points={cognitive} min={Math.min(...cognitive.map((p) => p.value), baseline?.overallScore ?? 100) - 3} max={Math.max(...cognitive.map((p) => p.value), baseline?.overallScore ?? 0) + 3} tone="#2f5e4e" />
-              <p className="mt-2 text-[11px] leading-5 text-muted">
+              <p className="mt-2 text-[13px] leading-5 text-muted">
                 {baseline ? `Your baseline of ${Math.round(baseline.overallScore)} is shown for reference, not as a target.` : 'A baseline is not established.'}
               </p>
             </Card>
             <Card>
               <SectionTitle title="Ocular trend" detail="Fixation observation across sessions." action={<Eye className="h-4 w-4 text-slate-400" />} />
               <TrendLine points={ocular} tone="#0D9488" />
-              <p className="mt-2 text-[11px] leading-5 text-muted">Eye-movement observations are descriptive; lighting and device differences can affect them.</p>
+              <p className="mt-2 text-[13px] leading-5 text-muted">Eye-movement observations are descriptive; lighting and device differences can affect them.</p>
             </Card>
             <Card>
               <SectionTitle title="Vocal trend" detail="Pause observation across sessions." action={<Waves className="h-4 w-4 text-slate-400" />} />
               <TrendLine points={vocal} tone="#7FA692" />
-              <p className="mt-2 text-[11px] leading-5 text-muted">Microphone placement and background noise can affect acoustic observations.</p>
+              <p className="mt-2 text-[13px] leading-5 text-muted">Microphone placement and background noise can affect acoustic observations.</p>
             </Card>
             <Card>
               <SectionTitle title="Functional trend" detail="Trail sequencing time (lower is faster)." action={<Activity className="h-4 w-4 text-slate-400" />} />
               <TrendLine points={functional} tone="#D97706" valueSuffix=" s" />
-              <p className="mt-2 text-[11px] leading-5 text-muted">A slower session can reflect fatigue, distraction, or device familiarity rather than a change in ability.</p>
+              <p className="mt-2 text-[13px] leading-5 text-muted">A slower session can reflect fatigue, distraction, or device familiarity rather than a change in ability.</p>
             </Card>
           </div>
 
@@ -452,12 +449,12 @@ export const LongitudinalTrendsPage: React.FC = () => {
                 ['Clinical thresholds', 'Not applied']
               ].map(([label, value]) => (
                 <div key={label} className="rounded-xl border border-line bg-warm/70 p-3">
-                  <p className="text-[11px] text-muted">{label}</p>
-                  <p className="mt-1 text-[12px] font-semibold text-ink">{value}</p>
+                  <p className="text-[13px] text-muted">{label}</p>
+                  <p className="mt-1 text-[14px] font-semibold text-ink">{value}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-3 flex gap-1.5 text-[11px] leading-5 text-muted">
+            <p className="mt-3 flex gap-1.5 text-[13px] leading-5 text-muted">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               These charts are not validated clinical trend lines and must not be used to infer diagnosis or treatment response.
             </p>
@@ -502,7 +499,7 @@ export const ChangeDetectionPage: React.FC = () => {
               </span>
               <div>
                 <h2 className="text-[15px] font-semibold text-ink">{status.label}: {status.detail}</h2>
-                <p className="mt-1 text-[11px] leading-5 text-muted">
+                <p className="mt-1 text-[13px] leading-5 text-muted">
                   Detected {formatDate(latest.detectedAt)}. A review prompt means the observations deserve a closer look with context — not that a condition is present.
                 </p>
               </div>
@@ -522,7 +519,7 @@ export const ChangeDetectionPage: React.FC = () => {
               {latest.reviewReasons?.length ? (
                 <ul className="mt-3 space-y-2">
                   {latest.reviewReasons.map((reason) => (
-                    <li key={reason} className="flex gap-2 rounded-lg bg-warm/70 px-3 py-2 text-[11px] leading-5 text-muted">
+                    <li key={reason} className="flex gap-2 rounded-lg bg-warm/70 px-3 py-2 text-[13px] leading-5 text-muted">
                       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />
                       {reasonLabel(reason)}
                     </li>
@@ -534,7 +531,7 @@ export const ChangeDetectionPage: React.FC = () => {
             <div className="space-y-4">
               <Card>
                 <SectionTitle title="Uncertainty & limitations" />
-                <ul className="space-y-2 text-[11px] leading-5 text-muted">
+                <ul className="space-y-2 text-[13px] leading-5 text-muted">
                   <li className="flex gap-2"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />Prototype thresholds are not validated clinical thresholds.</li>
                   <li className="flex gap-2"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />Sleep, stress, medication timing, or a noisy environment can influence a session.</li>
                   <li className="flex gap-2"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />A single session outside range is not evidence of persistent change.</li>
@@ -542,7 +539,7 @@ export const ChangeDetectionPage: React.FC = () => {
               </Card>
               <Card>
                 <SectionTitle title="Suggested next step" />
-                <p className="text-[11px] leading-5 text-muted">
+                <p className="text-[13px] leading-5 text-muted">
                   {brainHealth?.nextSteps?.[0] || 'Repeat the screening in a similar setting in about four weeks, and discuss any persistent concern with your clinician.'}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -565,11 +562,11 @@ export const ChangeDetectionPage: React.FC = () => {
                         {change.status === 'REVIEW' ? <AlertTriangle className="h-4 w-4" aria-hidden="true" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
                       </span>
                       <div>
-                        <p className="text-[11px] font-semibold text-ink">{copy.label}</p>
-                        <p className="text-[11px] text-muted">{formatDate(change.detectedAt)}</p>
+                        <p className="text-[13px] font-semibold text-ink">{copy.label}</p>
+                        <p className="text-[13px] text-muted">{formatDate(change.detectedAt)}</p>
                       </div>
                     </div>
-                    <span className="text-[11px] text-muted">
+                    <span className="text-[13px] text-muted">
                       {change.cognitiveChange == null ? 'No numeric change' : `${change.cognitiveChange >= 0 ? '+' : ''}${change.cognitiveChange.toFixed(1)} points`}
                     </span>
                   </li>

@@ -38,6 +38,7 @@ import {
   fieldClass,
   formatDate,
   formatDateTime,
+  formatScore,
   labelClass,
   primaryButton,
   secondaryButton
@@ -80,8 +81,8 @@ export const DoctorCarePlanPage: React.FC = () => {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading care plan…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading care plan…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
 
   const toggleAction = (action: CareAction) => {
     setActions((current) => current.includes(action) ? current.filter((item) => item !== action) : [...current, action]);
@@ -160,7 +161,7 @@ export const DoctorCarePlanPage: React.FC = () => {
         <Card>
           <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <h2 className="text-[13px] font-semibold text-ink">Approved next steps</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Approved next steps</h2>
               <p className="mt-0.5 text-xs text-muted">Select the actions you have clinically approved for this patient.</p>
               <div className="mt-3 space-y-2">
                 {careActions.map((action) => (
@@ -222,11 +223,11 @@ export const DoctorCarePlanPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Plan context</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Plan context</h2>
             <dl className="mt-2">
               <InfoRow label="Patient" value={patient.name} />
               <InfoRow label="Latest assessment" value={latest ? formatDate(latest.date) : 'None'} />
-              <InfoRow label="Latest score" value={latest ? `${Math.round(latest.overallScore)} / 100` : 'Not available'} />
+              <InfoRow label="Latest score" value={latest ? formatScore(latest.overallScore) : 'Not available'} />
               <InfoRow label="Review status" value={latest?.reviewStatus?.replace(/_/g, ' ').toLowerCase() || 'Not reviewed'} />
               <InfoRow label="Owner" value={clinician || 'Unassigned'} />
             </dl>
@@ -239,7 +240,7 @@ export const DoctorCarePlanPage: React.FC = () => {
             <Card>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <h2 className="text-[13px] font-semibold text-ink">Current approved plan</h2>
+                <h2 className="text-[14px] font-semibold text-ink">Current approved plan</h2>
               </div>
               <p className="mt-1 text-xs text-muted">Approved {formatDateTime(existing.approvedAt)}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -254,13 +255,13 @@ export const DoctorCarePlanPage: React.FC = () => {
             </Card>
           ) : (
             <Card>
-              <h2 className="text-[13px] font-semibold text-ink">No approved plan</h2>
+              <h2 className="text-[14px] font-semibold text-ink">No approved plan</h2>
               <p className="mt-2 text-xs leading-4 text-muted">Select next steps and save to create the first clinician-approved plan for this patient.</p>
             </Card>
           )}
 
           <Card>
-            <h2 className="flex items-center gap-1.5 text-[13px] font-semibold text-ink"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Safeguards</h2>
+            <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Safeguards</h2>
             <ul className="mt-2 space-y-1.5 text-xs leading-4 text-body">
               <li>• Recommendations are discussion prompts, not orders.</li>
               <li>• Screening results cannot establish a diagnosis.</li>
@@ -358,7 +359,7 @@ const ReferralWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) => {
       <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
         <Card padded={false}>
           <div className="border-b border-line px-4 py-3.5">
-            <h2 className="text-[13px] font-semibold text-ink">Referral records</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Referral records</h2>
             <p className="mt-0.5 text-xs text-muted">Status tracks the referral through your local workflow.</p>
           </div>
           {visibleReferrals.length === 0 ? (
@@ -373,7 +374,7 @@ const ReferralWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) => {
                   <li key={referral.id} className="p-4">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="text-[12px] font-semibold text-ink">
+                        <p className="text-[14px] font-semibold text-ink">
                           {referralTypes.find((item) => item.value === referral.type)?.label || referral.type} · {referral.destination}
                         </p>
                         <p className="mt-0.5 text-xs text-muted">
@@ -401,7 +402,7 @@ const ReferralWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) => {
         </Card>
 
         <Card>
-          <h2 className="text-[13px] font-semibold text-ink">New referral</h2>
+          <h2 className="text-[14px] font-semibold text-ink">New referral</h2>
           <p className="mt-0.5 text-xs leading-4 text-muted">Only the reason and destination are shared with the receiving service after you mark it sent.</p>
           <form onSubmit={handleSubmit} className="mt-3 space-y-3">
             {!patientId && (
@@ -439,7 +440,7 @@ const ReferralWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) => {
           </form>
           {latest && (
             <p className="mt-3 rounded-lg bg-warm p-2.5 text-xs leading-4 text-muted">
-              Latest assessment {formatDate(latest.date)} · {Math.round(latest.overallScore)} / 100. Include quality limits in the referral reason where relevant.
+              Latest assessment {formatDate(latest.date)} · {formatScore(latest.overallScore)}. Include quality limits in the referral reason where relevant.
             </p>
           )}
         </Card>
@@ -451,8 +452,8 @@ const ReferralWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) => {
 export const DoctorPatientReferralsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { patient, isLoading } = useDoctorPatient(id);
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading referrals…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading referrals…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
   return (
     <div className="space-y-5">
       <BackToPatient patientId={patient.patientId} />
@@ -486,7 +487,7 @@ export const DoctorReferralManagementPage: React.FC = () => {
       </div>
       <ReferralWorkspace />
       <Card>
-        <h2 className="text-[12px] font-semibold text-ink">Patients in your panel</h2>
+        <h2 className="text-[14px] font-semibold text-ink">Patients in your panel</h2>
         <p className="mt-1 text-xs text-muted">{registeredPatients.length} locally registered. Referral creation currently supports locally registered patients in this workspace.</p>
       </Card>
     </div>
@@ -574,7 +575,7 @@ const AppointmentWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) =
         <Card padded={false}>
           <div className="flex flex-col gap-2 border-b border-line px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-[13px] font-semibold text-ink">Appointments & follow-ups</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Appointments & follow-ups</h2>
               <p className="mt-0.5 text-xs text-muted">Scheduled reviews, repeat assessments, and communication history.</p>
             </div>
             <div className="flex rounded-lg border border-line bg-warm p-0.5">
@@ -598,7 +599,7 @@ const AppointmentWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) =
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <p className="text-[12px] font-semibold text-ink">{appointment.title}</p>
+                          <p className="text-[14px] font-semibold text-ink">{appointment.title}</p>
                           <Pill tone={appointment.status === 'UPCOMING' ? 'blue' : appointment.status === 'COMPLETED' ? 'green' : 'slate'}>{appointment.status.toLowerCase()}</Pill>
                           {appointment.type === 'REPEAT_ASSESSMENT' && <Pill tone="amber">repeat screen</Pill>}
                         </div>
@@ -623,7 +624,7 @@ const AppointmentWorkspace: React.FC<{ patientId?: string }> = ({ patientId }) =
         </Card>
 
         <Card>
-          <h2 className="text-[13px] font-semibold text-ink">Schedule a follow-up</h2>
+          <h2 className="text-[14px] font-semibold text-ink">Schedule a follow-up</h2>
           <form onSubmit={handleSubmit} className="mt-3 space-y-3">
             {!patientId && (
               <div>
@@ -699,7 +700,7 @@ export const DoctorAppointmentsPage: React.FC = () => (
     </MotionReveal>
     <AppointmentWorkspace />
     <Card>
-      <h2 className="flex items-center gap-1.5 text-[12px] font-semibold text-ink"><Mail className="h-3.5 w-3.5 text-blue-700" /> Communication note</h2>
+      <h2 className="flex items-center gap-1.5 text-[14px] font-semibold text-ink"><Mail className="h-3.5 w-3.5 text-blue-700" /> Communication note</h2>
       <p className="mt-1 text-xs leading-5 text-muted">
         Reminder details are recorded with the appointment. Actual delivery depends on the patient’s verified contact preferences and is not simulated in this workspace.
       </p>
@@ -710,8 +711,8 @@ export const DoctorAppointmentsPage: React.FC = () => (
 export const DoctorPatientAppointmentsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { patient, isLoading } = useDoctorPatient(id);
-  if (isLoading) return <div className="p-12 text-center text-[12px] text-muted">Loading appointments…</div>;
-  if (!patient) return <div className="p-12 text-center text-[12px] text-muted">Patient not found.</div>;
+  if (isLoading) return <div className="p-12 text-center text-[14px] text-muted">Loading appointments…</div>;
+  if (!patient) return <div className="p-12 text-center text-[14px] text-muted">Patient not found.</div>;
   return (
     <div className="space-y-5">
       <BackToPatient patientId={patient.patientId} />

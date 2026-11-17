@@ -78,7 +78,7 @@ export const CognitiveSummary: React.FC<{
 
         <Card>
           <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-sage-deep">Descriptive results</h2>
-          <p className="mt-1 text-[11px] leading-5 text-muted">
+          <p className="mt-1 text-[13px] leading-5 text-muted">
             These numbers describe what was captured. They are not a clinical score, a diagnosis or a risk category.
           </p>
           <div className="mt-2 space-y-2">
@@ -105,9 +105,9 @@ export const CognitiveSummary: React.FC<{
           </div>
           {session.confounders.length > 0 && (
             <div className="mt-3 space-y-1.5">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-sage-deep">Interpretation context</p>
+              <p className="text-[13px] font-bold uppercase tracking-wide text-sage-deep">Interpretation context</p>
               {session.confounders.map((item) => (
-                <p key={item.code} className="text-[11px] leading-5 text-muted">{item.label}: {item.detail}</p>
+                <p key={item.code} className="text-[13px] leading-5 text-muted">{item.label}: {item.detail}</p>
               ))}
             </div>
           )}
@@ -129,7 +129,7 @@ export const CognitiveSummary: React.FC<{
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[540px] text-left text-xs">
             <thead>
-              <tr className="border-b border-line text-[10px] uppercase tracking-wide text-sage-deep">
+              <tr className="border-b border-line text-[12px] uppercase tracking-wide text-sage-deep">
                 <th className="py-2 pr-3">Activity</th>
                 <th className="px-3 py-2">Domain</th>
                 <th className="px-3 py-2">Form / level</th>
@@ -159,7 +159,7 @@ export const CognitiveSummary: React.FC<{
           </table>
         </div>
         {!showAll && session.tasks.length > 4 && (
-          <p className="mt-2 text-[11px] text-muted">Showing the first four activities. Open task-level detail for the full session.</p>
+          <p className="mt-2 text-[13px] text-muted">Showing the first four activities. Open task-level detail for the full session.</p>
         )}
       </Card>
 
@@ -188,7 +188,7 @@ export const CognitiveSummary: React.FC<{
             <p className="flex items-center gap-1.5 text-xs font-bold text-ink">
               <ShieldCheck className="h-3.5 w-3.5 text-forest" /> Not a diagnosis
             </p>
-            <p className="mt-1 text-[11px] leading-5 text-muted">
+            <p className="mt-1 text-[13px] leading-5 text-muted">
               {LIBRARY_NOTICE}
             </p>
           </div>
@@ -211,7 +211,7 @@ export const CognitiveSummary: React.FC<{
               <ClipboardList className="h-4 w-4" /> Assessment history
             </Link>
           </div>
-          <div className="mt-3 rounded-xl border border-mint bg-mint/50 p-3 text-[11px] leading-5 text-forest">
+          <div className="mt-3 rounded-xl border border-mint bg-mint/50 p-3 text-[13px] leading-5 text-forest">
             Standardized and exploratory sessions are stored separately and are never merged into one score.
           </div>
         </Card>
@@ -241,7 +241,7 @@ export const CognitiveSummary: React.FC<{
         </Link>
       </div>
 
-      <p className="flex items-start gap-1.5 text-[11px] leading-5 text-muted">
+      <p className="flex items-start gap-1.5 text-[13px] leading-5 text-muted">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         Records carry a timestamp, task identifiers, task versions, assessment mode and administration conditions. Clinician review is required before any clinical interpretation.
       </p>

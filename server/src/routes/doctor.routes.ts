@@ -28,6 +28,8 @@ router.get('/appointments', clinicianGuard, AppointmentController.listAll);
 router.post('/patients/:id/appointments', clinicianGuard, AppointmentController.createForPatient);
 router.patch('/appointments/:id', clinicianGuard, AppointmentController.update);
 router.get('/platform-insights', clinicianGuard, PlatformController.getInsights);
+router.get('/assessment-language-readiness', clinicianGuard, DoctorController.getAssessmentLanguageReadiness);
+router.post('/assessment-language-readiness/sign-off', clinicianGuard, DoctorController.recordLanguageSignOff);
 
 // Cognitive assessment management: task library, recorded sessions and
 // clinician approval of a patient's assessment plan.

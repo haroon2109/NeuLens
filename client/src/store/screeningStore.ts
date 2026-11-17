@@ -15,44 +15,63 @@ export type ScreeningStep =
   | 'submitting'
   | 'results';
 
+/**
+ * Every score is nullable by design.
+ *
+ * A task that was skipped, interrupted or failed to record produces `null`, not
+ * a placeholder. A composite is only computed when every contributing domain has
+ * a real recorded value, so a partially completed battery is recorded as
+ * non-interpretable instead of looking like an average performance.
+ */
 export interface CognitiveScores {
-  memoryScore: number;
-  attentionScore: number;
-  visuospatialScore: number;
-  executiveScore: number;
-  compositeScore: number;
-  game1Score: number; // Focus Orbit (dot tracking)
-  game2Score: number; // Cortex Match (memory match)
-  game3Score: number; // Vocal Echo (voice repeat)
-  game4Score: number; // Mimic Sync (facial tasks)
-  game5Score: number; // Path Mapper (trail making)
-  game6Score: number; // Piano Sequence (fixed observation)
+  memoryScore: number | null;
+  attentionScore: number | null;
+  visuospatialScore: number | null;
+  executiveScore: number | null;
+  compositeScore: number | null;
+  game1Score: number | null; // Focus Orbit (dot tracking)
+  game2Score: number | null; // Cortex Match (memory match)
+  game3Score: number | null; // Vocal Echo (voice repeat)
+  game4Score: number | null; // Mimic Sync (facial tasks)
+  game5Score: number | null; // Path Mapper (trail making)
+  game6Score: number | null; // Piano Sequence (fixed observation)
 }
 
 export interface BiometricMetrics {
   eye: {
     reactionTimes: number[];
-    fixationStability: number;
-    blinkCount: number;
-    avgEAR: number;
-    trackingAccuracy: number;
+    fixationStability: number | null;
+    blinkCount: number | null;
+    avgEAR: number | null;
+    trackingAccuracy: number | null;
   };
   face: {
-    smileIntensity: number;
-    jawOpening: number;
-    eyebrowsRaising: number;
-    stability: number;
-    headPose: { yaw: number; pitch: number; roll: number };
+    smileIntensity: number | null;
+    jawOpening: number | null;
+    eyebrowsRaising: number | null;
+    stability: number | null;
+    headPose: { yaw: number; pitch: number; roll: number } | null;
   };
   speech: {
-    speechRate: number;
-    pitch: number;
-    jitter: number;
-    shimmer: number;
-    pauseCount: number;
-    mfcc: number[];
-    duration: number;
+    speechRate: number | null;
+    pitch: number | null;
+    jitter: number | null;
+    shimmer: number | null;
+    pauseCount: number | null;
+    mfcc: number[] | null;
+    duration: number | null;
   };
+}
+
+/**
+ * What the participant chose on the language screen, including whether they were
+ * told that task wording in that language is still under review. It survives a
+ * session reset: re-answering a battery does not un-tell them.
+ */
+export interface LanguagePreference {
+  language: string;
+  acknowledged: boolean;
+  acknowledgedAt: string | null;
 }
 
 interface ScreeningState {
@@ -61,27 +80,43 @@ interface ScreeningState {
   scores: CognitiveScores;
   biometricMetrics: BiometricMetrics | null;
   isSubmitting: boolean;
-  
+  languagePreference: LanguagePreference | null;
+
   setStep: (step: ScreeningStep) => void;
   saveResponse: (domain: string, data: any) => void;
   setScores: (scores: CognitiveScores) => void;
   setSubmitting: (submitting: boolean) => void;
+  setLanguagePreference: (preference: LanguagePreference | null) => void;
   resetSession: () => void;
   calculateFinalScores: () => void;
 }
 
+// No task has been performed yet, so no score exists. Zero would be a claim.
 const initialScores: CognitiveScores = {
-  memoryScore: 0,
-  attentionScore: 0,
-  visuospatialScore: 0,
-  executiveScore: 0,
-  compositeScore: 0,
-  game1Score: 0,
-  game2Score: 0,
-  game3Score: 0,
-  game4Score: 0,
-  game5Score: 0,
-  game6Score: 0
+  memoryScore: null,
+  attentionScore: null,
+  visuospatialScore: null,
+  executiveScore: null,
+  compositeScore: null,
+  game1Score: null,
+  game2Score: null,
+  game3Score: null,
+  game4Score: null,
+  game5Score: null,
+  game6Score: null
+};
+
+/** Only a recorded finite number is a measurement. Anything else is absent. */
+const recordedNumber = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null;
+
+const recordedArray = (value: unknown): number[] => (Array.isArray(value) ? value : []);
+
+/** Mean of recorded values, or null if any contributing value is missing. */
+const meanIfComplete = (...values: Array<number | null>): number | null => {
+  if (values.some(value => value === null)) return null;
+  const total = values.reduce<number>((sum, value) => sum + (value as number), 0);
+  return Math.round(total / values.length);
 };
 
 export const useScreeningStore = create<ScreeningState>((set, get) => ({
@@ -90,6 +125,7 @@ export const useScreeningStore = create<ScreeningState>((set, get) => ({
   scores: initialScores,
   biometricMetrics: null,
   isSubmitting: false,
+  languagePreference: null,
 
   setStep: (step: ScreeningStep) => set({ currentStep: step }),
 
@@ -106,6 +142,10 @@ export const useScreeningStore = create<ScreeningState>((set, get) => ({
 
   setSubmitting: (submitting: boolean) => set({ isSubmitting: submitting }),
 
+  setLanguagePreference: (preference: LanguagePreference | null) => set({ languagePreference: preference }),
+
+  // `languagePreference` deliberately survives: restarting the battery does not
+  // undo the fact that the participant was told the wording is unverified.
   resetSession: () => set({
     currentStep: 'language-select',
     rawResponses: {},
@@ -118,46 +158,49 @@ export const useScreeningStore = create<ScreeningState>((set, get) => ({
     const { rawResponses } = get();
 
     // Fixed-observation clinical activities only. Adaptive practice is explicitly excluded.
-    const g1Score = rawResponses.game1?.score ?? 85;
-    const g2Score = rawResponses.game2?.score ?? 90;
-    const g3Score = rawResponses.game3?.score ?? 80;
-    const g4Score = rawResponses.game4?.score ?? 85;
-    const g5Score = rawResponses.game5?.score ?? 78;
-    const g6Score = rawResponses.pianoSequence?.score ?? rawResponses.game6?.score ?? 80;
+    // A missing task yields null — it is never replaced with a plausible "normal" value.
+    const g1Score = recordedNumber(rawResponses.game1?.score);
+    const g2Score = recordedNumber(rawResponses.game2?.score);
+    const g3Score = recordedNumber(rawResponses.game3?.score);
+    const g4Score = recordedNumber(rawResponses.game4?.score);
+    const g5Score = recordedNumber(rawResponses.game5?.score);
+    const g6Score = recordedNumber(rawResponses.pianoSequence?.score)
+      ?? recordedNumber(rawResponses.game6?.score);
 
     // Map fixed-observation tasks into cognitive domains (standardized observation, not adaptive practice):
-    const memory = Math.round((g2Score + g6Score) / 2); // Cortex Match + Piano Sequence (sequencing/recall)
-    const attention = Math.round((g1Score + g4Score) / 2); // Dot follow + gesture sync
+    const memory = meanIfComplete(g2Score, g6Score); // Cortex Match + Piano Sequence (sequencing/recall)
+    const attention = meanIfComplete(g1Score, g4Score); // Dot follow + gesture sync
     const spatial = g5Score; // Trail tracing maps visuospatial orientation
-    const executive = Math.round((g5Score + g2Score + g6Score) / 3); // Planning/flexibility/sequencing signals
+    const executive = meanIfComplete(g5Score, g2Score, g6Score); // Planning/flexibility/sequencing signals
 
-    const composite = Math.round((memory + attention + spatial + executive) / 4);
+    // The composite requires all four domains. Anything less is not interpretable.
+    const composite = meanIfComplete(memory, attention, spatial, executive);
 
-    // Extract connected Biometric Metrics (from recorded fixed-observation activities)
+    // Biometric measurements are passed through exactly as recorded.
     const eye = {
-      reactionTimes: rawResponses.game1?.reactionTimes || [],
-      fixationStability: rawResponses.game1?.fixationStability || 85,
-      blinkCount: rawResponses.game1?.blinkCount || 0,
-      avgEAR: rawResponses.game1?.avgEAR || 0.28,
-      trackingAccuracy: rawResponses.game1?.trackingAccuracy || 85
+      reactionTimes: recordedArray(rawResponses.game1?.reactionTimes),
+      fixationStability: recordedNumber(rawResponses.game1?.fixationStability),
+      blinkCount: recordedNumber(rawResponses.game1?.blinkCount),
+      avgEAR: recordedNumber(rawResponses.game1?.avgEAR),
+      trackingAccuracy: recordedNumber(rawResponses.game1?.trackingAccuracy)
     };
 
     const face = {
-      smileIntensity: rawResponses.game4?.smileIntensity || 0,
-      jawOpening: rawResponses.game4?.jawOpening || 0,
-      eyebrowsRaising: rawResponses.game4?.eyebrowsRaising || 0,
-      stability: rawResponses.game4?.stability || 90,
-      headPose: rawResponses.game4?.headPose || { yaw: 0, pitch: 0, roll: 0 }
+      smileIntensity: recordedNumber(rawResponses.game4?.smileIntensity),
+      jawOpening: recordedNumber(rawResponses.game4?.jawOpening),
+      eyebrowsRaising: recordedNumber(rawResponses.game4?.eyebrowsRaising),
+      stability: recordedNumber(rawResponses.game4?.stability),
+      headPose: rawResponses.game4?.headPose ?? null
     };
 
     const speech = {
-      speechRate: rawResponses.game3?.speechRate || 140,
-      pitch: rawResponses.game3?.pitch || 120,
-      jitter: rawResponses.game3?.jitter || 0.12,
-      shimmer: rawResponses.game3?.shimmer || 1.1,
-      pauseCount: rawResponses.game3?.pauseCount || 2,
-      mfcc: rawResponses.game3?.mfcc || [48.1, -12.4, 33.9, 10.2],
-      duration: rawResponses.game3?.duration || 4.5
+      speechRate: recordedNumber(rawResponses.game3?.speechRate),
+      pitch: recordedNumber(rawResponses.game3?.pitch),
+      jitter: recordedNumber(rawResponses.game3?.jitter),
+      shimmer: recordedNumber(rawResponses.game3?.shimmer),
+      pauseCount: recordedNumber(rawResponses.game3?.pauseCount),
+      mfcc: Array.isArray(rawResponses.game3?.mfcc) ? rawResponses.game3.mfcc : null,
+      duration: recordedNumber(rawResponses.game3?.duration)
     };
 
     set({

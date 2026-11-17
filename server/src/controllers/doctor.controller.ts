@@ -5,15 +5,63 @@ import { HospitalDataStore } from '../models/dataStore';
 import { loginSchema, doctorCarePlanSchema, doctorReviewSchema } from '../validation/schemas';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { summarizePatientChanges } from '../services/changeMonitor';
+import { describeExternalHistory, summarizeExternalAnchor } from '../services/externalInstruments';
 import { auditFromRequest, requestIp } from '../services/audit';
 import { clearAttempts, consumeAttempt } from '../services/loginThrottle';
 import { getJwtSecret } from '../config/jwt';
+import { getAssessmentLanguageReadiness, recordLanguageSignOff } from '../services/assessmentLanguageReadiness';
+import type { ReadinessStageKey } from '../services/assessmentLanguageReadiness';
 import { setSessionCookie, SESSION_MAX_AGE_MS } from '../services/sessionCookie';
+import { isDemoUserId } from '../services/demoRecords';
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS_PER_EMAIL = 10;
 const LOGIN_MAX_ATTEMPTS_PER_IP = 30;
 
 export class DoctorController {
+  /**
+   * GET /api/v1/doctor/assessment-language-readiness
+   * Per-language readiness for administering the assessment tasks.
+   */
+  public static async getAssessmentLanguageReadiness(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user || (req.user.role !== 'CLINICIAN' && req.user.role !== 'ADMIN')) {
+        return res.status(403).json({ error: 'Clinician access required' });
+      }
+      return res.status(200).json(getAssessmentLanguageReadiness());
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/v1/doctor/assessment-language-readiness/sign-off
+   * Clinician records a back-translation / pretesting / clinical-review sign-off.
+   */
+  public static async recordLanguageSignOff(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user || (req.user.role !== 'CLINICIAN' && req.user.role !== 'ADMIN')) {
+        return res.status(403).json({ error: 'Clinician access required' });
+      }
+      const { language, stage, status, notes } = req.body || {};
+      if (typeof language !== 'string' || typeof stage !== 'string') {
+        return res.status(400).json({ error: 'language and stage are required' });
+      }
+      const record = recordLanguageSignOff({
+        language,
+        stage: stage as ReadinessStageKey,
+        status,
+        reviewer: req.user.email,
+        notes: typeof notes === 'string' ? notes : undefined
+      });
+      if (!record) {
+        return res.status(400).json({ error: 'Unknown language or stage' });
+      }
+      return res.status(201).json({ signOff: record, readiness: getAssessmentLanguageReadiness() });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   /**
    * POST /api/v1/doctor/login
    * Doctor / Clinician Authentication.
@@ -102,7 +150,11 @@ export class DoctorController {
         return res.status(403).json({ error: 'Clinician access required' });
       }
 
-      const stats = await HospitalDataStore.getDoctorDashboardStats();
+      // Demo records are invented, so they are only counted inside the demo
+      // workspace — never in a real clinician's patient and quality figures.
+      const stats = await HospitalDataStore.getDoctorDashboardStats({
+        includeDemo: isDemoUserId(req.user.id)
+      });
       return res.status(200).json({
         success: true,
         stats
@@ -123,9 +175,14 @@ export class DoctorController {
       }
 
       const query = (req.query.q as string) || '';
-      const risk = (req.query.risk as string) || 'ALL';
+      // Administrative review filter — never a risk tier.
+      const reviewFilter = (req.query.reviewState as string)
+        || (req.query.review as string)
+        || 'ALL';
 
-      const patients = await HospitalDataStore.listPatients(query, risk);
+      const patients = await HospitalDataStore.listPatients(query, reviewFilter, {
+        includeDemo: isDemoUserId(req.user.id)
+      });
       return res.status(200).json({
         success: true,
         count: patients.length,
@@ -155,6 +212,14 @@ export class DoctorController {
 
       const { passwordHash: _, ...patientProfile } = data.patient;
       const referrals = await HospitalDataStore.listReferrals(data.patient.id);
+      const externalInstrumentRecords = await HospitalDataStore.listExternalInstruments(data.patient.id);
+
+      // Patient-shared context (including family history and optional genomic
+      // context) is returned only with the consent recorded alongside it. A
+      // genomic input without explicit consent is dropped rather than shown.
+      const contextInputs = (await HospitalDataStore.getContextInputs(data.patient.id)).filter(
+        (input) => input.source !== 'genomic' || input.consentGranted
+      );
 
       await auditFromRequest(req, {
         actorId: req.user.id,
@@ -170,7 +235,10 @@ export class DoctorController {
         patient: patientProfile,
         assessments: data.assessments,
         changeSummary: summarizePatientChanges(data.assessments),
-        referrals
+        contextInputs,
+        referrals,
+        externalInstruments: describeExternalHistory(externalInstrumentRecords),
+        externalAnchor: summarizeExternalAnchor(externalInstrumentRecords)
       });
     } catch (err) {
       next(err);

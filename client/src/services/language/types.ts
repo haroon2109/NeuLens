@@ -1,4 +1,4 @@
-export type SupportedLanguage = 'en' | 'ta' | 'hi' | 'te' | 'ml' | 'kn';
+export type SupportedLanguage = 'en' | 'ar' | 'ta' | 'hi' | 'te' | 'ml' | 'kn';
 
 export interface LanguageInfo {
   id: SupportedLanguage;
@@ -7,6 +7,14 @@ export interface LanguageInfo {
   script: string;
   flag: string;
   bcp47: string;
+  /** Writing direction for this language. Defaults to ltr when absent. */
+  dir?: 'ltr' | 'rtl';
+  /**
+   * Whether spoken instructions are currently available from the configured
+   * speech provider. Arabic on-screen text is available; spoken Arabic is
+   * marked pending until an Arabic voice is configured and reviewed.
+   */
+  speechAvailable?: boolean;
   sampleGreeting: string;
   repeatKeywords: string[];
   helpKeywords: string[];

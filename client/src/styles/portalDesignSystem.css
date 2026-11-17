@@ -6,19 +6,19 @@
    followed by generic dashboards.
 
    Palette (mirrors landing page):
-     forest  — primary action, headings-on-dark        #2f5e4e
-     forest-deep — hover / darker variant              #24493d
-     sage           — secondary ink, eyebrows          #a9c7b6
-     sage-dark      — deeper sage                      #7fa692
-     sage-deep      — strongest sage, icon tint        #46715e
-     mint           — tinted surface                   #dff3ea
-     warm           — page background                  #fbf7ef
-     white          — card surface                     #ffffff
-     ink            — deep charcoal text               #1b332b
-     body           — secondary text                   #4e5f58
-     muted          — tertiary text                    #63716b
-     line           — default border                   #e2e7df
-     line-strong    — stronger border                  #cfd8ce
+     forest  — primary action, headings-on-dark        var(--nl-forest)
+     forest-deep — hover / darker variant              var(--nl-forest-deep)
+     sage           — secondary ink, eyebrows          var(--nl-sage)
+     sage-dark      — deeper sage                      var(--nl-sage-dark)
+     sage-deep      — strongest sage, icon tint        var(--nl-sage-deep)
+     mint           — tinted surface                   var(--nl-mint)
+     warm           — page background                  var(--nl-warm)
+     white          — card surface                     var(--nl-white)
+     ink            — deep charcoal text               var(--nl-ink)
+     body           — secondary text                   var(--nl-body)
+     muted          — tertiary text                    var(--nl-muted)
+     line           — default border                   var(--nl-line)
+     line-strong    — stronger border                  var(--nl-line-strong)
 
    Type scale (Manrope only, same as landing page):
      pp-display  — hero heading
@@ -43,19 +43,21 @@
 */
 
 :root {
-  --pp-forest: #2f5e4e;
-  --pp-forest-deep: #24493d;
-  --pp-sage: #a9c7b6;
-  --pp-sage-dark: #7fa692;
-  --pp-sage-deep: #46715e;
-  --pp-mint: #dff3ea;
-  --pp-warm: #fbf7ef;
-  --pp-white: #ffffff;
-  --pp-ink: #1b332b;
-  --pp-body: #4e5f58;
-  --pp-muted: #63716b;
-  --pp-line: #e2e7df;
-  --pp-line-strong: #cfd8ce;
+  /* Palette aliases only: the values live in tokens.css. These names exist so
+     the pp-* component classes below stay readable. */
+  --pp-forest: var(--nl-forest);
+  --pp-forest-deep: var(--nl-forest-deep);
+  --pp-sage: var(--nl-sage);
+  --pp-sage-dark: var(--nl-sage-dark);
+  --pp-sage-deep: var(--nl-sage-deep);
+  --pp-mint: var(--nl-mint);
+  --pp-warm: var(--nl-warm);
+  --pp-white: var(--nl-white);
+  --pp-ink: var(--nl-ink);
+  --pp-body: var(--nl-body);
+  --pp-muted: var(--nl-muted);
+  --pp-line: var(--nl-line);
+  --pp-line-strong: var(--nl-line-strong);
 
   --pp-radius-sm: 0.65rem;
   --pp-radius: 0.85rem;
@@ -217,7 +219,7 @@
 
 .patient-portal .pp-caption,
 .doctor-portal .pp-caption {
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.5;
   letter-spacing: 0.14em;
@@ -230,7 +232,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.5;
   letter-spacing: 0.14em;
@@ -333,7 +335,8 @@
 
 .patient-portal .pp-btn-sm,
 .doctor-portal .pp-btn-sm {
-  min-height: 2.7rem;
+  /* 2.8rem keeps the small size above the 44px touch target. */
+  min-height: 2.8rem;
   padding: 0.6rem 1.05rem;
   font-size: 0.875rem;
 }
@@ -410,14 +413,14 @@
 
 .patient-portal .pp-btn-danger,
 .doctor-portal .pp-btn-danger {
-  background-color: #b42332;
-  border-color: #b42332;
+  background-color: var(--nl-rose);
+  border-color: var(--nl-rose);
   color: white;
 }
 
 .patient-portal .pp-btn-danger:hover,
 .doctor-portal .pp-btn-danger:hover {
-  background-color: #9a1d2a;
+  background-color: var(--nl-error-deep);
 }
 
 .patient-portal .pp-btn:disabled,
@@ -444,7 +447,7 @@
   border-radius: 999px;
   background-color: var(--pp-white);
   color: var(--pp-body);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.3;
 }
@@ -494,7 +497,7 @@
 
 .patient-portal .pp-status-dot.warning,
 .doctor-portal .pp-status-dot.warning {
-  background-color: #d97706;
+  background-color: var(--nl-warning);
   box-shadow: 0 0 8px rgba(217, 119, 6, 0.45);
 }
 
@@ -505,7 +508,7 @@
 
 .patient-portal .pp-status-dot.pending,
 .doctor-portal .pp-status-dot.pending {
-  background-color: #f0dfbe;
+  background-color: var(--nl-warning-border);
   box-shadow: 0 0 8px rgba(160, 108, 66, 0.35);
 }
 
@@ -528,7 +531,7 @@
 
 .patient-portal .pp-input::placeholder,
 .doctor-portal .pp-input::placeholder {
-  color: #66736d;
+  color: var(--nl-placeholder);
 }
 
 .patient-portal .pp-input:focus,
@@ -541,7 +544,7 @@
 
 .patient-portal .pp-input[aria-invalid="true"],
 .doctor-portal .pp-input[aria-invalid="true"] {
-  border-color: #b42332;
+  border-color: var(--nl-rose);
 }
 
 .patient-portal .pp-input-lg,
@@ -556,7 +559,7 @@
   display: block;
   margin-bottom: 0.45rem;
   color: var(--pp-ink);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -568,7 +571,7 @@
   gap: 0.4rem;
   margin-top: 0.5rem;
   color: var(--pp-muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.55;
 }
 
@@ -576,8 +579,8 @@
 .doctor-portal .pp-field-error {
   display: block;
   margin-top: 0.45rem;
-  color: #b42332;
-  font-size: 0.75rem;
+  color: var(--nl-rose);
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.5;
 }
@@ -660,7 +663,7 @@
   border-bottom: 1px solid var(--pp-line);
   background-color: var(--pp-warm);
   color: var(--pp-sage-deep);
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -707,7 +710,7 @@
   border-radius: var(--pp-radius-lg);
   background-color: var(--pp-mint);
   color: var(--pp-forest);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 
@@ -732,14 +735,14 @@
 
 .patient-portal .pp-warning,
 .doctor-portal .pp-warning {
-  background-color: #fffaf1;
-  border-color: #f0dfbe;
-  color: #7a5224;
+  background-color: var(--nl-warning-surface);
+  border-color: var(--nl-warning-border);
+  color: var(--nl-warning-text);
 }
 
 .patient-portal .pp-warning svg,
 .doctor-portal .pp-warning svg {
-  color: #a06c42;
+  color: var(--nl-clay-deep);
 }
 
 .patient-portal .pp-error,
@@ -748,11 +751,11 @@
   align-items: flex-start;
   gap: 0.7rem;
   padding: 0.9rem 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--nl-error-border);
   border-radius: var(--pp-radius-lg);
-  background-color: #fff7f7;
-  color: #b42332;
-  font-size: 0.8rem;
+  background-color: var(--nl-error-surface);
+  color: var(--nl-rose);
+  font-size: 0.8125rem;
   line-height: 1.5;
 }
 
@@ -760,7 +763,7 @@
 .doctor-portal .pp-error svg {
   flex: none;
   margin-top: 0.06rem;
-  color: #b42332;
+  color: var(--nl-rose);
 }
 
 .patient-portal .pp-success,
@@ -769,11 +772,11 @@
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.85rem 0.95rem;
-  border: 1px solid #c8ecd9;
+  border: 1px solid var(--nl-success-border);
   border-radius: var(--pp-radius-lg);
-  background-color: #f3fcf7;
-  color: #166b47;
-  font-size: 0.8rem;
+  background-color: var(--nl-success-surface);
+  color: var(--nl-success-text);
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 
@@ -781,7 +784,7 @@
 .doctor-portal .pp-success svg {
   flex: none;
   margin-top: 0.08rem;
-  color: #166b47;
+  color: var(--nl-success-text);
 }
 
 /* ── Two-column and grid helpers ───────────────────────────────────────────── */
@@ -1018,37 +1021,58 @@
   outline-color: white;
 }
 
-/* ── Motion: page enter transition ─────────────────────────────────────────── */
-/* Every clinician screen shares one calm entrance; individual pages do not
-   need to opt in. Patient screens use MotionReveal for staggered sections. */
+/* ── Motion ───────────────────────────────────────────────────────────────── */
+/* Durations mirror MOTION in components/motion/Reveal.tsx. Entrances are
+   deliberately short: a page that takes half a second to appear is a page that
+   is slower than the one without animation. */
 .doctor-portal #doctor-main > * {
-  animation: pp-page-appear 420ms ease-out both;
+  animation: pp-page-appear 180ms ease-out both;
 }
 
 .patient-portal .pp-page-enter,
 .doctor-portal .pp-page-enter {
-  animation: pp-page-appear 450ms ease-out both;
+  animation: pp-page-appear 180ms ease-out both;
 }
 
 .patient-portal .pp-page-enter-delay-1,
 .doctor-portal .pp-page-enter-delay-1 {
-  animation-delay: 70ms;
+  animation-delay: 30ms;
 }
 
 .patient-portal .pp-page-enter-delay-2,
 .doctor-portal .pp-page-enter-delay-2 {
-  animation-delay: 150ms;
+  animation-delay: 60ms;
 }
 
 .patient-portal .pp-page-enter-delay-3,
 .doctor-portal .pp-page-enter-delay-3 {
-  animation-delay: 240ms;
+  animation-delay: 90ms;
 }
 
 @keyframes pp-page-appear {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Content that appears in place — a disclosure body. Short fade only, and it is
+   scoped to the open state so it replays each time the disclosure is opened
+   rather than only on first paint. The height change itself stays instant so
+   the page keeps up with the tap. */
+.patient-portal details[open] > .pp-swap-enter,
+.doctor-portal details[open] > .pp-swap-enter {
+  animation: pp-swap-appear 180ms ease-out both;
+}
+
+@keyframes pp-swap-appear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -1064,7 +1088,9 @@
   }
 
   .patient-portal .pp-page-enter,
-  .doctor-portal .pp-page-enter {
+  .doctor-portal .pp-page-enter,
+  .patient-portal .pp-swap-enter,
+  .doctor-portal .pp-swap-enter {
     animation: none !important;
     transform: none !important;
   }
@@ -1096,14 +1122,14 @@
 /* ── High contrast mode (portal pages) ────────────────────────────────────── */
 .patient-portal.patient-contrast,
 .doctor-portal.patient-contrast {
-  --pp-ink: #132520;
-  --pp-body: #2a3d35;
-  --pp-muted: #46715e;
-  --pp-line: #63716b;
-  --pp-line-strong: #2a3d35;
-  --pp-sage-deep: #24493d;
-  --pp-forest: #142a23;
-  --pp-forest-deep: #0e1d19;
+  --pp-ink: var(--nl-ink-950);
+  --pp-body: var(--nl-sand-800);
+  --pp-muted: var(--nl-sage-deep);
+  --pp-line: var(--nl-muted);
+  --pp-line-strong: var(--nl-sand-800);
+  --pp-sage-deep: var(--nl-forest-deep);
+  --pp-forest: var(--nl-forest-950);
+  --pp-forest-deep: var(--nl-scrim);
 }
 
 .patient-portal.patient-contrast .pp-input,

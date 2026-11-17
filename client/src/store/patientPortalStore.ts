@@ -69,6 +69,13 @@ interface PatientPortalState {
     familyHistory: string;
     previousAssessments: string;
     lifestyleNotes: string;
+    /**
+     * Optional, consent-gated genomic context supplied by the patient.
+     * NeuLens stores what was shared for clinician context only. It does not
+     * interpret variants, calculate genetic risk, or change any score.
+     */
+    genomicConsent: boolean;
+    genomicSummary: string;
   };
   consent: ConsentState;
   accessibility: {
@@ -161,7 +168,9 @@ export const usePatientPortalStore = create<PatientPortalState>()(
         sensory: [],
         familyHistory: '',
         previousAssessments: 'No previous assessments',
-        lifestyleNotes: ''
+        lifestyleNotes: '',
+        genomicConsent: false,
+        genomicSummary: ''
       },
       consent: {
         dataCollection: false,

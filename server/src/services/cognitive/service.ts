@@ -40,6 +40,13 @@ const sessionCache = new Map<string, ReturnType<typeof buildSessionRecord>>();
 /** Latest generated plan per patient, so a clinician can review the same plan. */
 const latestPlans = new Map<string, AssessmentPlan>();
 
+/** A count the session actually recorded, or null when it was not supplied. */
+const toRecordedCount = (value: unknown): number | null => {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed) : null;
+};
+
 const MODES: AssessmentMode[] = ['STANDARDIZED', 'EXPLORATORY'];
 
 export class CognitiveAssessmentService {
@@ -203,10 +210,19 @@ export class CognitiveAssessmentService {
         cognitiveSession: session,
         cognitiveSummary,
         assessmentConditions: {
-          interruptions: Number(body.interruptions) || 0,
-          breaksTaken: Number(body.breaksTaken) || 0,
+          // Missing counts stay missing: recording 0 would assert "no interruptions"
+          // for a session where nobody recorded whether there were any.
+          interruptions: toRecordedCount(body.interruptions),
+          breaksTaken: toRecordedCount(body.breaksTaken),
           language: context.language,
           device: context.device,
+          // Every activity in this mode is played with buttons and keys only.
+          // Recording the route is what makes the accessibility claim checkable:
+          // no camera, microphone or motion input is used, so a participant
+          // without them is administered the same task, not a compromise task.
+          sensoryRoute: 'BUTTON_ONLY_NO_SENSORS',
+          cameraUsed: false,
+          microphoneUsed: false,
           administeredAt: session.completedAt
         }
       }

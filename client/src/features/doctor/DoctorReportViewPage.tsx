@@ -22,16 +22,6 @@ import {
 } from 'lucide-react';
 import { doctorApi } from '../../services/portalApi';
 import { aiServiceApi } from '../../services/aiServiceApi';
-import {
-  Legend,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip
-} from 'recharts';
 
 export const DoctorReportViewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -184,38 +174,13 @@ export const DoctorReportViewPage: React.FC = () => {
   }
 
   const { assessment, patient } = reportData;
-  const overallScore = Math.round(assessment.overallScore || 75);
-  const risk = assessment.riskLevel || 'LOW';
+  // No fallback value: a session without an interpretable score renders as such.
+  const overallScore = assessment.overallScore === null || assessment.overallScore === undefined
+    ? null
+    : Math.round(assessment.overallScore);
+  const reviewState = String(assessment.reviewState || 'NOT_REVIEWED');
   const taskData = assessment.taskResponses || {};
 
-  // Radar chart domain scores (derived from assessment and tasks)
-  const radarData = [
-    {
-      domain: 'Memory Recall',
-      patient: Math.min(100, Math.round(overallScore * 0.95 + 4)),
-      normative: 78
-    },
-    {
-      domain: 'Attention & Saccades',
-      patient: Math.min(100, Math.round(overallScore * 0.92 + 6)),
-      normative: 80
-    },
-    {
-      domain: 'Visuospatial',
-      patient: Math.min(100, Math.round(overallScore * 1.02 - 2)),
-      normative: 75
-    },
-    {
-      domain: 'Executive Trail',
-      patient: Math.min(100, Math.round(overallScore * 0.88 + 8)),
-      normative: 78
-    },
-    {
-      domain: 'Vocal Precision',
-      patient: Math.min(100, Math.round(overallScore * 0.98 + 3)),
-      normative: 82
-    }
-  ];
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-20">
@@ -343,7 +308,7 @@ export const DoctorReportViewPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Primary Scores & Radar Chart Grid */}
+        {/* Primary Scores */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
           
           {/* Overall Composite Score Box */}
@@ -352,23 +317,27 @@ export const DoctorReportViewPage: React.FC = () => {
               <span className="text-xs font-bold uppercase tracking-[0.12em] text-medical-300 block mb-1">
                 Neurocognitive Composite Index
               </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-semibold font-display text-white">{overallScore}</span>
-                <span className="text-lg text-muted font-bold">/ 100</span>
-              </div>
+              {overallScore === null ? (
+                <p className="text-sm font-semibold text-amber-300">Not interpretable</p>
+              ) : (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-semibold font-display text-white">{overallScore}</span>
+                  <span className="text-lg text-muted font-bold">/ 100</span>
+                </div>
+              )}
             </div>
 
             <div className="pt-2 border-t border-white/10 space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-300">Stratification Tier:</span>
+                <span className="text-slate-300">Review state:</span>
                 <span className={`px-3 py-1 rounded-full font-bold uppercase tracking-[0.12em] text-xs ${
-                  risk === 'HIGH'
-                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                    : risk === 'MODERATE'
+                  reviewState === 'REVIEW_PROMPT'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : reviewState === 'NOT_INTERPRETABLE'
+                    ? 'bg-slate-500/20 text-slate-200 border border-slate-500/30'
+                    : 'bg-slate-500/20 text-slate-200 border border-slate-500/30'
                 }`}>
-                  {risk} Risk
+                  {reviewState.replace(/_/g, ' ')}
                 </span>
               </div>
 
@@ -385,39 +354,19 @@ export const DoctorReportViewPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Radar Chart */}
-          <div className="md:col-span-7 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData} outerRadius="72%">
-                <PolarGrid stroke="rgba(226, 232, 240, 0.8)" />
-                <PolarAngleAxis dataKey="domain" tick={{ fill: '#334155', fontSize: 11, fontWeight: 600 }} />
-                <PolarRadiusAxis domain={[30, 100]} tickCount={4} tick={{ fill: '#94a3b8', fontSize: 9 }} axisLine={false} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: 8, padding: 10 }}
-                  labelStyle={{ color: '#94a3b8', fontSize: 11 }}
-                  itemStyle={{ color: '#ffffff', fontSize: 11 }}
-                />
-                <Legend wrapperStyle={{ fontSize: 11, fontWeight: 600 }} />
-                <Radar
-                  dataKey="patient"
-                  name="Patient Domain Score"
-                  stroke="rgb(14, 116, 144)"
-                  strokeWidth={2}
-                  fill="rgb(14, 116, 144)"
-                  fillOpacity={0.2}
-                  dot={{ r: 3.5, fill: 'rgb(14, 116, 144)', stroke: '#ffffff', strokeWidth: 2 }}
-                />
-                <Radar
-                  dataKey="normative"
-                  name="Age-Adjusted Normative Baseline"
-                  stroke="rgba(148, 163, 184, 0.8)"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
-                  fill="rgba(148, 163, 184, 0.1)"
-                  dot={false}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+          {/*
+            Domain-level scores are deliberately not charted. This build has no
+            validated domain scoring and no local normative data, so a domain
+            radar would be an invented clinical picture.
+          */}
+          <div className="md:col-span-7 rounded-2xl border border-line bg-warm p-6">
+            <h3 className="text-sm font-bold text-ink">Domain breakdown not available</h3>
+            <p className="mt-2 text-xs leading-6 text-body">
+              This build records session measurements only. It does not compute validated
+              domain scores and has no age-adjusted local normative data, so no domain
+              profile is displayed. Interpret the recorded session measurements with
+              session quality, missing tasks and the patient’s own baseline in view.
+            </p>
           </div>
 
         </div>

@@ -3,6 +3,7 @@ import { evaluateSafetyAccessibility } from './safetyAccessibilityEngine';
 import { loadHistory } from './historyEngine';
 import { runLongitudinalIntelligence } from './longitudinalIntelligenceEngine';
 import { buildClinicalDocumentation } from './clinicalDocumentationEngine';
+import { isInterpretableScore } from '../reviewState';
 import type { AssessmentWorkflowOutput } from './types';
 
 /**
@@ -16,7 +17,12 @@ export async function runAssessmentCompletionWorkflow(userId: string, savedAsses
 
   // 1. History & baseline (needed for safety/context-aware interpretation)
   const history = await loadHistory(userId, savedAssessment);
-  stages.push({ key: 'history', engine: 'HistoryEngine', status: 'completed', summary: `Loaded baseline (${history.baselineCreated ? 'created provisional' : 'active'}) and ${history.assessmentsCount} completed assessment(s).` });
+  // Only claim a baseline when one exists. A session whose score or check-in was
+  // missing establishes none, and the pathway must not report otherwise.
+  const baselineStatus = history.baselineCreated
+    ? 'created provisional'
+    : history.baseline ? 'active' : 'none established';
+  stages.push({ key: 'history', engine: 'HistoryEngine', status: 'completed', summary: `Loaded baseline (${baselineStatus}) and ${history.assessmentsCount} completed assessment(s).` });
 
   // 2. Safety & Accessibility gate
   const safety = evaluateSafetyAccessibility(taskResponses, history.contextInputs);
@@ -31,25 +37,43 @@ export async function runAssessmentCompletionWorkflow(userId: string, savedAsses
   const longitudinal = runLongitudinalIntelligence(history.assessments, safety);
   stages.push({ key: 'longitudinal_intelligence', engine: 'LongitudinalIntelligenceEngine', status: 'completed', summary: `Status ${longitudinal.status}; comparable assessments ${longitudinal.comparableAssessments}.` });
 
-  // 4. Persist longitudinal record (deterministic, safety-aware)
+  // 4. Persist longitudinal record (deterministic, safety-aware).
+  //    A session with no interpretable score produces no longitudinal point:
+  //    there is nothing to plot, and a placeholder would fabricate a trend.
   const status = longitudinal.status;
-  const longitudinalRecord = await HospitalDataStore.createLongitudinalRecord({
-    userId,
-    assessmentId: savedAssessment.id,
-    overallScore: savedAssessment.overallScore,
-    changeFromBaseline: history.baselineCreated ? null : (history.baseline ? savedAssessment.overallScore - history.baseline.overallScore : null),
-    trendDirection:
-      history.baselineCreated || status === 'INSUFFICIENT_DATA' || longitudinal.changeSummary.cognitive.change == null
-        ? null
-        : (longitudinal.changeSummary.cognitive.change > 0.5 ? 'IMPROVING' : longitudinal.changeSummary.cognitive.change < -0.5 ? 'DECLINING' : 'STABLE'),
-    assessmentsCount: history.assessmentsCount,
+  const interpretableScore = isInterpretableScore(savedAssessment.overallScore)
+    ? savedAssessment.overallScore
+    : null;
+  const baselineScore = isInterpretableScore(history.baseline?.overallScore)
+    ? history.baseline.overallScore
+    : null;
+  const longitudinalRecord = interpretableScore === null
+    ? null
+    : await HospitalDataStore.createLongitudinalRecord({
+        userId,
+        assessmentId: savedAssessment.id,
+        overallScore: interpretableScore,
+        changeFromBaseline:
+          history.baselineCreated || baselineScore === null ? null : interpretableScore - baselineScore,
+        trendDirection:
+          history.baselineCreated || status === 'INSUFFICIENT_DATA' || longitudinal.changeSummary.cognitive.change == null
+            ? null
+            : (longitudinal.changeSummary.cognitive.change > 0.5 ? 'IMPROVING' : longitudinal.changeSummary.cognitive.change < -0.5 ? 'DECLINING' : 'STABLE'),
+        assessmentsCount: history.assessmentsCount,
+      });
+  stages.push({
+    key: 'longitudinal_record',
+    engine: 'HistoryEngine',
+    status: interpretableScore === null ? 'skipped' : 'completed',
+    summary: interpretableScore === null
+      ? 'No longitudinal record written: the session produced no interpretable score.'
+      : 'Longitudinal record persisted.'
   });
-  stages.push({ key: 'longitudinal_record', engine: 'HistoryEngine', status: 'completed', summary: 'Longitudinal record persisted.' });
 
   // 5. Persist change detection (safety-aware outcome, always recorded)
   const changeDetection = await HospitalDataStore.createChangeDetection({
     userId,
-    baselineId: history.baseline?.id || '',
+    baselineId: history.baseline?.id ?? null,
     status,
     cognitiveChange: longitudinal.cognitiveChange,
     outsideBaseline: longitudinal.outsideBaseline,
@@ -61,6 +85,7 @@ export async function runAssessmentCompletionWorkflow(userId: string, savedAsses
   const hasContext = (history.contextInputs || []).length > 0 || !!(taskResponses as any)?.contextFactors;
   const doc = buildClinicalDocumentation({
     baselineCreated: history.baselineCreated,
+    hasBaseline: Boolean(history.baseline),
     status,
     safety,
     longitudinal,
@@ -74,13 +99,15 @@ export async function runAssessmentCompletionWorkflow(userId: string, savedAsses
   stages.push({ key: 'follow_up_coordination', engine: 'FollowUpCoordinationEngine', status: 'completed', summary: doc.followUp.requiresClinicalReview ? 'Clinical review and closed-loop follow-up flagged.' : 'Routine longitudinal follow-up planned.' });
 
   // 7. Brain health profile (clinician-in-the-loop)
-  const profileScore = savedAssessment.overallScore;
-  const riskTier = profileScore >= 78 ? 'LOW' : profileScore >= 60 ? 'MODERATE' : 'HIGH';
+  //    No risk tier is derived here. The profile records the descriptive score
+  //    (or its absence) and an administrative review signal only.
   const brainHealthProfile = await HospitalDataStore.createBrainHealthProfile({
     userId,
     changeDetectionId: changeDetection.id,
-    profileScore,
-    riskTier,
+    profileScore: interpretableScore,
+    reviewSignal: interpretableScore === null
+      ? 'NOT_INTERPRETABLE'
+      : status === 'REVIEW' ? 'REVIEW_PROMPT' : 'NOT_REVIEWED',
     interpretation: doc.interpretation,
     nextSteps: doc.nextSteps,
   });
@@ -100,7 +127,9 @@ export async function runAssessmentCompletionWorkflow(userId: string, savedAsses
     brainHealthProfile,
     platform: {
       pathway: doc.pathway,
-      baselineType: history.baselineCreated ? 'PROVISIONAL_PERSONAL_BASELINE' : 'PERSONAL_BASELINE',
+      baselineType: history.baselineCreated
+        ? 'PROVISIONAL_PERSONAL_BASELINE'
+        : history.baseline ? 'PERSONAL_BASELINE' : 'NONE_ESTABLISHED',
       sessionQuality: safety.sessionQuality,
       meaningfulChange: {
         status,
@@ -123,6 +152,13 @@ export async function runAssessmentCompletionWorkflow(userId: string, savedAsses
         cadence: doc.followUp.cadence,
         closedLoop: doc.followUp.closedLoop,
       },
+    },
+    // The evidence and limitations were computed but never returned, so the
+    // "source-linked draft" the documentation describes was not actually
+    // available to any caller. It carries the recorded limitations (including the
+    // administration language) so they travel with the result.
+    documentation: {
+      evidence: doc.evidence
     },
     workflow: {
       architecture: 'deterministic-orchestrator-v1',

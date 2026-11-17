@@ -18,13 +18,15 @@ export const createBrainHealthProfile = async (req: AuthenticatedRequest, res: R
   try {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
 
-    const { changeDetectionId, profileScore, riskTier, interpretation, nextSteps } = req.body;
+    const { changeDetectionId, profileScore, interpretation, nextSteps } = req.body;
+    const score = profileScore === null || profileScore === undefined ? null : Number(profileScore);
 
+    // No risk tier is accepted from the caller. The store derives an
+    // administrative review signal from the recorded score (or its absence).
     const profile = await HospitalDataStore.createBrainHealthProfile({
       userId: req.user.id,
       changeDetectionId,
-      profileScore: Number(profileScore),
-      riskTier,
+      profileScore: Number.isFinite(score) ? score : null,
       interpretation,
       nextSteps: Array.isArray(nextSteps) ? nextSteps : [],
     });

@@ -24,13 +24,17 @@
     "verify-deploy-script": "npx ts-node --project tsconfig.json src/scripts/migrate-deploy.ts"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.3.2",
     "@prisma/client": "^5.12.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.5.0",
+    "node-llama-cpp": "^3.22.3",
+    "resend": "^6.38.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

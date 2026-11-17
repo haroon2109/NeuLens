@@ -35,6 +35,13 @@ export interface LongitudinalIntelligenceResult {
   outsideBaseline: boolean;
   reviewReasons: string[];
   comparableAssessments: number;
+  /** Whether this patient's own variability supports a change claim at all. */
+  reliability?: {
+    state: 'NOT_ESTABLISHED' | 'PROVISIONAL';
+    pairs: number;
+    standardDeviationOfChange: number | null;
+    reliableChangeThreshold: number | null;
+  };
   changeSummary: any;
 }
 
@@ -67,6 +74,8 @@ export interface AssessmentWorkflowOutput {
   changeDetection: any;
   brainHealthProfile: any;
   platform: any;
+  /** Source-linked evidence and recorded limitations for this session. */
+  documentation?: { evidence: ClinicalDocumentationResult['evidence'] };
   workflow: {
     architecture: 'deterministic-orchestrator-v1';
     stages: Array<{ key: string; engine: string; status: 'completed' | 'skipped'; summary: string }>;

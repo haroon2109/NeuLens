@@ -27,9 +27,14 @@ export const LOWER_BAND = 0.5;
  */
 export function decideDifficulty(taskId: string, exposure: ExposureMap): DifficultyDecision {
   const history = exposure[taskId]?.recent || [];
-  const usable = history.filter(
-    (task) => task.completed && !task.skipped && task.trials >= MIN_TRIALS_PER_EXPOSURE
-  );
+  // An exposure without a recorded accuracy did not yield a usable measurement.
+  // Treating it as 0% would lower the difficulty on the strength of a missing
+  // value, so it is excluded rather than filled in.
+  const usable = history
+    .filter((task) => task.completed && !task.skipped && task.trials >= MIN_TRIALS_PER_EXPOSURE)
+    .filter((task): task is typeof task & { accuracy: number } =>
+      typeof task.accuracy === 'number' && Number.isFinite(task.accuracy)
+    );
 
   if (usable.length < MIN_EXPOSURES) {
     return {
@@ -46,8 +51,8 @@ export function decideDifficulty(taskId: string, exposure: ExposureMap): Difficu
   const levels = [latest.difficultyLevel, previous.difficultyLevel].filter(Number.isFinite);
   const baseline = levels.length ? Math.max(...levels) : 2;
 
-  const latestAccuracy = latest.accuracy ?? 0;
-  const previousAccuracy = previous.accuracy ?? 0;
+  const latestAccuracy = latest.accuracy;
+  const previousAccuracy = previous.accuracy;
 
   if (latestAccuracy >= UPPER_BAND && previousAccuracy >= UPPER_BAND) {
     return {

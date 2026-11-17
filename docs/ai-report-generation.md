@@ -87,6 +87,86 @@ Check the model's licence before commercial deployment. Several open-weight
 families have community licences with usage conditions, so "open weights" is
 not the same as "unrestricted commercial use".
 
+## Running the local model-assisted demo
+
+Nothing needs to be enabled in code. The explanation route calls Ollama at
+`OLLAMA_BASE_URL` on every request and falls back to the deterministic template
+when the call fails, so the only precondition for a model-assisted draft is a
+reachable model.
+
+`ENABLE_MODEL_INFERENCE` does **not** gate this path. It controls the reported
+capability and health payload only:
+
+- `/health` reports it as `model_inference`
+- the capability list reports `pipeline="model_inference", available=<flag>`
+
+Because it is unrelated to drafting, a deployment with
+`ENABLE_MODEL_INFERENCE=false` still produces Ollama drafts if a model is
+reachable, and a deployment with it set to `true` still produces templates if
+Ollama is not running. Do not use it to explain which provider produced a
+report; read the `provider` field instead.
+
+### Steps
+
+Ollama and the AI service are separate processes, so use two terminals.
+
+```bash
+# terminal 1
+ollama serve
+ollama pull qwen2.5:3b     # once per machine
+```
+
+```env
+# ai-service/.env
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=qwen2.5:3b
+```
+
+```bash
+# terminal 2
+cd ai-service
+.venv/bin/uvicorn app.main:app --reload --port 8000
+```
+
+Confirm the model is up before generating a report:
+
+```bash
+ollama list                                  # qwen2.5:3b present
+curl -s localhost:11434/api/tags | head -c 200
+```
+
+### Confirming which provider drafted the text
+
+The draft panel in the clinician report view prints a `Provider:` badge next to
+the returned `provider` and `model` values. On a working local run it reads
+`Provider: ollama` with the model name; when the template was used it reads
+`Provider: deterministic`. This is the fastest way to check the setup, and it
+makes the fallback visible during a demo rather than hidden.
+
+### What a rejected draft looks like
+
+`qwen2.5:3b` is small and will occasionally emit a sentence the guardrail
+rejects, for example a diagnostic term or a number that was not in the supplied
+observations. The response is then the deterministic template with
+`provider: deterministic` and `guardrail: rejected`.
+
+That is the design working, not a setup failure. There is no retry with a
+looser prompt, by intention. Say so during a demo instead of regenerating until
+the badge happens to read `ollama`.
+
+### Before a demo
+
+Do a full dry run on the demo machine the day before. If `ollama serve` is not
+running or the model was never pulled, the `.env` values point at nothing and
+every draft silently falls back to the template, which looks like the feature is
+missing entirely.
+
+For a hosted deployment, the same applies: the service can only reach a model on
+the address it is given. A deployment that does not run Ollama next to the AI
+service returns `provider: deterministic` for every request, whatever
+`ENABLE_MODEL_INFERENCE` says. Keep the port off the public internet if the
+model is reached over a network.
+
 ## Guardrails enforced in code
 
 `ai-service/app/services/explanation.py` applies all of these before returning a

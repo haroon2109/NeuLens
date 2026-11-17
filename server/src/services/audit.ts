@@ -25,7 +25,9 @@ export type AuditAction =
   | 'COGNITIVE_PLAN_GENERATED'
   | 'COGNITIVE_PLAN_REVIEWED'
   | 'COGNITIVE_SESSION_SUBMITTED'
-  | 'COGNITIVE_SESSION_READ';
+  | 'COGNITIVE_SESSION_READ'
+  | 'EXTERNAL_INSTRUMENT_READ'
+  | 'EXTERNAL_INSTRUMENT_WRITE';
 
 export interface AuditEntry {
   actorId?: string | null;

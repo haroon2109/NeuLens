@@ -10,7 +10,7 @@
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791.svg)](#)
 [![MediaPipe](https://img.shields.io/badge/Vision%20AI-MediaPipe%20Tasks-FF6F00.svg)](#)
 [![Gnani AI](https://img.shields.io/badge/Speech%20AI-Gnani%20v2.5%20(Timbre%20%2B%20Prisma)-7c3aed.svg)](#)
-[![Tests](https://img.shields.io/badge/Tests-55%20Passing-brightgreen.svg)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/Tests-81%20Passing-brightgreen.svg)](.github/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](#)
 
 ---
@@ -42,9 +42,58 @@ NeuLens is a browser-based, clinician-supervised screening aid — not a diagnos
 4. **Facial Kinematics & Bilateral Symmetry** via 478 3D facial mesh landmarks.
 5. **Psychomotor Processing & Executive Planning** via digital Trail Making and pattern-retention matrices.
 
-The MVP stores a prototype composite score and session telemetry for review. Its change monitor compares within-person results only when recorded language, task version, education, and accessibility conditions match. A score below the range of three earlier comparable screens is a review prompt—not a validated reliable-change statistic. Local language, cultural, age, education, sensory-access, and digital-literacy validity has not been established.
+The MVP stores a prototype composite score and session telemetry for review. Its change monitor compares within-person results only when recorded language, task version, education, and accessibility conditions match, and it will only report a score decline that exceeds the patient's **own measured session-to-session variability** (1.96 × SD of change across consecutive comparable repeat pairs — a reliable change index). With fewer than three repeat pairs there is no threshold, so no score-based decline is reported in either direction and the record states that reliability is not yet estimated. This is the patient's own measured noise, not a population-validated reliable-change statistic; local language, cultural, age, education, sensory-access, and digital-literacy validity has not been established.
+
+**What happens when an activity cannot run.** The battery uses a camera (eye and facial activities) and a microphone (spoken repeat). If one is unavailable, declined or the participant leaves the activity, that activity records no score and a reason (`CAMERA_UNAVAILABLE`, `MICROPHONE_UNAVAILABLE`, `SKIPPED`, `TIME_LIMIT`) — the server never substitutes a default, and the missing domain makes the composite non-interpretable. `taskResponses.administration` records exactly which activities were measured; the clinician's draft lists the unmeasured domains and why. Leaving an activity mid-way used to award 50–88 points; those constants are gone.
+
+**Accessibility scope, stated precisely.** No activity requires precise pointing: the moving target is a focusable button, and the trail-making activity can be completed with the number keys 1–6. Activity changes and instructions are announced through a live region for screen-reader users. The platform does let a participant continue without a camera or microphone, in which case the affected domains are reported as unmeasured rather than estimated. It does **not** yet offer a telephone-only or fully non-visual administration path for the camera- and audio-dependent activities, and no screen-reader usability study has been run.
 
 > **Medical Disclaimer**: *Neulens identifies changes in screening and self-reported function that may warrant further assessment. It does not diagnose disease or recommend treatment. Results are exploratory decision support and require review by a qualified professional.*
+
+## Known defects
+
+Declared rather than discovered. Each item names where it lives in the code so it can be checked.
+
+| # | Defect | Consequence | Where |
+| --- | --- | --- | --- |
+| 1 | No locally validated task wording, and no licensed validated screener. Arabic has a translated verbal-recall stimulus and registry-declared pending stages, nothing more. | No cross-language or cross-cultural score claim can be made. Readiness is enforced, not papered over. | `server/src/services/assessmentLanguageReadiness.ts`; `docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md` |
+| 2 | No population reliability estimate: ICC(2,1) is computed from real repeat pairs only and withheld below three pairs. | Score change is interpreted against the patient's own variability; no population-level SEM or MDC exists. | `server/src/services/reliability.ts`, `changeMonitor.ts` |
+| 3 | Two of the five battery activities need a camera, one needs a microphone. | A participant without them is administered a partial battery whose missing domains are reported unmeasured, not estimated. The cognitive activity route (`/patient/cognitive`) is cameras- and microphone-free but does not feed the composite. There is no telephone or IVR route. | `client/src/features/screening/ScreeningPage.tsx`, `client/src/features/cognitive/TaskPlayer.tsx` |
+| 4 | Change detection is inactive until three comparable repeat pairs exist. | On real data today the detector reports "reliability not established"; it is not silently guessing. | `server/src/services/changeMonitor.ts` |
+| 5 | Seven languages in the UI, one language declared task-ready (`en`). | Non-English sessions require an explicit participant acknowledgement and are stamped as such in the record. | `language-readiness` route; `taskResponses.languageReadiness` |
+| 6 | The legacy `/api/v1/screening` history endpoints still serve a demo record from an in-memory array and do not use the demo-isolation gate that the portal endpoints use. | A demo record can appear in that legacy endpoint's output for the demo patient id only. It is unreachable from the current UI, which uses the portal endpoints. | `server/src/controllers/screening.controller.ts` |
+| 7 | Acoustic jitter and shimmer are microphone- and codec-dependent. | They are stored as acoustic quality features only: excluded from scoring, change detection and patient endpoints. | `server/src/services/patientAssessmentView.ts`; `server/src/tests/acousticScope.test.ts` |
+| 8 | No screen-reader usability study has been run, and the battery is not operable without vision. | Live-region announcements and keyboard controls exist; they are not a validated non-visual administration. | `client/src/features/screening/ScreeningPage.tsx` |
+| 9 | The exploratory cognitive task catalogue is research-stage and unvalidated. | Each activity is labelled as such in the UI and never produces a diagnosis. | `client/src/features/cognitive/catalog*.ts` |
+
+Items 1–3 and 5 are not closable by editing code: they need licensing, an ethics-approved reliability study, or an accessibility design study. They are listed here so the gap is a known limitation rather than a discovered one.
+
+---
+
+### Challenge fit (Abu Dhabi — Future Health Digital Innovation Challenge)
+
+NeuLens is presented against the *Protecting Brain Health Earlier* brief with an explicit
+requirements-to-evidence map and a measurement plan:
+
+- **[`docs/future-health-challenge/SUBMISSION_FIT.md`](docs/future-health-challenge/SUBMISSION_FIT.md)** — maps the problem, objective and each desired outcome (culturally valid assessment, longitudinal change detection, integrated risk context, personalized prevention and timely care, safety and human oversight, validation and local population performance) to what is implemented, what is deliberately not claimed, and what remains.
+- **[`docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md`](docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md)** — operational definitions for completion, repeat-session stability, sensitivity, specificity, meaningful-change detection, false-referral burden and time to clinical assessment, with the segmented analysis plan and the linguistic/cultural adaptation register.
+- **[`docs/future-health-challenge/VALIDATION_STUDY_PLAN.md`](docs/future-health-challenge/VALIDATION_STUDY_PLAN.md)** — Abu Dhabi pilot protocol: cohort, reference standard, sensitivity/specificity/ICC targets, segment analysis by language/age/education, and acceptance criteria before any clinical claim.
+
+This is a research-stage, safety-first screening-support platform with a validation
+roadmap — not a validated diagnostic tool. Arabic task wording is translated and
+delivered (the verbal recall stimulus and the sequencing-task instructions are Arabic);
+back-translation, cognitive pretesting, local clinical sign-off and reviewed Arabic
+speech remain open. That state is enforced, not just documented: the language screen
+reads the same registry the server enforces, marks each language's real status, and a
+participant may only continue in a not-yet-reviewed language after an explicit
+acknowledgement that is stored with the session and reported to the clinician.
+
+Local fit: Arabic is a first-class right-to-left interface language with Arabic-script
+fonts; education, language, task version and sensory/digital access are matched before
+any within-person comparison; family history and consent-gated genomic context are
+source-labelled in clinician review; optional wearable summaries are a consent-gated
+context source; and population metrics are reported by language, age band and education
+band.
 
 ---
 
@@ -62,13 +111,11 @@ The MVP stores a prototype composite score and session telemetry for review. Its
   * In-memory SHA-256 prompt caching optimizing upstream API credit consumption.
 * **Verbal Assessment Transcription (Gnani Prisma v2.5)**:
   * Backend REST pipeline (`POST /api/v1/voice/transcribe`) transmitting patient verbal recordings to Gnani Prisma REST v3 with language-specific numeral formatting and confidence scores.
-* **Interactive 3D 5-Lobe Neural Health Map**:
-  * Interactive cortical lobe visualizer (Frontal, Parietal, Temporal, Occipital, and Cerebellar networks) mapping active test telemetry directly to corresponding cerebral systems.
 * **Hospital Dual-Portal Architecture (Role-Separated)**:
-  * **Patient Portal (`/patient`)**: Patient-facing platform experience designed for elderly users and people with low digital literacy, accessible from any browser. Follows a streamlined **7-Step Journey across 9 calm screens**:
+  * **Patient Portal (`/patient`)**: Patient-facing platform experience designed for elderly users and people with low digital literacy, accessible from any browser. A first-run path through registration, language, the screening battery and a completion slip is described below as a **guided first-run journey**; the portal itself has around thirty further screens (history, trends, change, context, prevention, appointments, cognitive activities) reachable from its own navigation, not a fixed nine-screen sequence:
     * **Step 1 (Screen 1 — Welcome Page `/patient`)**: Minimal, spacious homepage with Neulens branding and two large touch targets: "New Patient" and "Existing Patient".
     * **Step 2 (Screen 2 — Registration `/patient/register` & Screen 3 — Login `/patient/login`)**: Simple registration with essential demographics issuing a collision-resistant Patient ID (`CV-2026-XXXXXX`), or 2-field login with Patient ID + PIN (the PIN is the only accepted factor; the fictional jury demo account is listed under [Jury demo access](#jury-demo-access)). A new account lands on its own dashboard (`/patient/dashboard`) — the same destination as signing in — where starting the assessment is an explicit choice rather than an automatic redirect.
-    * **Step 3 (Screen 4 — Language Selection `/patient/language`)**: High-contrast regional language selection (English, Tamil, Hindi, Telugu, Kannada, Malayalam) with native script and spoken audio previews powered by Gnani Timbre TTS. It is a guided option before a first assessment, not a forced step: language is also set in My profile and Account settings.
+    * **Step 3 (Screen 4 — Language Selection `/patient/language`)**: High-contrast regional language selection (Arabic — right-to-left, English, Tamil, Hindi, Telugu, Kannada, Malayalam) with native script and, where a reviewed voice exists, spoken audio previews powered by Gnani Timbre TTS. Arabic is offered with full RTL layout and Arabic-script fonts for navigation, consent, check-in and results, and the verbal recall stimulus is Arabic. Each entry shows its real status from `GET /api/v1/language-readiness` — English is task-ready, other languages read "wording under review" with the pending stages listed — and continuing in one requires an explicit acknowledgement that travels with the session (`taskResponses.languageReadiness`) and appears in the clinician's evidence/limitations. `POST /patient/assessment` refuses an unacknowledged non-ready language with `422 LANGUAGE_NOT_VALIDATED`. It is a guided option before a first assessment, not a forced step: language is also set in My profile and Account settings.
     * **Step 4 (Screens 5–6 — Welcome & Screening Battery `/patient/assessment`)**: Calm "Let's Begin" welcome followed by exploratory tasks (*Focus Orbit*, *Cortex Match*, *Vocal Echo*, *Mimic Sync*, *Path Mapper*) with spoken voice guidance, repeat instruction button, and dynamic typography scaling (`A` / `A+` / `A++`). Live facial tracking and audio telemetry execute in the background without exposing raw biometric diagnostics (EAR, yaw/pitch/roll) to the patient.
     * **Step 5 (Screen 7 — Optional Daily-Function Check-in)**: Four large-touch questions about everyday activities, presented in the selected language. Responses can be skipped and are stored with the screening for within-person comparison.
     * **Step 6 (Screen 8 — Patient ID Confirmation `/patient/assessment/complete`)**: Reassuring completion message with prominent Patient ID display, downloadable text confirmation slip, and print layout. The completion screen itself shows no scores or notes.
@@ -77,12 +124,16 @@ The MVP stores a prototype composite score and session telemetry for review. Its
   * **Doctor Portal (`/doctor`)**: Streamlined clinician workspace with unified 3-item navigation (**Overview**, **Patients**, **Settings**) and a separate Patient Portal shortcut. The **Patients** section serves as the central workspace where clinicians search enrolled patients, open records, review chronological assessment histories with task telemetry and within-person change cues, launch screening tasks bound to patient records, and prepare reports for clinician review. Reports are not diagnoses or validated clinical instruments.
 * **Longitudinal Change Monitor**:
   * Each screening offers a multilingual check-in for four everyday activities plus sleep, physical activity, mood/stress, sensory access, and digital familiarity. It can be skipped.
-  * Personal score-range comparisons require three prior comparable screens and matching task version, language, education, and recorded access conditions. Missing or non-comparable data are not interpreted as stability.
-  * An observed-range flag and worsening check-in are review prompts only. No test-retest reliability coefficient or validated meaningful-change threshold is available in this MVP.
+  * A score-based change prompt requires three comparable repeat pairs (four comparable screens) with matching task version, language, education, and recorded access conditions; the decline must exceed 1.96 × the SD of that patient's own change. Below three pairs the platform reports "reliability not established" rather than either a change or stability claim. The observed score spread is displayed as a description, never used as a threshold.
+  * A reported functional or context change is also a review prompt. There is no population-validated reliability coefficient or meaningful-change threshold in this MVP; the threshold above is the patient's own measured variability.
+* **Integrated Risk Context (Family History + Genomic, Optional)**:
+  * Family history and current conditions/medications are recorded as source-labelled context inputs and shown to the reviewing clinician, not kept as a local text field.
+  * Genomic context is **optional and consent-gated**: it is stored only when the patient explicitly opts in, is returned to the clinician only with that consent, and is never interpreted, risk-scored, or used to change a score. NeuLens states this boundary in the patient and clinician interfaces.
+  * Genomic interpretation, variant-level risk modelling and family-history-based genetic risk calculation are explicitly out of scope.
 * **Authorized FHIR R4 Context (Optional)**:
   * With explicit per-session patient permission and server-side configuration, imports recent supported FHIR `Observation` resources using LOINC codes for blood pressure, glucose, cholesterol, weight, step count, sleep duration, and PHQ-2 score.
   * Supports open FHIR R4 servers such as HAPI FHIR or Medplum through a configured HTTPS endpoint and bearer token. No endpoint or credentials are bundled; live connectivity must be configured and tested in the deployment environment.
-  * Imports are read-only and limited to the supported code list and the previous 12 months. This MVP does not ingest genomic information or family history, write to the external record, or claim interoperability certification.
+  * Imports are read-only and limited to the supported code list and the previous 12 months. This MVP does not write to the external record or claim interoperability certification.
 * **Clinician-Owned Follow-up**:
   * Clinicians can save a proposed repeat screen, context review, clinical review, or daily-function support action and optional date/notes to an assessment record.
   * Recommendations are discussion prompts; only the qualified clinician confirms next steps. Context associations do not establish causality.
@@ -227,7 +278,7 @@ sequenceDiagram
 |                                                                             |                    |
 |   +--------------------------------------------------------------------+    |                    |
 |   |                     REACT 18 & ZUSTAND UI LAYER                    |    |                    |
-|   |  - DashboardPage (5-Lobe Cortical Map)    - ScreeningPage (5 Tasks)|    |                    |
+|   |  - Patient/Doctor portal screens          - ScreeningPage (5 Tasks)|    |                    |
 |   |  - SensorCheckStage                       - ElderlyLanguageSelector|    |                    |
 |   |  - ResultVoiceExplainer                   - ReportPage (PDF Export)|    |                    |
 |   +--------------------------------------------------------------------+----+                    |
@@ -310,13 +361,11 @@ Neulens/
 │       │   ├── doctor/                          # Doctor / Clinician Workspace
 │       │   │   ├── DoctorLoginPage.tsx          # Clinician authentication with 1-click evaluation access
 │       │   │   ├── DoctorDashboardPage.tsx      # Real database KPI metrics & recent assessments queue
-│       │   │   ├── DoctorPatientsPage.tsx       # Searchable patient directory with risk stratification
+│       │   │   ├── DoctorPatientsPage.tsx       # Searchable patient directory with review-state filter
 │       │   │   ├── DoctorPatientProfilePage.tsx # Complete medical file & task-by-task recorded responses
 │       │   │   └── DoctorReportViewPage.tsx     # Hospital clinical report, radar chart, notes & PDF export
 │       │   ├── about/
 │       │   │   └── AboutPage.tsx                # Technology architecture and platform clinical overview
-│       │   ├── analytics/
-│       │   │   └── AnalyticsPage.tsx            # Longitudinal population trends & demographic charts
 │       │   ├── assessments/
 │       │   │   └── AssessmentsPage.tsx          # Battery protocol catalog & micro-test selector
 │       │   ├── auth/                            # Authentication & Onboarding
@@ -324,14 +373,10 @@ Neulens/
 │       │   │   ├── LoginPage.tsx                # Clinician/Patient credentials authentication (1-click demo)
 │       │   │   ├── ProfileSetupPage.tsx         # 4-Step demographic & medical history onboarding
 │       │   │   └── RegisterPage.tsx             # New user profile registration form
-│       │   ├── dashboard/
-│       │   │   └── DashboardPage.tsx            # Executive overview, 5-lobe brain map, KPI metrics
-│       │   ├── family/
-│       │   │   └── FamilyDashboardPage.tsx      # Caregiver portal, medication adherence & alerts
 │       │   ├── landing/
 │       │   │   └── LandingPage.tsx              # Public hero landing, core pillars & feature showcases
 │       │   ├── patients/
-│       │   │   └── PatientsPage.tsx              # Patient directory with risk filter tabs & modal
+│       │   │   └── PatientsPage.tsx              # Patient directory with review filter tabs & modal
 │       │   ├── recommendations/
 │       │   │   └── RecommendationsPage.tsx      # Neurologist referral network & lifestyle pathways
 │       │   ├── report/
@@ -449,7 +494,7 @@ The routing architecture is constructed using React Router v6 (`createBrowserRou
 #### 1. Modular Controller Layer
 * **`auth.controller.ts`**: Manages credential hashing (`bcryptjs` salt rounds: 10), JSON Web Token signing (`7d` session lifespan), profile mutation, and password reset token generation. Integrates dual-write/read logic with automated in-memory fallback.
 * **`screening.controller.ts`**: Ingests compound screening submissions. Unpacks nested records to atomically generate `Assessment`, `EyeMetrics`, `VoiceMetrics`, `FaceMetrics`, and `Report` tables within PostgreSQL transactions.
-* **`analytics.controller.ts`**: Aggregates longitudinal screening results, transforming time-series metrics into coordinate arrays ready for Recharts rendering (`overallScore`, `reactionTime`, `symmetry`, `jitter`).
+* **`analytics.controller.ts`**: Aggregates longitudinal screening results, transforming time-series metrics into coordinate arrays ready for Recharts rendering (`overallScore`, `reactionTime`, `symmetry`). Missing values are returned as `null`, never as `0`. Acoustic jitter and shimmer are deliberately excluded: they are microphone- and codec-sensitive quality features, not cognitive evidence.
 * **`voice.controller.ts`**: Orchestrates Gnani AI Timbre v2.5 synthesis and Prisma v2.5 transcription. Features sliding-window rate limiting (45 TTS req/min, 20 STT req/min) to preserve paid API credits, payload sanitization, and error normalization.
 
 #### 2. Inbound Validation & Serialization (`server/src/validation/`)
@@ -489,11 +534,12 @@ Catches uncaught exceptions and Zod schema validation errors, returning structur
 #### 2. Acoustic Voice Analysis Pipeline (`ScreeningPage.tsx`)
 * **Audio Capture**: Employs Web Audio API `AudioContext` connected via `createMediaStreamSource` to an `AnalyserNode` configured with an FFT size of $128$.
 * **Waveform Animation**: Continuously queries `analyser.getByteTimeDomainData` to draw a live acoustic waveform onto a dynamic canvas overlay.
-* **Biomarker Synthesis**: Derives vocal metrics during phrase repetition:
+* **Acoustic feature synthesis**: Derives vocal metrics during phrase repetition:
   * *Fundamental Frequency ($F_0$)*: Extracted via auto-correlation pitch detection (normal adult range: 85–255 Hz).
   * *Acoustic Jitter*: Period-to-period perturbation in pitch frequency.
   * *Acoustic Shimmer*: Period-to-period variability in peak waveform amplitude.
-  * *Speech Pause Cadence*: Detection of sub-threshold energy troughs ($> 250\text{ ms}$) indexing hesitation and word-finding difficulties.
+  * *Speech Pause Cadence*: Detection of sub-threshold energy troughs ($> 250\text{ ms}$) counting hesitations.
+  * **Scope limit, stated deliberately**: jitter and shimmer are measured through a laptop or phone microphone and are dominated by microphone response, codec, room noise and browser resampling — not by laryngeal status and certainly not by cognition. They are retained as **acoustic quality and engagement signals only**. They never contribute to a domain score, the composite, a review prompt, or any change comparison, and the patient-facing API excludes them entirely. No claim about cognition, pathology or diagnosis is made from them.
 
 #### 3. Pure Gnani AI Speech & Zero Overlap Architecture
 To eliminate robotic speech and prevent overlapping voices during screening:
@@ -553,8 +599,8 @@ model Assessment {
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   date         DateTime      @default(now())
-  overallScore Float
-  riskLevel    String        // LOW, MODERATE, HIGH
+  overallScore Float?        // null when the session produced no interpretable score
+  reviewState  String        // NOT_REVIEWED | NOT_INTERPRETABLE | REVIEW_PROMPT | CLINICIAN_REVIEWED
   status       String        @default("COMPLETED") // IN_PROGRESS | COMPLETED | ABORTED
   reviewStatus String        @default("PENDING_REVIEW") // PENDING_REVIEW | REVIEWED | FOLLOWUP_REQUIRED
   reviewedBy   String?       // Clinician identifier/name
@@ -632,8 +678,8 @@ erDiagram
         String id PK "UUID"
         String userId FK
         DateTime date
-        Float overallScore
-        String riskLevel
+        Float overallScore "nullable"
+        String reviewState
     }
 
     EyeMetrics {
@@ -738,7 +784,9 @@ CLIENT_ORIGIN=http://localhost:5173
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/cognivision?schema=public"
 
 # Security & JWT Secrets
-JWT_SECRET="cognivision-super-secure-production-jwt-key-2026"
+# Generate a unique value per deployment: openssl rand -hex 32
+# Never commit the real value or reuse a documentation example.
+JWT_SECRET="<generate with: openssl rand -hex 32>"
 
 # -------------------------------------------------------------
 # Gnani AI Speech Integration
@@ -873,6 +921,8 @@ Each portal exposes only its own one-click **Jury demo access** account:
 
 The demo patient also has four synthetic screening records so the clinician dashboard, review queue, and longitudinal view are populated. No real patient data is used.
 
+Those fictional records are isolated: they are visible **only** inside the demo workspace. A real clinician's dashboard, patient directory and platform insights never count them, so demonstration data cannot move a real patient count, comparability rate or reliability estimate (`server/src/services/demoRecords.ts`, covered by `tests/demoIsolation.test.ts`).
+
 Demo seeding is on by default for local and jury use. Disable it before a real clinical deployment, and never enable it on an instance that contains real patient records:
 
 ```bash
@@ -950,7 +1000,8 @@ services:
     restart: always
     environment:
       POSTGRES_USER: cogni_user
-      POSTGRES_PASSWORD: cogni_secure_password
+      # Set a strong value in the environment; do not commit a real password.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a strong POSTGRES_PASSWORD}
       POSTGRES_DB: cognivision_db
     ports:
       - "5432:5432"
@@ -966,7 +1017,7 @@ services:
     environment:
       PORT: 5000
       NODE_ENV: production
-      DATABASE_URL: "postgresql://cogni_user:cogni_secure_password@postgres:5432/cognivision_db?schema=public"
+      DATABASE_URL: "postgresql://cogni_user:${POSTGRES_PASSWORD}@postgres:5432/cognivision_db?schema=public"
       JWT_SECRET: "${JWT_SECRET}"
       CLIENT_ORIGIN: "https://cognivision.yourdomain.com"
       GNANI_API_KEY: "${GNANI_API_KEY}"
@@ -1141,7 +1192,7 @@ Base URL: `http://localhost:5000/api/v1` (or relative `/api/v1` via Vite proxy).
 | `POST` | `/patient/register` | None | Patient portal registration. Generates collision-resistant Patient ID (`CV-2026-XXXXXX`). |
 | `POST` | `/patient/login` | None | Patient portal authentication using Patient ID + PIN or birth year verification. |
 | `GET` | `/patient/session` | `Bearer <token>` | Returns authenticated patient identity & assigned battery. |
-| `POST` | `/patient/assessment/submit` | `Bearer <token>` | Submits assessment. Returns ONLY patient ID confirmation (privacy-isolated; zero risk scores). |
+| `POST` | `/patient/assessment` | `Bearer <token>` | The only assessment submission entry point. Score is derived server-side from `taskResponses`; returns the session record and clinician-review workflow state. |
 | `GET` | `/patient/confirmation-card` | `Bearer <token>` | Downloads/prints patient ID confirmation slip with check-in timestamp. |
 
 ---
@@ -1167,8 +1218,14 @@ Base URL: `http://localhost:5000/api/v1` (or relative `/api/v1` via Vite proxy).
 * **Request Payload**:
 ```json
 {
-  "overallScore": 84.5,
-  "riskLevel": "LOW",
+  "taskResponses": {
+    "game1": { "score": 88 },
+    "game2": { "score": 82 },
+    "game3": { "score": 90 },
+    "game4": { "score": 84 },
+    "game5": { "score": 78 },
+    "pianoSequence": { "score": 85 }
+  },
   "reactionTime": 248.2,
   "blinkRate": 14.0,
   "fixationScore": 92.4,
@@ -1178,10 +1235,14 @@ Base URL: `http://localhost:5000/api/v1` (or relative `/api/v1` via Vite proxy).
   "shimmer": 1.15,
   "symmetry": 95.8,
   "tremorScore": 8.4,
-  "recommendation": "Normal neurocognitive baseline. Re-evaluate in 12 months.",
+  "recommendation": "Session recorded. Clinician review required.",
   "doctorNotes": "Patient cooperative, high eye-tracking fixation hold."
 }
 ```
+
+There is no `overallScore` field: the score is computed server-side from `taskResponses`
+(`server/src/services/sessionScoring.ts`). Sending one is rejected with `400`. A session
+whose tasks do not cover all four domains stores `null` and is marked `NOT_INTERPRETABLE`.
 * **Response (`201 Created`)**:
 ```json
 {
@@ -1191,7 +1252,7 @@ Base URL: `http://localhost:5000/api/v1` (or relative `/api/v1` via Vite proxy).
     "userId": "c3e981ad-e612-4e44-bca5-b289cf422d14",
     "date": "2026-10-24T15:35:00.000Z",
     "overallScore": 84.5,
-    "riskLevel": "LOW",
+    "reviewState": "NOT_REVIEWED",
     "eyeMetrics": {
       "reactionTime": 248.2,
       "blinkRate": 14.0,
@@ -1226,7 +1287,7 @@ Base URL: `http://localhost:5000/api/v1` (or relative `/api/v1` via Vite proxy).
       "id": "e4f802d1-7c91-4e78-8d02-123456789abc",
       "date": "2026-10-24T15:35:00.000Z",
       "overallScore": 84.5,
-      "riskLevel": "LOW",
+      "reviewState": "NOT_REVIEWED",
       "eyeMetrics": { "reactionTime": 248.2, "blinkRate": 14.0, "fixationScore": 92.4 },
       "voiceMetrics": { "speechRate": 142.0, "pauseScore": 88.0, "jitter": 0.11, "shimmer": 1.15 },
       "faceMetrics": { "symmetry": 95.8, "tremorScore": 8.4 },
@@ -1247,7 +1308,7 @@ Base URL: `http://localhost:5000/api/v1` (or relative `/api/v1` via Vite proxy).
     "userId": "c3e981ad-e612-4e44-bca5-b289cf422d14",
     "date": "2026-10-24T15:35:00.000Z",
     "overallScore": 84.5,
-    "riskLevel": "LOW",
+    "reviewState": "NOT_REVIEWED",
     "eyeMetrics": { "reactionTime": 248.2, "blinkRate": 14.0, "fixationScore": 92.4 },
     "voiceMetrics": { "speechRate": 142.0, "pauseScore": 88.0, "jitter": 0.11, "shimmer": 1.15 },
     "faceMetrics": { "symmetry": 95.8, "tremorScore": 8.4 },

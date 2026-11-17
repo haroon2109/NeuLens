@@ -1,4 +1,12 @@
 import animate from 'tailwindcss-animate';
+import defaultColors from 'tailwindcss/colors';
+
+/**
+ * Colours resolve from the CSS custom properties in src/styles/tokens.css.
+ * That file is the only place a palette hex may be written; the rgb() wrapper
+ * keeps Tailwind's slash-opacity syntax working (`bg-forest/40`).
+ */
+const token = (name) => `rgb(var(--nl-${name}-rgb) / <alpha-value>)`;
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -28,7 +36,7 @@ export default {
         // `text-muted` is the portal's secondary-text colour. The old shadcn
         // default here was a pale cream, which made body copy invisible.
         muted: {
-          DEFAULT: '#63716B',
+          DEFAULT: token('muted'),
           foreground: 'hsl(var(--muted-foreground))',
         },
         popover: {
@@ -55,32 +63,37 @@ export default {
         // ─── NeuLens brand palette as bare utilities ──────────────
         // Portal screens write `bg-warm`, `border-line`, `text-ink`, etc.
         // These entries make those classes resolve to the public-site palette.
-        sage: { DEFAULT: '#A9C7B6', dark: '#7FA692', deep: '#46715E' },
-        mint: { DEFAULT: '#DFF3EA', soft: '#EEF8F3' },
-        warm: '#FBF7EF',
-        forest: { DEFAULT: '#2F5E4E', deep: '#24493D' },
-        ink: '#1B332B',
-        body: '#4E5F58',
-        line: { DEFAULT: '#E2E7DF', strong: '#CFD8CE' },
+        sage: { DEFAULT: token('sage'), dark: token('sage-dark'), deep: token('sage-deep') },
+        mint: { DEFAULT: token('mint'), soft: token('mint-soft') },
+        warm: token('warm'),
+        forest: { DEFAULT: token('forest'), deep: token('forest-deep') },
+        ink: token('ink'),
+        body: token('body'),
+        line: { DEFAULT: token('line'), strong: token('line-strong') },
         // Bare accents used with opacity modifiers (bg-amber/10, border-rose/60)
-        amber: { DEFAULT: '#D97706' },
-        rose: { DEFAULT: '#B42332' },
+        amber: { DEFAULT: token('warning') },
+        rose: { DEFAULT: token('rose') },
+        // Isolated accents; declared in tokens.css so components stay hex-free.
+        mist: token('mist'),
+        clay: { DEFAULT: token('clay'), deep: token('clay-deep') },
+        'mint-haze': token('mint-haze'),
+        'mint-veil': token('mint-veil'),
 
         // ─── NeuLens formalized palette ───────────────────────────
         nl: {
           // Public-site brand palette (sage, mint, warm white, forest)
-          sage:          '#A9C7B6',
-          'sage-dark':   '#7FA692',
-          'sage-deep':   '#46715E',
-          mint:          '#DFF3EA',
-          'mint-soft':   '#EEF8F3',
-          warm:          '#FBF7EF',
-          forest:        '#2F5E4E',
-          'forest-deep': '#24493D',
-          ink:           '#1B332B',
-          body:          '#4E5F58',
-          muted:         '#63716B',
-          line:          '#E2E7DF',
+          sage:          token('sage'),
+          'sage-dark':   token('sage-dark'),
+          'sage-deep':   token('sage-deep'),
+          mint:          token('mint'),
+          'mint-soft':   token('mint-soft'),
+          warm:          token('warm'),
+          forest:        token('forest'),
+          'forest-deep': token('forest-deep'),
+          ink:           token('ink'),
+          body:          token('body'),
+          muted:         token('muted'),
+          line:          token('line'),
           // Product/portal tokens
           navy:          'var(--nl-navy)',
           blue:          'var(--nl-blue)',
@@ -101,56 +114,55 @@ export default {
         // brand scales. Remapping those scales keeps every screen on the same
         // sage / mint / forest palette as the public site without rewriting
         // hundreds of classNames.
+        // Every scale below is a name for the same brand ramp. They are kept
+        // so existing classNames still resolve; the values come from tokens.css.
         slate: {
-          50: '#FAF8F3', 100: '#F2F0E9', 200: '#E2E7DF', 300: '#CFD8CE',
-          400: '#A6B4AB', 500: '#63716B', 600: '#4E5F58', 700: '#3C4F47',
-          800: '#2A3D35', 900: '#1B332B', 950: '#132520',
+          50: token('sand-50'), 100: token('sand-100'), 200: token('line'), 300: token('line-strong'),
+          400: token('sand-400'), 500: token('muted'), 600: token('body'), 700: token('sand-700'),
+          800: token('sand-800'), 900: token('ink'), 950: token('ink-950'),
         },
         blue: {
-          50: '#EEF8F3', 100: '#DFF3EA', 200: '#C4E4D5', 300: '#A9C7B6',
-          400: '#7FA692', 500: '#5E8B76', 600: '#46715E', 700: '#2F5E4E',
-          800: '#24493D', 900: '#1D3B31', 950: '#142A23',
+          50: token('mint-soft'), 100: token('mint'), 200: token('mint-200'), 300: token('sage'),
+          400: token('sage-dark'), 500: token('forest-500'), 600: token('sage-deep'), 700: token('forest'),
+          800: token('forest-deep'), 900: token('forest-900'), 950: token('forest-950'),
         },
         sky: {
-          50: '#F1F8F4', 100: '#E5F1EA', 200: '#C8E2D5', 300: '#AACEBB',
-          400: '#82AF99', 500: '#5F9079', 600: '#46715E', 700: '#2F5E4E',
-          800: '#24493D', 900: '#1D3B31', 950: '#142A23',
+          50: token('tint-50'), 100: token('tint-100'), 200: token('tint-200'), 300: token('tint-300'),
+          400: token('tint-400'), 500: token('tint-500'), 600: token('sage-deep'), 700: token('forest'),
+          800: token('forest-deep'), 900: token('forest-900'), 950: token('forest-950'),
         },
         indigo: {
-          50: '#F1F8F4', 100: '#E5F1EA', 200: '#C8E2D5', 300: '#AACEBB',
-          400: '#82AF99', 500: '#5F9079', 600: '#46715E', 700: '#2F5E4E',
-          800: '#24493D', 900: '#1D3B31', 950: '#142A23',
+          50: token('tint-50'), 100: token('tint-100'), 200: token('tint-200'), 300: token('tint-300'),
+          400: token('tint-400'), 500: token('tint-500'), 600: token('sage-deep'), 700: token('forest'),
+          800: token('forest-deep'), 900: token('forest-900'), 950: token('forest-950'),
         },
         violet: {
-          50: '#F1F8F4', 100: '#E5F1EA', 200: '#C8E2D5', 300: '#AACEBB',
-          400: '#82AF99', 500: '#5F9079', 600: '#46715E', 700: '#2F5E4E',
-          800: '#24493D', 900: '#1D3B31', 950: '#142A23',
+          50: token('tint-50'), 100: token('tint-100'), 200: token('tint-200'), 300: token('tint-300'),
+          400: token('tint-400'), 500: token('tint-500'), 600: token('sage-deep'), 700: token('forest'),
+          800: token('forest-deep'), 900: token('forest-900'), 950: token('forest-950'),
         },
         purple: {
-          50: '#F1F8F4', 100: '#E5F1EA', 200: '#C8E2D5', 300: '#AACEBB',
-          400: '#82AF99', 500: '#5F9079', 600: '#46715E', 700: '#2F5E4E',
-          800: '#24493D', 900: '#1D3B31', 950: '#142A23',
+          50: token('tint-50'), 100: token('tint-100'), 200: token('tint-200'), 300: token('tint-300'),
+          400: token('tint-400'), 500: token('tint-500'), 600: token('sage-deep'), 700: token('forest'),
+          800: token('forest-deep'), 900: token('forest-900'), 950: token('forest-950'),
         },
-        // Clinician portal scale (was referenced but never defined)
+        // Clinician portal scale
         medical: {
-          50: '#EEF8F3', 100: '#DFF3EA', 200: '#C4E4D5', 300: '#A9C7B6',
-          400: '#7FA692', 500: '#5E8B76', 600: '#46715E', 700: '#2F5E4E',
-          800: '#24493D', 900: '#1D3B31', 950: '#142A23',
+          50: token('mint-soft'), 100: token('mint'), 200: token('mint-200'), 300: token('sage'),
+          400: token('sage-dark'), 500: token('forest-500'), 600: token('sage-deep'), 700: token('forest'),
+          800: token('forest-deep'), 900: token('forest-900'), 950: token('forest-950'),
         },
         // Legacy aliases kept for backward-compat with existing classNames
         health: {
-          blue:    { DEFAULT: '#2F5E4E', light: '#DFF3EA', dark: '#24493D', deep: '#1B332B' },
-          teal:    { DEFAULT: '#0D9488', light: '#99F6E4' },
-          green:   { DEFAULT: '#059669', light: '#D1FAE5' },
-          orange:  { DEFAULT: '#D97706', light: '#FEF3C7' },
-          red:     { DEFAULT: '#DC2626', light: '#FEE2E2' },
-          purple:  { DEFAULT: '#46715E', light: '#DFF3EA' },
-          gray: {
-            50: '#F8FAFC', 100: '#F1F5F9', 200: '#E2E8F0',
-            300: '#CBD5E1', 400: '#94A3B8', 500: '#64748B',
-            600: '#475569', 700: '#334155', 800: '#1E293B',
-            900: '#0F172A', 950: '#020617',
-          },
+          blue:    { DEFAULT: token('forest'), light: token('mint'), dark: token('forest-deep'), deep: token('ink') },
+          teal:    { DEFAULT: token('teal'), light: token('teal-light') },
+          green:   { DEFAULT: token('success'), light: token('success-light') },
+          orange:  { DEFAULT: token('warning'), light: token('warning-light') },
+          red:     { DEFAULT: token('error'), light: token('error-light') },
+          purple:  { DEFAULT: token('sage-deep'), light: token('mint') },
+          // Stock Tailwind neutrals, not brand colours: reference the
+          // framework's own scale instead of restating its hexes.
+          gray: defaultColors.slate,
         },
       },
       borderRadius: {

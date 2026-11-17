@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
+  Accessibility,
   ArrowRight,
   AudioLines,
   Building2,
@@ -45,7 +46,7 @@ export const PatientHubPage: React.FC = () => {
 
           <Link
             to="/doctor/login"
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-line bg-white px-3 text-[12px] font-semibold text-ink transition hover:border-sage-dark hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line bg-white px-3 text-[14px] font-semibold text-ink transition hover:border-sage-dark hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
           >
             <Stethoscope className="h-4 w-4 text-sage-deep" aria-hidden="true" />
             <span className="hidden sm:inline">Staff sign in</span>
@@ -57,7 +58,7 @@ export const PatientHubPage: React.FC = () => {
       <main className="mx-auto flex w-full max-w-7xl flex-1 items-center px-5 py-10 sm:px-8 sm:py-14 lg:py-16">
         <div className="grid w-full items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
           <MotionReveal className="mx-auto w-full max-w-[570px] lg:mx-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-semibold text-forest shadow-xs">
+            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-[14px] font-semibold text-forest shadow-xs">
               <ShieldCheck className="h-3.5 w-3.5 text-forest" aria-hidden="true" />
               Cognitive health screening
             </div>
@@ -107,7 +108,7 @@ export const PatientHubPage: React.FC = () => {
                 <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.03em] text-ink sm:text-[24px]">
                   Continue to screening
                 </h2>
-                <p className="mt-2 text-[13px] leading-5 text-body">
+                <p className="mt-2 text-[14px] leading-5 text-body">
                   Choose the option that applies to you.
                 </p>
               </div>
@@ -116,7 +117,7 @@ export const PatientHubPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/patient/register')}
-                  className="group w-full rounded-xl border border-sage/70 bg-mint/40 p-4 text-left transition hover:-translate-y-0.5 hover:border-sage-dark hover:bg-mint/60 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest sm:p-5"
+                  className="group w-full rounded-xl border border-sage/70 bg-mint/40 p-4 text-start transition hover:-translate-y-0.5 hover:border-sage-dark hover:bg-mint/60 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest sm:p-5"
                 >
                   <span className="flex items-start gap-3.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-forest text-white shadow-pill">
@@ -127,7 +128,7 @@ export const PatientHubPage: React.FC = () => {
                         <span className="text-[14px] font-semibold text-ink">New patient</span>
                         <ArrowRight className="h-4 w-4 shrink-0 text-forest transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                       </span>
-                      <span className="mt-1 block text-[12px] leading-5 text-body">
+                      <span className="mt-1 block text-[14px] leading-5 text-body">
                         Create a patient profile to begin.
                       </span>
                       <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-body">
@@ -141,7 +142,7 @@ export const PatientHubPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/patient/login')}
-                  className="group w-full rounded-xl border border-line bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-sage-dark hover:bg-warm/60 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep sm:p-5"
+                  className="group w-full rounded-xl border border-line bg-white p-4 text-start transition hover:-translate-y-0.5 hover:border-sage-dark hover:bg-warm/60 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep sm:p-5"
                 >
                   <span className="flex items-start gap-3.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-mint text-forest">
@@ -152,7 +153,7 @@ export const PatientHubPage: React.FC = () => {
                         <span className="text-[14px] font-semibold text-ink">Returning patient</span>
                         <ArrowRight className="h-4 w-4 shrink-0 text-sage-deep transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                       </span>
-                      <span className="mt-1 block text-[12px] leading-5 text-body">
+                      <span className="mt-1 block text-[14px] leading-5 text-body">
                         Sign in with your Patient ID to continue.
                       </span>
                     </span>
@@ -160,9 +161,35 @@ export const PatientHubPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="mt-6 flex items-start gap-2 rounded-xl border border-line bg-warm/70 px-3.5 py-3 text-xs leading-5 text-body">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-sage-deep" aria-hidden="true" />
-                <p>Screening results support clinical review and do not provide a diagnosis.</p>
+              <div className="mt-6 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/patient/accessible-checkin')}
+                  className="group w-full rounded-xl border border-amber-300 bg-amber-50/70 p-4 text-start transition hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-50 hover:shadow-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 sm:p-5"
+                >
+                  <span className="flex items-start gap-3.5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-600 text-white shadow-pill">
+                      <Accessibility className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center justify-between gap-3">
+                        <span className="text-[14px] font-semibold text-ink" dir="rtl" lang="ar">متابعة مبسطة (عربي) — بدون كاميرا/ميكروفون</span>
+                        <ArrowRight className="h-4 w-4 shrink-0 text-amber-700 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                      </span>
+                      <span className="mt-1 block text-[14px] leading-5 text-body" dir="rtl" lang="ar">
+                        تذكّر كلمات وأسئلة عن الأنشطة اليومية، بأزرار كبيرة ولوحة مفاتيح وقارئ شاشة وقراءة صوتية اختيارية. صياغة مسودّة غير مُحقَّقة.
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-body" dir="ltr" lang="en">
+                        Accessible Arabic check-in (word-list recall + daily-function). No camera, no microphone, no vision required. Draft wording — not validated; not a score or diagnosis.
+                      </span>
+                    </span>
+                  </span>
+                </button>
+
+                <div className="flex items-start gap-2 rounded-xl border border-line bg-warm/70 px-3.5 py-3 text-xs leading-5 text-body">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-sage-deep" aria-hidden="true" />
+                  <p>Screening results support clinical review and do not provide a diagnosis.</p>
+                </div>
               </div>
             </div>
           </MotionReveal>

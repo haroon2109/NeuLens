@@ -10,6 +10,63 @@ import { gnaniEvonService } from '../services/gnani/evon.service';
 import { GNANI_LANGUAGE_CATALOG, SupportedLanguageCode } from '../services/gnani/types';
 import { transcribeQuerySchema, synthesizeBodySchema, evonSummarySchema } from '../validation/voice.schemas';
 
+// Daily budget protection for the shared paid Gnani key. A paid key is active,
+// so STT transcription and TTS synthesis draw from one daily allowance that
+// resets at 00:00 UTC. Per-IP per-minute rate limits above still guard against
+// bursts; this budget caps total key spend for the day. Gnani's own 429s are
+// already serialized by the Gnani queue.
+
+const DEFAULT_DAILY_BUDGET = 1000;
+const parsedDailyBudget = Number(process.env.GNANI_DAILY_BUDGET);
+const DAILY_BUDGET =
+  Number.isFinite(parsedDailyBudget) && parsedDailyBudget > 0
+    ? Math.floor(parsedDailyBudget)
+    : DEFAULT_DAILY_BUDGET;
+
+interface DailyBudgetState {
+  used: number;
+  dayKey: string;
+  resetsAt: number;
+}
+
+let dailyBudget: DailyBudgetState = { used: 0, dayKey: '', resetsAt: 0 };
+
+function utcDayKey(now: number): string {
+  return new Date(now).toISOString().slice(0, 10);
+}
+
+function nextUtcMidnight(now: number): number {
+  const d = new Date(now);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+}
+
+function checkDailyBudget(now = Date.now()): boolean {
+  const dayKey = utcDayKey(now);
+
+  if (dailyBudget.dayKey !== dayKey) {
+    dailyBudget = { used: 0, dayKey, resetsAt: nextUtcMidnight(now) };
+  }
+
+  if (dailyBudget.used >= DAILY_BUDGET) {
+    return false;
+  }
+
+  dailyBudget.used++;
+  return true;
+}
+
+export function getDailyBudgetState() {
+  return {
+    limit: DAILY_BUDGET,
+    used: dailyBudget.dayKey === utcDayKey(Date.now()) ? dailyBudget.used : 0,
+    remaining: Math.max(
+      0,
+      DAILY_BUDGET - (dailyBudget.dayKey === utcDayKey(Date.now()) ? dailyBudget.used : 0)
+    ),
+    resetsAt: dailyBudget.dayKey === utcDayKey(Date.now()) ? dailyBudget.resetsAt : nextUtcMidnight(Date.now())
+  };
+}
+
 // Lightweight in-memory rate limiter to prevent credit depletion (5,000 credit budget preservation)
 interface RateLimitBucket {
   count: number;
@@ -61,7 +118,8 @@ export class VoiceController {
         supportedLanguages: Object.keys(GNANI_LANGUAGE_CATALOG),
         cacheEntries: gnaniTtsService.getCacheSize()
       },
-      evon: evonStatus
+      evon: evonStatus,
+      quota: getDailyBudgetState()
     });
   }
 
@@ -88,6 +146,15 @@ export class VoiceController {
       return res.status(429).json({
         error: 'Too many transcription requests. Please wait a minute before retrying.',
         code: 'RATE_LIMIT_EXCEEDED'
+      });
+    }
+
+    // Daily budget for the shared paid Gnani key (STT + TTS).
+    if (!checkDailyBudget()) {
+      return res.status(429).json({
+        error: 'Daily Gnani speech budget exhausted. Speech features resume at 00:00 UTC.',
+        code: 'QUOTA_EXCEEDED',
+        resetsAt: dailyBudget.resetsAt
       });
     }
 
@@ -147,12 +214,13 @@ export class VoiceController {
       );
 
       return res.status(200).json({
-        success: true,
+        success: result.success,
         transcript: result.transcript,
         language: result.language,
         requestId: result.requestId,
         confidence: result.confidence,
-        latencyMs: result.latencyMs
+        latencyMs: result.latencyMs,
+        ...(result.error ? { error: result.error } : {})
       });
     } catch (err: any) {
       console.error('[VoiceController]: Transcription failure:', err.message);
@@ -264,6 +332,15 @@ export class VoiceController {
       return res.status(429).json({
         error: 'Too many speech synthesis requests. Please wait a minute before retrying.',
         code: 'RATE_LIMIT_EXCEEDED'
+      });
+    }
+
+    // Daily budget for the shared paid Gnani key (STT + TTS).
+    if (!checkDailyBudget()) {
+      return res.status(429).json({
+        error: 'Daily Gnani speech budget exhausted. Speech features resume at 00:00 UTC.',
+        code: 'QUOTA_EXCEEDED',
+        resetsAt: dailyBudget.resetsAt
       });
     }
 

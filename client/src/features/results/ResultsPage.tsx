@@ -36,7 +36,8 @@ import {
 
 export const ResultsPage: React.FC = () => {
   const { scores, biometricMetrics } = useScreeningStore();
-  if (scores.compositeScore <= 0 || !biometricMetrics) {
+  const compositeScore = scores.compositeScore;
+  if (compositeScore === null || compositeScore <= 0 || !biometricMetrics) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <section className="max-w-lg rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
@@ -54,7 +55,7 @@ export const ResultsPage: React.FC = () => {
 
   const activeScores = scores;
 
-  const composite = activeScores.compositeScore;
+  const composite = compositeScore;
 
   // Radar Chart Data for Domain Performance
   const radarData = [
@@ -78,7 +79,7 @@ export const ResultsPage: React.FC = () => {
             Screening Results & Biometrics
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Subject ID: <strong className="text-slate-800">P-1024 (Jane Doe, 75y F)</strong> • Examined on {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            Subject ID: <strong className="text-slate-800">P-1024 (Jane Doe, 75y F)</strong> • Examined on {new Date().toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
 

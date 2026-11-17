@@ -11,9 +11,22 @@ import {
   getVerificationStatus,
 } from '../controllers/account.controller';
 import { authenticateToken } from '../middleware/auth';
+import { createRateLimiter } from '../middleware/rateLimit';
 import { demoAccessEnabled } from '../services/demoAccess';
 
 const router = Router();
+
+// Authentication endpoints are a credential-guessing surface (signup, OTP
+// verify/resend, password reset) in addition to the per-credential throttles
+// inside the login controllers.
+router.use(
+  createRateLimiter({
+    limit: Number(process.env.AUTH_RATE_LIMIT_MAX ?? 30),
+    windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? 60 * 1000),
+    keyPrefix: 'auth',
+    message: 'Too many authentication requests. Please wait a minute and try again.',
+  })
+);
 
 // Shared role-based authentication flow (screens 08–14)
 router.get('/demo-status', (_req, res) => {

@@ -20,7 +20,7 @@ import {
   Toggle,
   InfoRow,
   Notice,
-  RiskPill,
+  ReviewStatePill,
   ReviewPill,
   ChangePill,
   MetricTile,
@@ -31,6 +31,7 @@ import {
   dangerButton,
   formatDate,
   formatDateTime,
+  formatScore,
 } from './ui';
 
 /* ---------------------------------------------------------------
@@ -66,7 +67,7 @@ const escapeHtml = (s: string) =>
   });
 
 const ReportCenterCard: React.FC<{
-  patients: Array<{ id: string; patientId: string; name: string; age: number; risk?: string | null }>;
+  patients: Array<{ id: string; patientId: string; name: string; age: number; reviewState?: string | null }>;
   onSelect: (id: string) => void;
   selectedId: string | null;
 }> = ({ patients, onSelect, selectedId }) => (
@@ -91,7 +92,7 @@ const ReportCenterCard: React.FC<{
               </div>
               <div className="mt-1.5 flex items-center gap-2">
                 <span className="text-xs text-muted truncate">{p.patientId}</span>
-                <span className="ml-auto"><RiskPill risk={p.risk} /></span>
+                <span className="ml-auto"><ReviewStatePill state={p.reviewState} /></span>
               </div>
             </button>
           </li>
@@ -110,7 +111,7 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Clinical report</p>
             <h3 className="mt-2 text-[17px] font-semibold text-ink">{patient.name}</h3>
-            <p className="mt-1 text-[12px] text-body">{patient.age} yrs · {patient.gender ?? 'Not recorded'} · {patient.patientId}</p>
+            <p className="mt-1 text-[14px] text-body">{patient.age} yrs · {patient.gender ?? 'Not recorded'} · {patient.patientId}</p>
           </div>
           <div className="flex gap-2 shrink-0">
             <button type="button" onClick={onPrint} className={primaryButton}>
@@ -123,7 +124,10 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
         {latest && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <MetricTile label="Latest screening" value={formatDate(latest.date) || 'Not available'} detail={latest.assessmentType ? `Type: ${latest.assessmentType}` : 'Standard battery'} />
-            <MetricTile label="Overall score" value={`${Math.round(latest.overallScore)} / 100`} />
+            <MetricTile
+              label="Overall score"
+              value={formatScore(latest.overallScore)}
+            />
             <div className="rounded-xl border border-line bg-warm/60 p-3">
               <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted">Review status</p>
               <div className="mt-1.5"><ReviewPill status={latest.reviewStatus} /></div>
@@ -131,7 +135,7 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
           </div>
         )}
         {latest && (
-          <div className="mt-4 rounded-xl border border-line bg-warm/60 p-4 text-[12px] leading-6 text-body">
+          <div className="mt-4 rounded-xl border border-line bg-warm/60 p-4 text-[14px] leading-6 text-body">
             <p className="font-semibold text-ink mb-1">Screening recommendation</p>
             {latest.report?.recommendation ? <p className="whitespace-pre-line">{latest.report.recommendation}</p> : <p className="text-muted italic">No recommendation recorded for this session.</p>}
             {latest.report?.doctorNotes ? (
@@ -147,7 +151,7 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
       <Card padded>
         <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Assessment history</h2>
         {assessments.length === 0 ? (
-          <p className="text-[12px] text-muted">No assessments recorded for this patient.</p>
+          <p className="text-[14px] text-muted">No assessments recorded for this patient.</p>
         ) : (
           <ul className="space-y-2">
             {assessments.map((a) => (
@@ -157,8 +161,8 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
                   <span className="text-xs text-muted">{a.assessmentType ?? 'Standard'}</span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
-                  <InfoRow label="Overall score" value={`${Math.round(a.overallScore)} / 100`} />
-                  <InfoRow label="Risk level" value={a.riskLevel} />
+                  <InfoRow label="Overall score" value={formatScore(a.overallScore)} />
+                  <InfoRow label="Review state" value={String(a.reviewState || 'NOT_REVIEWED').replace(/_/g, ' ').toLowerCase()} />
                   <InfoRow label="Status" value={a.status} />
                   <InfoRow label="Review" value={<ReviewPill status={a.reviewStatus} />} />
                 </div>
@@ -176,7 +180,7 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
           <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted mb-3">Change summary</h2>
           <div className="flex items-center gap-2 mb-3">
             <ChangePill status={changeSummary.status === 'REVIEW' ? 'REVIEW' : changeSummary.status === 'NO_CHANGE' ? 'NO_CHANGE' : 'REVIEW'} />
-            <span className="text-[12px] font-semibold text-body">
+            <span className="text-[14px] font-semibold text-body">
               {changeSummary.status === 'INSUFFICIENT_DATA' ? 'Not enough comparable data' : changeSummary.status === 'NO_CHANGE' ? 'No notable change detected' : 'Review suggested'}
             </span>
           </div>
@@ -184,7 +188,11 @@ const ClinicalReportCard: React.FC<ClinicalReportCardProps> = ({ patient, assess
           <InfoRow label="Previous score" value={changeSummary.cognitive.previousScore !== null ? `${Math.round(changeSummary.cognitive.previousScore)} / 100` : 'Missing'} />
           <InfoRow label="Change" value={changeSummary.cognitive.change !== null ? `${changeSummary.cognitive.change > 0 ? '+' : ''}${changeSummary.cognitive.change.toFixed(1)} pts` : '—'} />
           <InfoRow label="Comparable assessments" value={String(changeSummary.cognitive.comparableAssessments)} />
-          <InfoRow label="Outside observed baseline" value={changeSummary.cognitive.outsideObservedBaseline ? 'Yes' : 'No'} />
+          <InfoRow label="Decline beyond measured variability" value={changeSummary.cognitive.declineBeyondReliableChange ? 'Yes' : 'No'} />
+          <InfoRow
+            label="Reliable-change threshold"
+            value={changeSummary.cognitive.reliability.reliableChangeThreshold != null ? `±${changeSummary.cognitive.reliability.reliableChangeThreshold} pts` : 'Not established'}
+          />
           {changeSummary.reviewReasons.length > 0 && (
             <div className="mt-2 text-xs text-body">
               <p className="font-semibold mb-1">Review reasons</p>
@@ -279,7 +287,7 @@ interface ReportRow {
   value: string;
 }
 
-const buildReportRows = (latest: { overallScore: number; assessmentType?: string | null; taskResponses?: Record<string, any> | null; eyeMetrics?: { reactionTime?: number; blinkRate?: number; fixationScore?: number } | null; voiceMetrics?: { speechRate?: number; pauseScore?: number; jitter?: number; shimmer?: number } | null; faceMetrics?: { symmetry?: number; tremorScore?: number } | null } | null, changeSummary: { status: string; cognitive: { latestScore: number | null; previousScore: number | null; change: number | null; baselineRange: { minimum: number; maximum: number } | null; comparableAssessments: number; outsideObservedBaseline: boolean } | null }): ReportRow[] => {
+const buildReportRows = (latest: { overallScore: number; assessmentType?: string | null; taskResponses?: Record<string, any> | null; eyeMetrics?: { reactionTime?: number; blinkRate?: number; fixationScore?: number } | null; voiceMetrics?: { speechRate?: number; pauseScore?: number; jitter?: number; shimmer?: number } | null; faceMetrics?: { symmetry?: number; tremorScore?: number } | null } | null, changeSummary: { status: string; cognitive: { latestScore: number | null; previousScore: number | null; change: number | null; baselineRange: { minimum: number; maximum: number } | null; comparableAssessments: number; declineBeyondReliableChange: boolean } | null }): ReportRow[] => {
   if (!latest) return [];
   const rows: ReportRow[] = [
     { label: 'Screening date', value: '' },
@@ -319,7 +327,7 @@ export const DoctorReportsPage: React.FC = () => {
     if (!patient || !assessments.length) return;
     printWindow(`NeuLens Clinical Report — ${patient.name}`, [
       { label: 'Patient', value: `${patient.name}\n${patient.age} yrs · ${patient.gender ?? 'Not recorded'}\n${patient.patientId}\n${patient.email ?? 'No email'}` },
-      { label: 'Latest screening', value: assessments[0] ? `${formatDateTime(assessments[0].date)}\n${assessments[0].assessmentType ?? 'Standard battery'}\nOverall score: ${Math.round(assessments[0].overallScore)} / 100` : '' },
+      { label: 'Latest screening', value: assessments[0] ? `${formatDateTime(assessments[0].date)}\n${assessments[0].assessmentType ?? 'Standard battery'}\nOverall score: ${formatScore(assessments[0].overallScore)}` : '' },
       { label: 'Change summary', value: changeSummary ? `${changeSummary.status}\nLatest score: ${changeSummary.cognitive.latestScore !== null ? Math.round(changeSummary.cognitive.latestScore) + ' / 100' : 'Missing'}\nPrevious score: ${changeSummary.cognitive.previousScore !== null ? Math.round(changeSummary.cognitive.previousScore) + ' / 100' : 'Missing'}\nComparable assessments: ${changeSummary.cognitive.comparableAssessments}` : '' },
       { label: 'Reviewer note', value: assessments[0]?.report?.doctorNotes ?? 'No reviewer notes recorded.' },
     ]);
@@ -380,7 +388,7 @@ export const DoctorReportsPage: React.FC = () => {
 const SectionHeading: React.FC<{ title: string; description?: string }> = ({ title, description }) => (
   <div className="border-b border-line pb-3 mb-4">
     <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-    {description && <p className="mt-1 text-[12px] text-body">{description}</p>}
+    {description && <p className="mt-1 text-[14px] text-body">{description}</p>}
   </div>
 );
 

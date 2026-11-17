@@ -29,7 +29,7 @@ interface PatientRecord {
   handedness?: string | null;
   assessmentsCount: number;
   latestScore: number | null;
-  latestRisk: string | null;
+  reviewState: string | null;
   latestAssessmentDate: string | null;
   changeStatus: 'INSUFFICIENT_DATA' | 'NO_CHANGE' | 'REVIEW';
   cognitiveChange: number | null;
@@ -44,14 +44,16 @@ export const DoctorPatientsPage: React.FC = () => {
   const [patients, setPatients] = useState<PatientRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [riskFilter, setRiskFilter] = useState<'ALL' | 'LOW' | 'MODERATE' | 'HIGH'>('ALL');
+  // Administrative review filter. There is no risk-tier filter any more: the
+  // product does not classify patients into risk bands.
+  const [reviewFilter, setReviewFilter] = useState<'ALL' | 'REVIEW_PROMPT' | 'NOT_REVIEWED' | 'NOT_INTERPRETABLE'>('ALL');
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPatients = async (query = searchQuery, risk = riskFilter) => {
+  const fetchPatients = async (query = searchQuery, reviewState = reviewFilter) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await doctorApi.getPatients(query, risk);
+      const data = await doctorApi.getPatients(query, reviewState);
       setPatients(data || []);
     } catch (err: any) {
       console.error('Failed to load patient records:', err);
@@ -62,42 +64,47 @@ export const DoctorPatientsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPatients(searchQuery, riskFilter);
-  }, [riskFilter]);
+    fetchPatients(searchQuery, reviewFilter);
+  }, [reviewFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchPatients(searchQuery, riskFilter);
+    fetchPatients(searchQuery, reviewFilter);
   };
 
-  const getRiskBadge = (risk: string | null) => {
-    if (!risk) {
+  const getReviewBadge = (state: string | null) => {
+    if (!state) {
       return (
         <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-warm text-muted">
           No Screenings
         </span>
       );
     }
-    switch (risk.toUpperCase()) {
-      case 'HIGH':
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
-            High Risk
-          </span>
-        );
-      case 'MODERATE':
+    switch (state.toUpperCase()) {
+      case 'REVIEW_PROMPT':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-            Moderate
+            Review prompt
+          </span>
+        );
+      case 'NOT_INTERPRETABLE':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-warm text-body border border-line">
+            Not interpretable
+          </span>
+        );
+      case 'CLINICIAN_REVIEWED':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Clinician reviewed
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Low Risk
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-medical-700 border border-blue-200">
+            Not reviewed
           </span>
         );
     }
@@ -183,22 +190,22 @@ export const DoctorPatientsPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Risk Stratification Tabs */}
+        {/* Review-state tabs */}
         <div className="flex items-center gap-1 bg-warm p-1.5 rounded-2xl text-xs font-semibold self-stretch md:self-auto justify-center">
           <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] px-2 hidden sm:inline">
-            Risk Tier:
+            Review state:
           </span>
-          {(['ALL', 'LOW', 'MODERATE', 'HIGH'] as const).map((r) => (
+          {(['ALL', 'REVIEW_PROMPT', 'NOT_REVIEWED', 'NOT_INTERPRETABLE'] as const).map((r) => (
             <button
               key={r}
-              onClick={() => setRiskFilter(r)}
+              onClick={() => setReviewFilter(r)}
               className={`px-3 py-1.5 rounded-xl transition-all ${
-                riskFilter === r
+                reviewFilter === r
                   ? 'bg-white text-ink shadow-card font-bold'
                   : 'text-body hover:text-ink'
               }`}
             >
-              {r === 'ALL' ? 'All Patients' : r.charAt(0) + r.slice(1).toLowerCase()}
+              {r === 'ALL' ? 'All patients' : r === 'REVIEW_PROMPT' ? 'Review prompt' : r === 'NOT_REVIEWED' ? 'Not reviewed' : 'Not interpretable'}
             </button>
           ))}
         </div>
@@ -233,7 +240,7 @@ export const DoctorPatientsPage: React.FC = () => {
                   <th className="py-3.5 px-6">Assessments</th>
                   <th className="py-3.5 px-6">Latest Score</th>
                   <th className="py-3.5 px-6">Change Monitor</th>
-                  <th className="py-3.5 px-6">AI Risk Tier</th>
+                  <th className="py-3.5 px-6">Review state</th>
                   <th className="py-3.5 px-6 text-right">Medical Record</th>
                 </tr>
               </thead>
@@ -314,9 +321,9 @@ export const DoctorPatientsPage: React.FC = () => {
                       )}
                     </td>
 
-                    {/* Latest Risk */}
+                    {/* Administrative review state */}
                     <td className="py-4 px-6">
-                      {getRiskBadge(p.latestRisk)}
+                      {getReviewBadge(p.reviewState)}
                     </td>
 
                     {/* Action Links */}

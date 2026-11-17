@@ -4,6 +4,7 @@
  */
 
 import crypto from 'crypto';
+import { withGnaniQueue } from './gnaniQueue';
 import { GNANI_LANGUAGE_CATALOG, GnaniTtsOptions, GnaniTtsResult, SupportedLanguageCode } from './types';
 
 interface CachedAudioEntry {
@@ -136,15 +137,17 @@ export class GnaniTtsService {
     };
 
     try {
-      const response = await fetch(targetUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key-ID': apiKey
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
+      const response = await withGnaniQueue(() =>
+        fetch(targetUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key-ID': apiKey
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        })
+      );
 
       const latencyMs = Date.now() - startTime;
 

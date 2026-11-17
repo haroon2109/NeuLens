@@ -26,7 +26,8 @@ import {
   Activity,
   Cpu,
   Loader2,
-  Brain
+  Brain,
+  Languages
 } from 'lucide-react';
 import { useLanguageStore } from '../../services/language/LanguageManager';
 import { useVoiceAssistantStore } from '../../services/voice/VoiceInstructionEngine';
@@ -119,24 +120,64 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
   const submitAssessment = useCallback(async () => {
     const state = useScreeningStore.getState();
-    const compScore = state.scores.compositeScore || 84;
-    const derivedRisk = compScore >= 78 ? 'LOW' : compScore >= 60 ? 'MODERATE' : 'HIGH';
+    const compScore = state.scores.compositeScore;
+
+    // A session that did not produce a complete, interpretable score is not
+    // submitted. The previous behaviour fell back to 84 and labelled the result
+    // LOW risk; that presented a comfortable number for a battery that was not
+    // actually completed.
+    if (typeof compScore !== 'number' || !Number.isFinite(compScore)) {
+      setIsSavingAssessment(false);
+      // Name the activities that produced nothing, so the participant knows what
+      // to retry instead of being told vaguely that something was incomplete.
+      const activityLabels: Record<string, string> = {
+        game1: 'moving circle',
+        game2: 'card matching',
+        game3: 'spoken repeat',
+        game4: 'facial movement',
+        game5: 'connecting numbers',
+        pianoSequence: 'sequence memory',
+        game6: 'sequence memory'
+      };
+      const missing = Object.entries(activityLabels)
+        .filter(([key]) => typeof state.rawResponses[key]?.score !== 'number')
+        .map(([, label]) => label);
+      const uniqueMissing = Array.from(new Set(missing));
+      setSubmissionError(
+        `No score can be calculated because these activities produced no measurement: ${
+          uniqueMissing.length ? uniqueMissing.join(', ') : 'the full battery'
+        }. Nothing has been submitted. A missed activity is recorded as not measured rather than filled in, so the assessment has to be repeated to be interpretable.`
+      );
+      return;
+    }
+
     setIsSavingAssessment(true);
     setSubmissionError(null);
     try {
+      const metrics = state.biometricMetrics;
+      const pauseCount = metrics?.speech.pauseCount;
+      const smileIntensity = metrics?.face.smileIntensity;
       const result = await patientApi.submitAssessmentComplete({
         patientId: targetPatientId,
-        overallScore: compScore,
-        riskLevel: derivedRisk,
-        reactionTime: state.biometricMetrics?.eye.reactionTimes[0] || 240,
-        blinkRate: state.biometricMetrics?.eye.blinkCount || 14,
-        fixationScore: state.biometricMetrics?.eye.fixationStability || 88,
-        speechRate: state.biometricMetrics?.speech.speechRate || 135,
-        pauseScore: state.biometricMetrics?.speech.pauseCount ? Math.max(50, 100 - state.biometricMetrics.speech.pauseCount * 10) : 88,
-        jitter: state.biometricMetrics?.speech.jitter || 0.11,
-        shimmer: state.biometricMetrics?.speech.shimmer || 1.15,
-        symmetry: state.biometricMetrics?.face.stability || 94,
-        tremorScore: state.biometricMetrics?.face.smileIntensity ? 100 - state.biometricMetrics.face.smileIntensity : 8,
+        // Administration language and whether the participant was told what is
+        // unverified in that language. The server re-checks readiness itself and
+        // refuses an unacknowledged non-ready language with a 422.
+        language: state.languagePreference?.language || currentLanguage,
+        languageAcknowledged: state.languagePreference?.acknowledged === true,
+        // No score is sent: the server derives it from taskResponses. A client
+        // that claims a score gets a 400, which is the point.
+        // Unrecorded measurements are sent as null; the server never invents them.
+        reactionTime: metrics?.eye.reactionTimes[0] ?? null,
+        blinkRate: metrics?.eye.blinkCount ?? null,
+        fixationScore: metrics?.eye.fixationStability ?? null,
+        speechRate: metrics?.speech.speechRate ?? null,
+        // Derived from the recorded pause count; no floor, because a floor would
+        // report a minimum "acceptable" value that was never measured.
+        pauseScore: pauseCount != null ? Math.max(0, Math.min(100, 100 - pauseCount * 10)) : null,
+        jitter: metrics?.speech.jitter ?? null,
+        shimmer: metrics?.speech.shimmer ?? null,
+        symmetry: metrics?.face.stability ?? null,
+        tremorScore: smileIntensity != null ? 100 - smileIntensity : null,
         taskResponses: state.rawResponses,
         recommendation: 'Hospital cognitive screening completed. Attending physician review pending.'
       });
@@ -160,7 +201,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
     } finally {
       setIsSavingAssessment(false);
     }
-  }, [navigate, patientMode, setStep, targetPatientId, user?.role]);
+  }, [currentLanguage, navigate, patientMode, setStep, targetPatientId, user?.role]);
 
   // Stop/Start global timer
   const startTimer = (limit = 30.0) => {
@@ -269,7 +310,9 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
   const [focusProgress, setFocusProgress] = useState(0);
   const [game1ScoreDetails, setGame1ScoreDetails] = useState<{
     avgReaction: number;
-    fixationStability: number;
+    // Null when no camera was active: fixation was not measured, so it is not
+    // averaged into the activity score.
+    fixationStability: number | null;
     trackingAccuracy: number;
     score: number;
   } | null>(null);
@@ -310,9 +353,16 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
       stopTimer();
       speak(t.contextual.taskCompleted);
       const avgReaction = newTimes.reduce((a, b) => a + b, 0) / newTimes.length;
-      const trackingAccuracy = Math.max(70, Math.min(100, Math.round(100 - (avgReaction - 350) / 12)));
-      const fixationStability = Math.round(metrics.stability);
-      const finalG1Score = Math.round((trackingAccuracy + fixationStability) / 2);
+      // Accuracy is derived only from the recorded reaction times. The old formula
+      // floored it at 70, so a slow performance was reported as a normal one.
+      const trackingAccuracy = Math.max(0, Math.min(100, Math.round(100 - (avgReaction - 350) / 12)));
+      // Fixation needs a camera. Without one there is no eye measurement at all,
+      // so it stays null rather than being replaced by a zero (which would drag
+      // the score down) or a placeholder (which would invent it).
+      const fixationStability = cameraStatus === 'active' ? Math.round(metrics.stability) : null;
+      const finalG1Score = fixationStability === null
+        ? trackingAccuracy
+        : Math.round((trackingAccuracy + fixationStability) / 2);
 
       saveResponse('game1', {
         score: finalG1Score,
@@ -368,11 +418,16 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
     }
   }, [metrics.screenGaze, currentStep, dotPos, game1Finished]);
 
+  /**
+   * Leaving an activity before it produced a measurement records no score.
+   * The old fallbacks (50 on timeout, 80 on skip) wrote a plausible normal value
+   * for an activity the participant never actually completed.
+   */
   const handleNextGame1 = (isTimeout = false) => {
     stopTimer();
-    const score = isTimeout ? 50 : 80;
     saveResponse('game1', {
-      score,
+      score: null,
+      notMeasured: isTimeout ? 'TIME_LIMIT' : 'SKIPPED',
       reactionTimes: dotReactionTimes,
       ocularSummary: getSummary(),
     });
@@ -429,7 +484,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
           if (matchedDeck.every(c => c.isMatched)) {
             stopTimer();
             speak(t.contextual.taskCompleted);
-            const score = Math.max(50, 100 - mismatches * 8);
+            const score = Math.max(0, Math.min(100, 100 - mismatches * 8));
             saveResponse('game2', { score, mismatches });
             setStep('game3');
           }
@@ -458,8 +513,11 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
   const handleNextGame2 = (isTimeout = false) => {
     stopTimer();
-    const score = isTimeout ? 50 : 75;
-    saveResponse('game2', { score, mismatches });
+    saveResponse('game2', {
+      score: null,
+      notMeasured: isTimeout ? 'TIME_LIMIT' : 'SKIPPED',
+      mismatches,
+    });
     setStep('game3');
   };
 
@@ -473,6 +531,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
   const [voiceComplete, setVoiceComplete] = useState(false);
   const [recordedTranscript, setRecordedTranscript] = useState<string>('');
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isAnalyzingArabic, setIsAnalyzingArabic] = useState(false);
 
   // Live mic timer & audio parameters
   const [recordDuration, setRecordDuration] = useState(0);
@@ -495,6 +554,11 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
   const getTargetSentence = () => {
     switch (currentLanguage) {
+      case 'ar':
+        // Without this case an Arabic session showed Arabic instructions and then
+        // asked the participant to repeat an English sentence, so the recorded
+        // speech measured a language they were not assessed in.
+        return 'تُقاس سرعة الاستجابة العصبية من خلال المؤشرات المعرفية وتتبُّع المسارات البصرية.';
       case 'ta':
         return 'அறிவாற்றல் குறிப்பான்கள் மற்றும் பார்வை பாதைகள் நரம்பியல் எதிர்வினை வேகத்தை அளவிடுகின்றன.';
       case 'hi':
@@ -787,11 +851,17 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
   const handleNextGame3 = (isTimeout = false) => {
     stopTimer();
-    const score = isTimeout ? 60 : 88;
+    // The previous value (60 on timeout, 88 otherwise) was unrelated to what the
+    // participant said. The only defensible score is the server-measured word
+    // accuracy of the recording; with no recording there is no score.
+    const score = audioParams?.speechAccuracy ?? null;
     
     // Store locally in response store (preserving acoustic metrics while saving transcript)
     saveResponse('game3', {
       score,
+      notMeasured: score === null
+        ? (micPermissionDenied ? 'MICROPHONE_UNAVAILABLE' : isTimeout ? 'TIME_LIMIT' : 'NO_RECORDING')
+        : undefined,
       transcript: recordedTranscript,
       logs: voiceLogs,
       speechRate: audioParams?.speechRate,
@@ -807,6 +877,22 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
       voiceSummary: voiceSummaryRef.current
     });
     setStep('game4');
+  };
+
+  // Arabic transcript analysis (research-stage model inference)
+  const analyzeArabicArabicTranscript = async () => {
+    if (isAnalyzingArabic) return;
+    setIsAnalyzingArabic(true);
+    try {
+      const result = await patientApi.analyzeArabic(recordedTranscript, 'ARABERT');
+      // Handle result UI – show disclaimer that output is exploratory
+      console.log('Arabic LLM result:', result);
+      // You could additionally display result.sentiment, result.keyPhrases, etc.
+    } catch (err) {
+      console.error('Arabic analysis error:', err);
+    } finally {
+      setIsAnalyzingArabic(false);
+    }
   };
 
   // -------------------------------------------------------------
@@ -911,9 +997,13 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
   const handleNextGame4 = (isTimeout = false) => {
     stopTimer();
-    const score = isTimeout ? 60 : 85;
+    // 85/60 were invented constants: the activity either produced recorded facial
+    // movement or it did not. Not producing a measurement means no score.
     saveResponse('game4', {
-      score,
+      score: null,
+      notMeasured: isTimeout
+        ? 'TIME_LIMIT'
+        : cameraStatus === 'active' ? 'SKIPPED' : 'CAMERA_UNAVAILABLE',
       smileIntensity: Math.round(metrics.smile),
       jawOpening: Math.round(metrics.jawMovement),
       eyebrowsRaising: Math.round(metrics.eyebrows),
@@ -966,7 +1056,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
       if (nextExpected > 6) {
         stopTimer();
         speak(t.contextual.taskCompleted);
-        const score = Math.max(50, 100 - trailErrors * 12);
+        const score = Math.max(0, Math.min(100, 100 - trailErrors * 12));
         saveResponse('game5', { score, errors: trailErrors });
         setStep('submitting');
       }
@@ -988,10 +1078,29 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
   const handleNextGame5 = (isTimeout = false) => {
     stopTimer();
-    const score = isTimeout ? 50 : 70;
-    saveResponse('game5', { score, errors: trailErrors });
+    saveResponse('game5', {
+      score: null,
+      notMeasured: isTimeout ? 'TIME_LIMIT' : 'SKIPPED',
+      errors: trailErrors,
+    });
     setStep('submitting');
   };
+
+  // Keyboard equivalent for the trail-making activity: pressing the number of the
+  // next circle does the same thing as tapping it, so the activity does not demand
+  // fine pointing accuracy. Announced in the live region above.
+  useEffect(() => {
+    if (currentStep !== 'game5') return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!/^[1-6]$/.test(event.key)) return;
+      const node = nodes.find((item) => item.id === Number(event.key));
+      if (!node || node.isMatched) return;
+      event.preventDefault();
+      handleNodeClick(node);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [currentStep, nodes, expectedNode]);
 
   const completeFunctionalCheckIn = (skipped = false) => {
     if (!skipped) {
@@ -1119,6 +1228,16 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
           />
         </div>
       ) : null}
+
+      {/* The battery's activities are announced to screen readers as they change,
+          so a participant who cannot see the layout still knows what to do. */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {currentStep === 'game1' && 'Activity 1 of 5: Focus Orbit. Tap or focus the moving blue circle and press Enter when it appears.'}
+        {currentStep === 'game2' && 'Activity 2 of 5: Cortex Match. Turn over two cards at a time and match the pairs.'}
+        {currentStep === 'game3' && 'Activity 3 of 5: Spoken Repeat. Say the sentence you hear out loud.'}
+        {currentStep === 'game4' && 'Activity 4 of 5: Facial Movement. Copy the expression shown on the screen.'}
+        {currentStep === 'game5' && 'Activity 5 of 5: Connect the Numbers. Press the number keys 1 to 6 in order, or tap each circle.'}
+      </div>
 
       {/* Sensor permission states stay visible next to the activity they block. */}
       {(cameraStatus === 'error' || micPermissionDenied) && !permissionNoticeDismissed && (
@@ -1395,7 +1514,11 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                     </div>
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center">
                       <span className="text-xs text-health-gray-500 uppercase block font-semibold">Stability</span>
-                      <span className="text-sm font-bold text-slate-800 block mt-0.5">{game1ScoreDetails.fixationStability}%</span>
+                      <span className="text-sm font-bold text-slate-800 block mt-0.5">
+                        {game1ScoreDetails.fixationStability === null
+                          ? 'Not measured'
+                          : `${game1ScoreDetails.fixationStability}%`}
+                      </span>
                     </div>
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center">
                       <span className="text-xs text-health-gray-500 uppercase block font-semibold">Accuracy</span>
@@ -1666,6 +1789,24 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-1 max-w-md mx-auto">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Recorded Words</span>
                   <p className="text-sm font-medium text-slate-800 italic">"{recordedTranscript}"</p>
+                  {/* Arabic analysis – appears when Arabic language is selected */}
+                  {currentLanguage === 'ar' && (
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        disabled={isAnalyzingArabic}
+                        onClick={() => analyzeArabicArabicTranscript()}
+                        className="flex-1 py-2 px-4 bg-forest hover:bg-forest/80 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                        title="Analyze Arabic transcript (exploratory only)"
+                      >
+                        <Languages className="w-4 h-4" />
+                        <span>Analyze Arabic</span>
+                      </button>
+                      <span className="text-xs text-slate-400">
+                        {isAnalyzingArabic && 'Analyzing...'}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1840,7 +1981,29 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
         )}
 
         {/* Game 4: Mimic Sync */}
-        {currentStep === 'game4' && (
+        {currentStep === 'game4' && cameraStatus !== 'active' && (
+          <motion.div
+            key="game4-unavailable"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white border border-amber-200 rounded-3xl p-6 sm:p-8 space-y-4 text-center"
+          >
+            <h3 className="text-xl font-black font-display text-slate-900">Camera not available</h3>
+            <p className="text-sm text-slate-600 max-w-md mx-auto">
+              This activity reads facial movement through the camera, so it cannot be scored without one. It will be
+              recorded as not measured — the rest of the assessment still counts.
+            </p>
+            <button
+              type="button"
+              onClick={() => handleNextGame4(false)}
+              className="w-full max-w-xs mx-auto py-3 px-6 bg-medical-600 hover:bg-medical-700 text-white font-bold rounded-2xl"
+            >
+              Continue without this activity
+            </button>
+          </motion.div>
+        )}
+
+        {currentStep === 'game4' && cameraStatus === 'active' && (
           patientMode ? (
             <motion.div 
               key="game4"
@@ -2305,6 +2468,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
             <PianoSequenceTask
               patientMode={patientMode}
               speak={speak}
+              language={currentLanguage}
               onComplete={(result: any) => {
                 saveResponse('pianoSequence', result);
                 // Clinical fixed-observation activity complete -> proceed to analysis/submission
@@ -2582,11 +2746,11 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
             )}
           </div>
           <div className="z-10 bg-health-gray-950 bg-opacity-75 backdrop-blur-md px-2.5 py-1 flex items-center justify-between border-t border-health-gray-850">
-            <span className="text-[8px] font-bold text-health-gray-400 uppercase tracking-wider font-display">
+            <span className="text-[12px] font-bold text-health-gray-400 uppercase tracking-wider font-display">
               {cameraStatus === 'active' ? 'Sensor Feed' : 'Pending'}
             </span>
             <div className="flex items-center gap-1">
-              <span className="text-[8px] text-health-gray-400 font-mono">EAR: {metrics.ear.toFixed(2)}</span>
+              <span className="text-[12px] text-health-gray-400 font-mono">EAR: {metrics.ear.toFixed(2)}</span>
               <span className={`h-1.5 w-1.5 rounded-full ${
                 cameraStatus === 'active' ? 'bg-health-teal shadow-[0_0_6px_#34C759]' : 'bg-amber-500'
               }`} />

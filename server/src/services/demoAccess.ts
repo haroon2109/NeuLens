@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { accounts, type AccountRecord } from '../controllers/account.controller';
+import { DEMO_CLINICIAN_USER_ID, DEMO_PATIENT_USER_ID } from './demoRecords';
 import {
   inMemoryAssessments,
   inMemoryUsers,
@@ -28,7 +29,6 @@ export const DEMO_DOCTOR = {
   name: 'Dr. Amara Okafor',
 };
 
-const DEMO_PATIENT_USER_ID = 'demo-patient-margaret-ellis';
 const DEMO_PATIENT_ACCOUNT_ID = 'acct_demo_patient';
 const DEMO_DOCTOR_ACCOUNT_ID = 'acct_demo_doctor';
 
@@ -74,7 +74,7 @@ function ensureDemoPatientUser(): UserRecord {
   return user;
 }
 
-const DEMO_DOCTOR_USER_ID = 'demo-clinician-amara-okafor';
+const DEMO_DOCTOR_USER_ID = DEMO_CLINICIAN_USER_ID;
 
 /**
  * The doctor portal signs in against the clinical user table, while the shared
@@ -110,7 +110,7 @@ function demoAssessment(
   id: string,
   date: Date,
   overallScore: number,
-  riskLevel: string,
+  reviewState: string,
   reviewStatus: string,
   activities: Record<string, number>,
   sleep: number
@@ -138,7 +138,7 @@ function demoAssessment(
     userId: DEMO_PATIENT_USER_ID,
     date,
     overallScore,
-    riskLevel,
+    reviewState,
     status: 'COMPLETED',
     reviewStatus,
     reviewedBy: reviewStatus === 'PENDING_REVIEW' ? null : DEMO_DOCTOR.name,
@@ -168,7 +168,7 @@ function ensureDemoHistory(): void {
       'demo-assessment-latest',
       new Date(now - 45 * 60 * 1000),
       69,
-      'MODERATE',
+      'NOT_REVIEWED',
       'PENDING_REVIEW',
       { appointments: 1, medication: 1, finances: 1, household: 0 },
       1
@@ -177,7 +177,7 @@ function ensureDemoHistory(): void {
       'demo-assessment-35d',
       new Date(now - 35 * day),
       76,
-      'LOW',
+      'CLINICIAN_REVIEWED',
       'REVIEWED',
       { appointments: 0, medication: 0, finances: 0, household: 1 },
       0
@@ -186,7 +186,7 @@ function ensureDemoHistory(): void {
       'demo-assessment-95d',
       new Date(now - 95 * day),
       80,
-      'LOW',
+      'CLINICIAN_REVIEWED',
       'REVIEWED',
       { appointments: 0, medication: 0, finances: 0, household: 0 },
       0
@@ -195,7 +195,7 @@ function ensureDemoHistory(): void {
       'demo-assessment-155d',
       new Date(now - 155 * day),
       82,
-      'LOW',
+      'CLINICIAN_REVIEWED',
       'REVIEWED',
       { appointments: 0, medication: 0, finances: 0, household: 0 },
       0

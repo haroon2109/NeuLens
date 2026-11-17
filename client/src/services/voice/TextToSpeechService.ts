@@ -9,8 +9,10 @@
  */
 
 import { SupportedLanguage } from '../language/types';
+import { getLanguageInfo } from '../language/translations';
 import { ITextToSpeechService, TTSOptions } from './types';
 import { gnaniVoiceApi } from './gnaniVoiceApi';
+import { SpeechRecognitionService } from './SpeechRecognitionService';
 
 class GnaniTTSService implements ITextToSpeechService {
   // HTML Audio state for Gnani Timbre playback
@@ -119,6 +121,20 @@ class GnaniTTSService implements ITextToSpeechService {
    */
   public async speak(text: string, lang: SupportedLanguage, options: TTSOptions = {}): Promise<void> {
     if (this.isMuted || this.volume <= 0 || !text || text.trim() === '') {
+      return;
+    }
+
+    // While the portal is transcribing the patient's recording, defer the
+    // task-completion greeting so it never overlaps the Gnani STT request.
+    if (SpeechRecognitionService.isTranscribing()) {
+      return;
+    }
+
+    // The configured speech provider has no reviewed voice for this language.
+    // Do not send the text through a different-language voice: the on-screen
+    // instructions remain available and the caller is told speech is pending.
+    if (getLanguageInfo(lang).speechAvailable === false) {
+      options.onError?.(new Error('Spoken instructions are not yet available in this language. On-screen text is shown instead.'));
       return;
     }
 

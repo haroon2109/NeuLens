@@ -17,6 +17,7 @@ import {
   readSessionToken,
   SESSION_MAX_AGE_MS,
 } from '../services/sessionCookie';
+import { sendOtpEmail } from '../services/email';
 
 export type AccountRole = 'PATIENT' | 'CLINICIAN' | 'INSTITUTION';
 export type VerificationStatus = 'VERIFIED' | 'PENDING' | 'REJECTED';
@@ -148,12 +149,31 @@ const createChallenge = (
   return challenge;
 };
 
-const challengeResponse = (challenge: OtpChallenge) => ({
+/**
+ * Delivers the code to the account's registered email. Returns false when email
+ * delivery is not configured or the provider rejected the message, in which
+ * case the development fallback may still expose the code outside production.
+ */
+const deliverChallenge = async (challenge: OtpChallenge): Promise<boolean> => {
+  const account = accounts.find((entry) => entry.id === challenge.accountId);
+  if (!account) return false;
+
+  return sendOtpEmail({
+    to: account.email,
+    code: challenge.code,
+    purpose: challenge.purpose,
+    name: account.name,
+    expiresInMinutes: Math.floor(OTP_TTL_MS / 60000),
+  });
+};
+
+const challengeResponse = (challenge: OtpChallenge, emailed = false) => ({
   challengeId: challenge.id,
   expiresInSeconds: Math.floor(OTP_TTL_MS / 1000),
-  // Demo deployments surface the code so reviewers can complete the flow. A
-  // production deployment should deliver it by email/SMS and omit this field.
-  devOtp: process.env.NODE_ENV === 'production' ? undefined : challenge.code,
+  emailSent: emailed,
+  // Never expose the code in production. Outside production it is only a
+  // fallback for when a real email was not configured/delivered.
+  devOtp: !emailed && process.env.NODE_ENV !== 'production' ? challenge.code : undefined,
 });
 
 const consumeChallenge = (challengeId: string, code: string, purpose: OtpChallenge['purpose']) => {
@@ -279,13 +299,14 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
 
     accounts.push(account);
     const challenge = createChallenge(account, 'SIGNUP', account.email);
+    const emailSent = await deliverChallenge(challenge);
 
     return res.status(201).json({
       success: true,
       message: 'Account created. Verify your email or phone to continue.',
       requiresVerification: true,
       account: toPublicUser(account),
-      ...challengeResponse(challenge),
+      ...challengeResponse(challenge, emailSent),
     });
   } catch (error) {
     next(error);
@@ -322,7 +343,7 @@ export const verifyOtp = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export const resendOtp = (req: Request, res: Response, next: NextFunction) => {
+export const resendOtp = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { challengeId } = resendOtpSchema.parse(req.body);
     const challenge = otpChallenges.find((entry) => entry.id === challengeId);
@@ -333,11 +354,12 @@ export const resendOtp = (req: Request, res: Response, next: NextFunction) => {
     challenge.code = String(crypto.randomInt(100000, 1000000));
     challenge.expiresAt = Date.now() + OTP_TTL_MS;
     challenge.attempts = 0;
+    const emailSent = await deliverChallenge(challenge);
 
     return res.status(200).json({
       success: true,
       message: 'A new verification code has been issued.',
-      ...challengeResponse(challenge),
+      ...challengeResponse(challenge, emailSent),
     });
   } catch (error) {
     next(error);
@@ -363,12 +385,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         (entry) => entry.accountId === account.id && entry.purpose === 'SIGNUP'
       );
       const challenge = existing || createChallenge(account, 'SIGNUP', account.email);
+      const emailSent = existing ? false : await deliverChallenge(challenge);
 
       return res.status(403).json({
         error: 'Verify your email or phone before signing in.',
         requiresVerification: true,
         account: toPublicUser(account),
-        ...challengeResponse(challenge),
+        ...challengeResponse(challenge, emailSent),
       });
     }
 
@@ -389,26 +412,33 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
-export const forgotPassword = (req: Request, res: Response, next: NextFunction) => {
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { identifier } = forgotPasswordSchema.parse(req.body);
     const account = findAccountByEmailOrPhone(identifier);
 
-    // Always respond the same way so the endpoint cannot be used to enumerate accounts.
+    // Always respond with the same shape so the endpoint cannot be used to
+    // enumerate accounts. Unknown identifiers receive a decoy challenge id that
+    // will simply fail to consume.
     if (!account) {
       return res.status(200).json({
         success: true,
         message: 'If an account exists for that email or phone, a reset code has been sent.',
+        challengeId: `otp_${crypto.randomUUID()}`,
+        expiresInSeconds: Math.floor(OTP_TTL_MS / 1000),
+        emailSent: false,
       });
     }
 
     const challenge = createChallenge(account, 'PASSWORD_RESET', identifier);
+    const emailSent = await deliverChallenge(challenge);
 
     return res.status(200).json({
       success: true,
       message: 'If an account exists for that email or phone, a reset code has been sent.',
-      identifier: account.email,
-      ...challengeResponse(challenge),
+      // Do not echo the account email here: it would confirm which identifiers
+      // are registered and turn this endpoint into an account enumerator.
+      ...challengeResponse(challenge, emailSent),
     });
   } catch (error) {
     next(error);
@@ -461,7 +491,7 @@ export const authenticateAccountToken = (
   }
 
   try {
-    const decoded = jwt.verify(token, getJwtSecret()) as {
+    const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] }) as {
       accountId?: string;
       role?: string;
       verificationStatus?: VerificationStatus;

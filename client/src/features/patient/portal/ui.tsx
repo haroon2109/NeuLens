@@ -2,18 +2,48 @@ import type { FC, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { HealthcareScene, type SceneKind } from '../../../components/illustrations/HealthcareScene';
 
+/**
+ * Portal button classes.
+ *
+ * Every button in the patient portal is built from one of these strings, so the
+ * `pp-btn` base class cannot go missing again: `.pp-btn` supplies the layout,
+ * size, radius and focus ring, and the modifier supplies the colour. Layout
+ * utilities (`inline-flex`, `items-center`, `gap-2`, `min-h-11`, `rounded-xl`)
+ * are deliberately absent — they are inert here, because `.patient-portal
+ * .pp-btn` outranks a single utility class.
+ *
+ * `shrink-0` keeps a button from collapsing inside a flex row: beside a
+ * sentence, the sentence wraps and the button keeps its label on one line.
+ */
+export const primaryButton = 'pp-btn pp-btn-primary pp-btn-sm shrink-0';
+export const secondaryButton = 'pp-btn pp-btn-secondary pp-btn-sm shrink-0';
+
+const displayLocale = (): string => {
+  if (typeof document === 'undefined') return 'en-US';
+  const lang = document.documentElement.lang || 'en-US';
+  if (lang === 'ar') return 'ar-AE';
+  return lang;
+};
+
 export const formatDate = (value?: string | Date | null, options?: Intl.DateTimeFormatOptions) => {
   if (!value) return 'Not available';
   const date = typeof value === 'string' ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return 'Not available';
-  return date.toLocaleDateString('en-GB', options || { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString(displayLocale(), options || { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 export const formatDateTime = (value?: string | Date | null) => {
   if (!value) return 'Not available';
   const date = typeof value === 'string' ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return 'Not available';
-  return `${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+  return `${date.toLocaleDateString(displayLocale(), { day: 'numeric', month: 'short' })} · ${date.toLocaleTimeString(displayLocale(), { hour: '2-digit', minute: '2-digit' })}`;
+};
+
+export const formatTime = (value?: string | Date | null) => {
+  if (!value) return 'Not available';
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return date.toLocaleTimeString(displayLocale(), { hour: '2-digit', minute: '2-digit' });
 };
 
 /**
@@ -92,7 +122,7 @@ export const PortalPageHeader: FC<{
   <header className="flex flex-col gap-4 border-b border-line/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
     <div className="min-w-0">
       {eyebrow && (
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+        <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-sage-deep">
           {Icon && <Icon className="h-3.5 w-3.5 text-sage-deep" aria-hidden="true" />}
           {eyebrow}
         </div>
@@ -101,7 +131,7 @@ export const PortalPageHeader: FC<{
         {title}
       </h1>
       {description && (
-        <p className="mt-2 max-w-2xl text-[13px] leading-6 text-body">{description}</p>
+        <p className="mt-2 max-w-2xl text-[14px] leading-6 text-body">{description}</p>
       )}
     </div>
     {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
@@ -130,7 +160,7 @@ export const SectionTitle: FC<{ title: string; detail?: string; action?: ReactNo
   <div className="mb-4 flex items-start justify-between gap-4">
     <div>
       <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-      {detail && <p className="mt-1 text-[12px] leading-5 text-muted">{detail}</p>}
+      {detail && <p className="mt-1 text-[14px] leading-5 text-muted">{detail}</p>}
     </div>
     {action}
   </div>
@@ -154,21 +184,21 @@ export const StatCard: FC<{
   return (
     <div className="rounded-2xl border border-line bg-white p-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
+        <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
         <span className={`flex h-8 w-8 items-center justify-center rounded-lg border ${toneClasses[chipTone]}`}>
           <Icon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
         </span>
       </div>
       <p className="mt-3 text-[21px] font-semibold tracking-[-0.03em] text-ink">{value}</p>
-      {detail && <p className="mt-1 text-[11px] leading-5 text-muted">{detail}</p>}
+      {detail && <p className="mt-1 text-[13px] leading-5 text-muted">{detail}</p>}
     </div>
   );
 };
 
 export const InfoRow: FC<{ label: string; value: ReactNode }> = ({ label, value }) => (
   <div className="flex items-start justify-between gap-4 border-b border-line py-2.5 last:border-0">
-    <dt className="text-[12px] text-muted">{label}</dt>
-    <dd className="max-w-[60%] text-right text-[12px] font-semibold text-ink">{value}</dd>
+    <dt className="text-[14px] text-muted">{label}</dt>
+    <dd className="max-w-[60%] text-right text-[14px] font-semibold text-ink">{value}</dd>
   </div>
 );
 
@@ -188,7 +218,7 @@ export const EmptyState: FC<{
       </span>
     )}
     <p className="mt-3 text-[14px] font-semibold text-ink">{title}</p>
-    <p className="mx-auto mt-1 max-w-md text-[12px] leading-5 text-muted">{detail}</p>
+    <p className="mx-auto mt-1 max-w-md text-[14px] leading-5 text-muted">{detail}</p>
     {action && <div className="mt-4 flex justify-center">{action}</div>}
   </div>
 );
@@ -206,8 +236,8 @@ export const Toggle: FC<{
     }`}
   >
     <span>
-      <span className="block text-[12px] font-semibold text-ink">{label}</span>
-      {detail && <span className="mt-1 block text-[11px] leading-5 text-muted">{detail}</span>}
+      <span className="block text-[14px] font-semibold text-ink">{label}</span>
+      {detail && <span className="mt-1 block text-[13px] leading-5 text-muted">{detail}</span>}
     </span>
     <span
       className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
@@ -240,7 +270,7 @@ export const TrendLine: FC<{
 }> = ({ points, min, max, tone = '#2f5e4e', height = 150, valueSuffix = '' }) => {
   if (points.length < 2) {
     return (
-      <div className="flex h-[150px] items-center justify-center rounded-xl border border-dashed border-line bg-warm text-[11px] text-muted">
+      <div className="flex h-[150px] items-center justify-center rounded-xl border border-dashed border-line bg-warm text-[13px] text-muted">
         More valid sessions are needed to show a trend.
       </div>
     );
@@ -337,7 +367,7 @@ export const ScoreDial: FC<{ value: number; label: string; tone?: string }> = ({
       </svg>
       <div className="absolute text-center">
         <span className="block text-[22px] font-semibold leading-none text-ink">{Math.round(clamped)}</span>
-        <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
+        <span className="mt-1 block text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
       </div>
     </div>
   );

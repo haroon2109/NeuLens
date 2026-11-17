@@ -1,5 +1,6 @@
 import { SupportedLanguage, LanguageInfo, LanguageTranslation } from '../types';
 import { enTranslation } from './en';
+import { arTranslation } from './ar';
 import { taTranslation } from './ta';
 import { hiTranslation } from './hi';
 import { teTranslation } from './te';
@@ -17,6 +18,19 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
     sampleGreeting: 'Hello, I will guide you.',
     repeatKeywords: ['repeat', 'again', 'say again', 'pardon'],
     helpKeywords: ['help', 'what to do', 'explain', 'how to']
+  },
+  {
+    id: 'ar',
+    name: 'Arabic',
+    nativeName: 'العربية',
+    script: 'Arabic',
+    flag: '🇦🇪',
+    bcp47: 'ar-AE',
+    dir: 'rtl',
+    speechAvailable: true,
+    sampleGreeting: 'مرحبًا، سأرشدك.',
+    repeatKeywords: ['أعد', 'كرر', 'مرة أخرى', 'أعد من فضلك'],
+    helpKeywords: ['مساعدة', 'ماذا أفعل', 'اشرح', 'كيف']
   },
   {
     id: 'ta',
@@ -77,6 +91,7 @@ export const SUPPORTED_LANGUAGES: LanguageInfo[] = [
 
 export const translations: Record<SupportedLanguage, LanguageTranslation> = {
   en: enTranslation,
+  ar: arTranslation,
   ta: taTranslation,
   hi: hiTranslation,
   te: teTranslation,

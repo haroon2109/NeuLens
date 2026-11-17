@@ -12,6 +12,9 @@ import contextInputRoutes from './contextinput.routes';
 import brainHealthRoutes from './brainhealth.routes';
 import assessmentCompleteRoutes from './assessmentcomplete.routes';
 import cognitiveRoutes from './cognitive.routes';
+import arabicRoutes from './arabic.routes';
+import languageRoutes from './language.routes';
+import externalInstrumentRoutes from './externalinstruments.routes';
 
 const router = Router();
 
@@ -32,5 +35,14 @@ router.use('/brain-health', brainHealthRoutes);
 
 // Complete assessment submission endpoint
 router.use('/patient/assessment', assessmentCompleteRoutes);
+
+// Arabic LLM research-stage inference endpoint
+router.use('/arabic', arabicRoutes);
+
+// Participant-facing language readiness (public)
+router.use('/language-readiness', languageRoutes);
+
+// Clinician-entered scores from validated instruments administered outside the platform.
+router.use('/external-instruments', externalInstrumentRoutes);
 
 export default router;

@@ -229,26 +229,16 @@ export const useDoctorPortalStore = create<DoctorPortalState>()(
       },
       identityReference: 'Government ID ending 4821',
       clinic: {
-        hospitalName: 'Neulens General Hospital',
+        // No fabricated clinic identity. These fields are completed during clinic
+        // onboarding and deployment configuration; empty values are shown as
+        // "Not configured" rather than a made-up hospital or phone number.
+        hospitalName: '',
         department: 'Neurology & Cognitive Health',
-        address: '12 Anna Salai, Chennai 600002, India',
-        institutionId: 'TN-HOSP-2026-1184',
-        contactPhone: '+91 44 4000 1200',
-        contactEmail: 'neurology@neulens.health',
-        otherClinicians: [
-          {
-            id: 'clinic-doc-1',
-            name: 'Dr. Meera Krishnan',
-            role: 'Consultant Geriatrician',
-            email: 'm.krishnan@neulens.health'
-          },
-          {
-            id: 'clinic-doc-2',
-            name: 'Dr. Arun Rao',
-            role: 'Neuropsychologist',
-            email: 'a.rao@neulens.health'
-          }
-        ]
+        address: '',
+        institutionId: '',
+        contactPhone: '',
+        contactEmail: '',
+        otherClinicians: []
       },
       registeredPatients: [],
       clinicalContexts: {},

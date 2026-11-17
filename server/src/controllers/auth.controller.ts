@@ -16,16 +16,31 @@ import {
   clearSessionCookie,
   SESSION_MAX_AGE_MS,
 } from '../services/sessionCookie';
+import { consumeAttempt, clearAttempts, addressKey, credentialKey } from '../services/loginThrottle';
+import { requestIp, securityEvent, type SecurityEvent } from '../services/logger';
+
+/**
+ * A security event may be described without the timestamp the logger requires.
+ * This helper fills in the missing field before handing it to the logger.
+ */
+export function securityEventWithTs(event: Omit<SecurityEvent, 'ts'>): void {
+  securityEvent({ ts: new Date().toISOString(), ...event });
+}
+
 
 // Development-only fallback store. No demo or shared credentials are seeded.
 const inMemoryUsers: any[] = [];
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS_PER_EMAIL = 10;
+const LOGIN_MAX_ATTEMPTS_PER_IP = 30;
 
 export const register = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const validatedData = registerSchema.parse(req.body);
     const { email, password, name, age, gender, language } = validatedData;
 
-    const hashedPassword = await bcrypt.hashSync(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     let newUser: any;
 
@@ -89,6 +104,27 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
 export const login = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
+    const ip = requestIp(req) || 'unknown';
+
+    const emailLimit = consumeAttempt(`login:email:${email.trim().toLowerCase()}`, LOGIN_MAX_ATTEMPTS_PER_EMAIL, LOGIN_WINDOW_MS);
+    if (!emailLimit.allowed) {
+      res.setHeader('Retry-After', String(emailLimit.retryAfterSeconds));
+      securityEventWithTs({
+        action: 'LOGIN_RATE_LIMITED',
+        detail: `email=${email} ip=${ip} reason=sliding_window_exceeded | user-agent=${req.headers['user-agent']?.toString() ?? '-'}`,
+      });
+      return res.status(429).json({ error: 'Too many sign-in attempts. Please wait a few minutes and try again.' });
+    }
+
+    const ipLimit = consumeAttempt(addressKey(req), LOGIN_MAX_ATTEMPTS_PER_IP, LOGIN_WINDOW_MS);
+    if (!ipLimit.allowed) {
+      res.setHeader('Retry-After', String(ipLimit.retryAfterSeconds));
+      securityEventWithTs({
+        action: 'LOGIN_RATE_LIMITED',
+        detail: `email=${email} ip=${ip} reason=sliding_window_exceeded_by_ip | user-agent=${req.headers['user-agent']?.toString() ?? '-'}`,
+      });
+      return res.status(429).json({ error: 'Too many sign-in attempts. Please wait a few minutes and try again.' });
+    }
 
     let user: any;
 
@@ -103,11 +139,19 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     }
 
     if (!user) {
+      securityEventWithTs({
+        action: 'LOGIN_FAILED',
+        detail: `email=${email} ip=${ip} reason=UNKNOWN_ACCOUNT | user-agent=${req.headers['user-agent']?.toString() ?? '-'}`,
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const isPasswordValid = bcrypt.compareSync(password, user.passwordHash);
     if (!isPasswordValid) {
+      securityEventWithTs({
+        action: 'LOGIN_FAILED',
+        detail: `email=${email} ip=${ip} reason=INVALID_PASSWORD | account=${user.id} user-agent=${req.headers['user-agent']?.toString() ?? '-'}`,
+      });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -225,9 +269,12 @@ export const forgotPassword = async (req: AuthenticatedRequest, res: Response, n
     const resetToken = jwt.sign({ email }, getJwtSecret(), { expiresIn: '1h' });
     const resetLink = `${process.env.CLIENT_ORIGIN || 'http://localhost:5173'}/auth/reset-password?token=${resetToken}`;
 
+    // Never hand a signed reset token back to the caller in production: that
+    // would let anyone reset any account they can name. Real delivery belongs
+    // in the email/SMS channel; the link is exposed for local development only.
     return res.status(200).json({
       message: 'If the email exists, a password reset link has been dispatched.',
-      debugResetLink: resetLink
+      ...(process.env.NODE_ENV !== 'production' ? { debugResetLink: resetLink } : {}),
     });
   } catch (error) {
     next(error);

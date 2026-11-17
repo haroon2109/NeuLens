@@ -34,10 +34,13 @@ export const getTrends = async (req: AuthenticatedRequest, res: Response, next: 
       return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     });
 
-    const datasetOverall = assessments.map(s => s.overallScore);
-    const datasetReaction = assessments.map(s => s.eyeMetrics?.reactionTime || 0);
-    const datasetSymmetry = assessments.map(s => s.faceMetrics?.symmetry || 0);
-    const datasetJitter = assessments.map(s => s.voiceMetrics?.jitter || 0);
+    // A missing measurement stays missing (null), never 0: a zero reaction time
+    // or zero jitter is a reading, and plotting one that was never taken invents
+    // data. Jitter and shimmer are deliberately absent from this payload — they
+    // are acoustic quality features, not cognitive evidence.
+    const datasetOverall = assessments.map(s => s.overallScore ?? null);
+    const datasetReaction = assessments.map(s => s.eyeMetrics?.reactionTime ?? null);
+    const datasetSymmetry = assessments.map(s => s.faceMetrics?.symmetry ?? null);
 
     return res.status(200).json({
       trends: {
@@ -45,8 +48,7 @@ export const getTrends = async (req: AuthenticatedRequest, res: Response, next: 
         datasets: {
           overall: datasetOverall,
           reactionTime: datasetReaction,
-          symmetry: datasetSymmetry,
-          jitter: datasetJitter
+          symmetry: datasetSymmetry
         },
         rawCount: assessments.length
       }

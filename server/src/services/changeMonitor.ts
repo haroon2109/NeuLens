@@ -1,4 +1,5 @@
 import type { AssessmentRecord } from '../models/dataStore';
+import { isInterpretableScore } from './reviewState';
 
 export const FUNCTIONAL_ACTIVITY_IDS = [
   'appointments',
@@ -10,15 +11,41 @@ export const FUNCTIONAL_ACTIVITY_IDS = [
 export type FunctionalActivityId = typeof FUNCTIONAL_ACTIVITY_IDS[number];
 export type ContextFactorId = 'sleep' | 'activity' | 'moodStress';
 
+/**
+ * What the within-person data can support about a decline.
+ *
+ * A difference between two scores cannot be interpreted without an estimate of
+ * how much that score moves when nothing has changed. Until enough repeat pairs
+ * exist to measure that, no score-based decline is reported at all — the previous
+ * rule ("below the lowest of three earlier scores") had no way to separate a real
+ * change from ordinary session-to-session variation, so it is gone.
+ */
+export interface ChangeReliability {
+  state: 'NOT_ESTABLISHED' | 'PROVISIONAL';
+  /** Consecutive comparable repeat pairs available for this patient. */
+  pairs: number;
+  /** Standard deviation of within-person session-to-session differences. */
+  standardDeviationOfChange: number | null;
+  /** 1.96 × SD of change (the reliable change index for a single measurement). */
+  reliableChangeThreshold: number | null;
+}
+
+/** Fewer repeat pairs than this cannot describe this patient's own variability. */
+export const MIN_PAIRS_FOR_RELIABLE_CHANGE = 3;
+
 export interface PatientChangeSummary {
   status: 'INSUFFICIENT_DATA' | 'NO_CHANGE' | 'REVIEW';
   cognitive: {
     latestScore: number | null;
     previousScore: number | null;
     change: number | null;
+    /** Mean of up to three prior comparable scores — the comparison point. */
+    referenceScore: number | null;
     baselineRange: { minimum: number; maximum: number } | null;
     comparableAssessments: number;
-    outsideObservedBaseline: boolean;
+    /** True only when a decline exceeds the reliability threshold below. */
+    declineBeyondReliableChange: boolean;
+    reliability: ChangeReliability;
   };
   function: {
     currentActivityLevels: Partial<Record<FunctionalActivityId, number>>;
@@ -30,7 +57,7 @@ export interface PatientChangeSummary {
     currentFactors: Partial<Record<ContextFactorId, number>>;
     changedFactors: ContextFactorId[];
   };
-  reviewReasons: Array<'OUTSIDE_OBSERVED_BASELINE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
+  reviewReasons: Array<'OUTSIDE_RELIABLE_CHANGE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
 }
 
 interface AssessmentContext {
@@ -110,11 +137,57 @@ function areComparable(current: FunctionalCheckIn, previous: FunctionalCheckIn):
     a.accessibility.digitalFamiliarity === b.accessibility.digitalFamiliarity);
 }
 
+/**
+ * Describe how much a score moves for this patient when nothing has changed.
+ *
+ * SD of consecutive within-person differences → reliable change index
+ * (1.96 × SD). That is the smallest decline this data can distinguish from
+ * noise, and it is the only threshold the product uses for a score-based flag.
+ * With fewer than `MIN_PAIRS_FOR_RELIABLE_CHANGE` pairs, or with a degenerate
+ * zero spread (every repeat identical), no threshold is returned and no decline
+ * is reported.
+ */
+function describeReliability(differences: number[]): ChangeReliability {
+  const usable = differences.filter((value) => Number.isFinite(value));
+  if (usable.length < MIN_PAIRS_FOR_RELIABLE_CHANGE) {
+    return {
+      state: 'NOT_ESTABLISHED',
+      pairs: usable.length,
+      standardDeviationOfChange: null,
+      reliableChangeThreshold: null
+    };
+  }
+
+  const mean = usable.reduce((sum, value) => sum + value, 0) / usable.length;
+  const variance = usable.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (usable.length - 1);
+  const standardDeviation = Math.sqrt(variance);
+  if (!Number.isFinite(standardDeviation) || standardDeviation === 0) {
+    return {
+      state: 'NOT_ESTABLISHED',
+      pairs: usable.length,
+      standardDeviationOfChange: null,
+      reliableChangeThreshold: null
+    };
+  }
+
+  return {
+    state: 'PROVISIONAL',
+    pairs: usable.length,
+    standardDeviationOfChange: Number(standardDeviation.toFixed(1)),
+    reliableChangeThreshold: Number((1.96 * standardDeviation).toFixed(1))
+  };
+}
+
 export function summarizePatientChanges(assessments: AssessmentRecord[]): PatientChangeSummary {
   const completed = assessments
     .filter(assessment => assessment.status === 'COMPLETED')
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const latest = completed[0];
+  // Sessions without an interpretable score never enter a cognitive comparison:
+  // there is nothing to compare, and treating a missing score as a value would
+  // fabricate both a baseline and a change.
+  const scored = completed.filter(assessment => isInterpretableScore(assessment.overallScore));
+  const latestScored = scored[0] ?? null;
   const checkIns = completed
     .map(assessment => ({
       assessment,
@@ -125,10 +198,15 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
   const previousCheckIn = checkIns[1];
   const currentCheckInIsLatest = currentCheckIn && currentCheckIn.assessment.id === latest?.id;
   const comparableHistory = currentCheckInIsLatest
-    ? checkIns.slice(1).filter(entry => areComparable(currentCheckIn.checkIn, entry.checkIn))
+    ? checkIns.slice(1).filter(
+        entry => areComparable(currentCheckIn.checkIn, entry.checkIn)
+          && isInterpretableScore(entry.assessment.overallScore)
+      )
     : [];
   const baselineAssessments = comparableHistory.slice(0, 3);
-  const baselineValues = baselineAssessments.map(entry => entry.assessment.overallScore);
+  const baselineValues = baselineAssessments
+    .map(entry => entry.assessment.overallScore)
+    .filter(isInterpretableScore);
   const baselineRange = baselineValues.length === 3
     ? {
         minimum: Math.min(...baselineValues),
@@ -136,11 +214,44 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
       }
     : null;
   const previousComparable = comparableHistory[0]?.assessment;
-  const cognitiveChange = latest && previousComparable
-    ? Number((latest.overallScore - previousComparable.overallScore).toFixed(1))
+  const latestScoredScore = latestScored && isInterpretableScore(latestScored.overallScore)
+    ? latestScored.overallScore
     : null;
-  const outsideObservedBaseline = Boolean(
-    latest && currentCheckInIsLatest && baselineRange && latest.overallScore < baselineRange.minimum
+  const previousComparableScore = previousComparable && isInterpretableScore(previousComparable.overallScore)
+    ? previousComparable.overallScore
+    : null;
+  const cognitiveChange = latestScoredScore !== null && previousComparableScore !== null
+    ? Number((latestScoredScore - previousComparableScore).toFixed(1))
+    : null;
+
+  // The comparison point: the mean of up to three prior comparable scores. The
+  // range remains for display, but a decline is judged against measured
+  // variability, not against the lowest value ever seen.
+  const referenceScore = baselineValues.length > 0
+    ? Number((baselineValues.reduce((sum, value) => sum + value, 0) / baselineValues.length).toFixed(1))
+    : null;
+
+  // This patient's own session-to-session variability. Only consecutive
+  // comparable scores contribute, because a pair spanning a year of genuine
+  // change would inflate the error estimate as much as a pair spanning a week.
+  const seriesScores: number[] = [];
+  if (currentCheckInIsLatest && latestScoredScore !== null) seriesScores.push(latestScoredScore);
+  for (const entry of comparableHistory) {
+    if (isInterpretableScore(entry.assessment.overallScore)) {
+      seriesScores.push(entry.assessment.overallScore);
+    }
+  }
+  const differences = seriesScores
+    .slice(1)
+    .map((score, index) => score - seriesScores[index]);
+  const reliability = describeReliability(differences);
+
+  const declineBeyondReliableChange = Boolean(
+    reliability.reliableChangeThreshold !== null &&
+    referenceScore !== null &&
+    latestScoredScore !== null &&
+    currentCheckInIsLatest &&
+    referenceScore - latestScoredScore >= reliability.reliableChangeThreshold
   );
   const worsenedActivityIds: FunctionalActivityId[] = [];
   const changedFactors: ContextFactorId[] = [];
@@ -163,23 +274,31 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
   }
 
   const reviewReasons: PatientChangeSummary['reviewReasons'] = [];
-  if (outsideObservedBaseline) reviewReasons.push('OUTSIDE_OBSERVED_BASELINE');
+  if (declineBeyondReliableChange) reviewReasons.push('OUTSIDE_RELIABLE_CHANGE');
   if (worsenedActivityIds.length > 0) reviewReasons.push('FUNCTIONAL_CHANGE');
   if (changedFactors.length > 0) reviewReasons.push('CONTEXT_CHANGE');
 
+  // "NO_CHANGE" is a claim of stability. It therefore requires an actual scored
+  // comparison *and* a measured variability to compare it against; matching
+  // check-ins alone are not evidence of stability, and neither is a difference
+  // whose noise has never been estimated.
   const hasComparableData = Boolean(
     baselineRange ||
-    (currentCheckInIsLatest && previousCheckIn && areComparable(currentCheckIn.checkIn, previousCheckIn.checkIn))
+    (currentCheckInIsLatest && latestScoredScore !== null && previousComparableScore !== null)
   );
+  const hasScoredComparison = hasComparableData && reliability.state === 'PROVISIONAL';
   return {
-    status: reviewReasons.length > 0 ? 'REVIEW' : hasComparableData ? 'NO_CHANGE' : 'INSUFFICIENT_DATA',
+    status: reviewReasons.length > 0 ? 'REVIEW' : hasScoredComparison ? 'NO_CHANGE' : 'INSUFFICIENT_DATA',
     cognitive: {
-      latestScore: latest?.overallScore ?? null,
-      previousScore: previousComparable?.overallScore ?? null,
+      latestScore: latestScoredScore,
+      previousScore: previousComparableScore,
       change: cognitiveChange,
+      referenceScore,
       baselineRange,
-      comparableAssessments: comparableHistory.length + (currentCheckInIsLatest ? 1 : 0),
-      outsideObservedBaseline
+      // Only scored sessions count as comparable assessments.
+      comparableAssessments: comparableHistory.length + (currentCheckInIsLatest && latestScoredScore !== null ? 1 : 0),
+      declineBeyondReliableChange,
+      reliability
     },
     function: {
       currentActivityLevels: currentCheckInIsLatest ? currentCheckIn.checkIn.activities : {},

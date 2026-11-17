@@ -13,13 +13,17 @@ const STORAGE_KEY = 'neulens_language';
 const LEGACY_STORAGE_KEY = 'cognivision_kiosk_language';
 
 /**
- * Keeps the document language in sync with the language the user is reading.
- * Without this, a screen reader announces Tamil/Hindi/Telugu/Kannada/Malayalam
- * content with English pronunciation rules.
+ * Keeps the document language and writing direction in sync with the language
+ * the user is reading. Without this, a screen reader announces Arabic or the
+ * Indian-language content with English pronunciation and layout rules, and
+ * Arabic renders left-to-right.
  */
 const applyDocumentLanguage = (lang: SupportedLanguage): void => {
   if (typeof document === 'undefined') return;
-  document.documentElement.lang = getLanguageInfo(lang).bcp47;
+  const info = getLanguageInfo(lang);
+  document.documentElement.lang = info.bcp47;
+  document.documentElement.dir = info.dir ?? 'ltr';
+  document.documentElement.dataset.nlSpeech = info.speechAvailable === false ? 'unavailable' : 'available';
 };
 
 const getInitialLanguage = (): SupportedLanguage => {
@@ -33,7 +37,9 @@ const getInitialLanguage = (): SupportedLanguage => {
   } catch (e) {
     // Ignore storage errors in sandboxed environments
   }
-  return 'ta'; // Default to Tamil as requested in prominent examples, or easy switch
+  // New visitors start in English; Arabic and the Indian languages are one
+  // explicit choice away, and the selection persists on this device.
+  return 'en';
 };
 
 const initialLanguage = getInitialLanguage();

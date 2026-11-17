@@ -3,15 +3,20 @@ import { prisma } from '../config/db';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { screeningSubmitSchema } from '../validation/schemas';
 import { HospitalDataStore } from '../models/dataStore';
+import { reviewStateForAssessment } from '../services/reviewState';
+import { scoreBatterySession } from '../services/sessionScoring';
 
-// In-memory assessments fallback store for NBEC Demo
+// In-memory assessments fallback store for the demo posture.
+// This record is illustrative demo data; it is not a clinical interpretation.
 const inMemoryAssessments: any[] = [
   {
     id: 'demo-assess-1',
     userId: 'demo-patient-123',
     date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
     overallScore: 84.0,
-    riskLevel: 'LOW',
+    reviewState: 'NOT_REVIEWED',
+    status: 'COMPLETED',
+    reviewStatus: 'PENDING_REVIEW',
     eyeMetrics: {
       reactionTime: 240.0,
       blinkRate: 12.0,
@@ -28,8 +33,8 @@ const inMemoryAssessments: any[] = [
       tremorScore: 12.0
     },
     report: {
-      recommendation: 'Baseline indexes normal. Annual follow-up screening advised.',
-      doctorNotes: 'Demo patient showing high focus and quick reaction speed.',
+      recommendation: 'Demo record. Not a clinical interpretation; clinician review required.',
+      doctorNotes: 'Demo data only.',
       pdfUrl: null
     }
   }
@@ -42,21 +47,32 @@ export const submitScreening = async (req: AuthenticatedRequest, res: Response, 
     }
 
     const validatedData = screeningSubmitSchema.parse(req.body);
-    const { 
-      overallScore, 
-      riskLevel, 
-      reactionTime, 
-      blinkRate, 
-      fixationScore, 
-      speechRate, 
-      pauseScore, 
-      jitter, 
-      shimmer, 
-      symmetry, 
-      tremorScore, 
-      recommendation, 
-      doctorNotes 
+    const {
+      taskResponses,
+      reactionTime,
+      blinkRate,
+      fixationScore,
+      speechRate,
+      pauseScore,
+      jitter,
+      shimmer,
+      symmetry,
+      tremorScore,
+      recommendation,
+      doctorNotes
     } = validatedData;
+
+    // The score is derived from the recorded task responses, never accepted from
+    // the caller: a session with an incomplete battery has no score at all.
+    const score = scoreBatterySession(taskResponses).composite;
+    const reviewState = reviewStateForAssessment(score);
+    const hasEye = reactionTime != null && blinkRate != null && fixationScore != null;
+    const hasVoice = speechRate != null && pauseScore != null && jitter != null && shimmer != null;
+    const hasFace = symmetry != null && tremorScore != null;
+    const storedRecommendation = recommendation
+      || (score === null
+        ? 'Session recorded without an interpretable score. No interpretation is available; clinician review required.'
+        : 'Assessment recorded. Clinician review required.');
 
     let savedAssessment: any;
 
@@ -64,32 +80,39 @@ export const submitScreening = async (req: AuthenticatedRequest, res: Response, 
       savedAssessment = await prisma.assessment.create({
         data: {
           userId: req.user.id,
-          overallScore,
-          riskLevel,
-          eyeMetrics: {
-            create: {
-              reactionTime,
-              blinkRate,
-              fixationScore
+          overallScore: score,
+          reviewState,
+          taskResponses: taskResponses ?? undefined,
+          ...(hasEye ? {
+            eyeMetrics: {
+              create: {
+                reactionTime: reactionTime as number,
+                blinkRate: blinkRate as number,
+                fixationScore: fixationScore as number
+              }
             }
-          },
-          voiceMetrics: {
-            create: {
-              speechRate,
-              pauseScore,
-              jitter,
-              shimmer
+          } : {}),
+          ...(hasVoice ? {
+            voiceMetrics: {
+              create: {
+                speechRate: speechRate as number,
+                pauseScore: pauseScore as number,
+                jitter: jitter as number,
+                shimmer: shimmer as number
+              }
             }
-          },
-          faceMetrics: {
-            create: {
-              symmetry,
-              tremorScore
+          } : {}),
+          ...(hasFace ? {
+            faceMetrics: {
+              create: {
+                symmetry: symmetry as number,
+                tremorScore: tremorScore as number
+              }
             }
-          },
+          } : {}),
           report: {
             create: {
-              recommendation,
+              recommendation: storedRecommendation,
               doctorNotes: doctorNotes || '',
             }
           }
@@ -102,7 +125,7 @@ export const submitScreening = async (req: AuthenticatedRequest, res: Response, 
         }
       });
       console.log('Saved assessment via Prisma:', savedAssessment.id);
-      // NEW: Establish or link to personal baseline (first assessment creates baseline)
+      // NEW: Establish or link to personal baseline (first interpretable assessment creates baseline)
       try {
         await HospitalDataStore.ensureBaselineAndLink(req.user.id, savedAssessment);
         console.log('Baseline linked to assessment:', savedAssessment.id);
@@ -115,15 +138,18 @@ export const submitScreening = async (req: AuthenticatedRequest, res: Response, 
         id: `demo-assess-${Date.now()}`,
         userId: req.user.id,
         date: new Date(),
-        overallScore,
-        riskLevel,
-        eyeMetrics: { reactionTime, blinkRate, fixationScore },
-        voiceMetrics: { speechRate, pauseScore, jitter, shimmer },
-        faceMetrics: { symmetry, tremorScore },
+        overallScore: score,
+        reviewState,
+        status: 'COMPLETED',
+        reviewStatus: 'PENDING_REVIEW',
+        taskResponses: taskResponses ?? null,
+        eyeMetrics: hasEye ? { reactionTime, blinkRate, fixationScore } : null,
+        voiceMetrics: hasVoice ? { speechRate, pauseScore, jitter, shimmer } : null,
+        faceMetrics: hasFace ? { symmetry, tremorScore } : null,
         report: {
           id: `demo-rep-${Date.now()}`,
           assessmentId: `demo-assess-${Date.now()}`,
-          recommendation,
+          recommendation: storedRecommendation,
           doctorNotes: doctorNotes || '',
           pdfUrl: null
         }
@@ -191,7 +217,7 @@ export const getScreeningById = async (req: AuthenticatedRequest, res: Response,
           report: true
         }
       });
-      
+
       if (assessment && assessment.userId !== req.user.id && req.user.role !== 'ADMIN') {
         return res.status(403).json({ error: 'Unauthorized to view this assessment' });
       }

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { RouteAnnouncer } from '../components/a11y/RouteAnnouncer';
 import { ConfirmDialog } from '../components/systemStates';
 import { useAuthStore } from '../store/authStore';
 import { useDoctorPortalStore } from '../store/doctorPortalStore';
+import { deploymentConfig } from '../config/deployment';
 import { doctorApi } from '../services/portalApi';
 import { NeulensLogoMark } from '../components/NeulensLogoMark';
 import { NeulensWordmark } from '../components/NeulensWordmark';
@@ -18,6 +20,7 @@ import {
   Activity,
   CalendarDays,
   FileText,
+  Languages,
   Send,
   LogOut,
   Search,
@@ -67,6 +70,7 @@ const navGroups: NavGroup[] = [
     label: 'Insights',
     items: [
       { path: '/doctor/evidence-quality', label: 'Evidence & Data Quality', icon: Search },
+      { path: '/doctor/assessment-readiness', label: 'Assessment Readiness', icon: Languages },
       { path: '/doctor/quality-equity', label: 'Quality & Equity', icon: BarChart3 }
     ]
   },
@@ -105,7 +109,7 @@ const SidebarContent: React.FC<{
         {!collapsed && (
           <span className="flex flex-col">
             <NeulensWordmark size="small" />
-            <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
+            <span className="mt-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
               Clinical workspace
             </span>
           </span>
@@ -143,7 +147,7 @@ const SidebarContent: React.FC<{
       {navGroups.map((group) => (
         <div key={group.label} className="mb-4">
           {!collapsed && (
-            <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+            <p className="px-3 pb-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-sage-deep">
               {group.label}
             </p>
           )}
@@ -159,7 +163,10 @@ const SidebarContent: React.FC<{
                     to={item.path}
                     onClick={onNavigate}
                     title={collapsed ? item.label : undefined}
-                    className={`flex items-center rounded-lg text-[13px] font-medium transition-colors ${
+                    /* Without this a screen reader cannot tell which section is
+                       open; the colour change is invisible to it. */
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`flex items-center rounded-lg text-[14px] font-medium transition-colors ${
                       collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2'
                     } ${
                       isActive
@@ -193,21 +200,21 @@ const SidebarContent: React.FC<{
       >
         <span className="flex items-center gap-2.5">
           <ExternalLink className="h-4 w-4 shrink-0 text-sage-deep" aria-hidden="true" />
-          {!collapsed && <span className="text-[12px] font-semibold">Patient Portal</span>}
+          {!collapsed && <span className="text-[14px] font-semibold">Patient Portal</span>}
         </span>
         {!collapsed && <ChevronRight className="h-3.5 w-3.5 text-sage-deep" aria-hidden="true" />}
       </Link>
 
       <div className={`flex items-center gap-2.5 rounded-xl border border-line bg-warm/70 p-2.5 ${collapsed ? 'justify-center' : ''}`}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-forest text-[11px] font-bold text-white">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-forest text-[13px] font-bold text-white">
           {clinicianInitials}
         </span>
         {!collapsed && (
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[12px] font-semibold text-ink" title={clinicianName}>
+            <span className="block truncate text-[14px] font-semibold text-ink" title={clinicianName}>
               {clinicianName}
             </span>
-            <span className="mt-0.5 block truncate text-[11px] text-muted">{clinicianRole}</span>
+            <span className="mt-0.5 block truncate text-[13px] text-muted">{clinicianRole}</span>
           </span>
         )}
       </div>
@@ -216,7 +223,7 @@ const SidebarContent: React.FC<{
         type="button"
         onClick={onLogout}
         title="Sign out of the clinical workspace"
-        className={`flex w-full items-center rounded-lg text-[13px] font-semibold text-body transition hover:bg-rose-50 hover:text-rose-700 ${
+        className={`flex w-full items-center rounded-lg text-[14px] font-semibold text-body transition hover:bg-rose-50 hover:text-rose-700 ${
           collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2'
         }`}
       >
@@ -367,7 +374,7 @@ export const DoctorLayout: React.FC = () => {
   };
 
   return (
-    <div className="doctor-portal min-h-screen bg-warm text-ink">
+    <div className="doctor-portal min-h-screen bg-warm text-ink" dir="ltr" lang="en">
       {/* Skip link */}
       <a
         href="#doctor-main"
@@ -375,6 +382,7 @@ export const DoctorLayout: React.FC = () => {
       >
         Skip to content
       </a>
+      <RouteAnnouncer />
 
       {/* Sidebar — desktop */}
       <aside
@@ -424,11 +432,11 @@ export const DoctorLayout: React.FC = () => {
             </button>
 
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sage-deep">
+              <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-deep">
                 <Stethoscope className="h-3 w-3" aria-hidden="true" />
                 Neurology &amp; Cognitive Health
               </p>
-              <p className="truncate text-[13px] font-semibold text-ink">{activeLabel}</p>
+              <p className="truncate text-[14px] font-semibold text-ink">{activeLabel}</p>
             </div>
 
             <form onSubmit={handleSearchSubmit} className="hidden items-center md:flex" role="search">
@@ -440,12 +448,12 @@ export const DoctorLayout: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   aria-label="Search patients"
-                  className="h-9 w-56 rounded-lg border border-line bg-warm/60 pl-8 pr-3 text-[12px] text-ink placeholder:text-muted transition focus:border-forest focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest/15"
+                  className="h-9 w-56 rounded-lg border border-line bg-warm/60 pl-8 pr-3 text-[14px] text-ink placeholder:text-muted transition focus:border-forest focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest/15"
                 />
               </div>
             </form>
 
-            <div className="hidden items-center gap-2 rounded-full border border-line bg-warm/70 px-3 py-1.5 text-[11px] font-semibold text-body sm:flex">
+            <div className="hidden items-center gap-2 rounded-full border border-line bg-warm/70 px-3 py-1.5 text-[13px] font-semibold text-body sm:flex">
               <span className="h-1.5 w-1.5 rounded-full bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]" />
               Clinical pipeline active
             </div>
@@ -463,13 +471,17 @@ export const DoctorLayout: React.FC = () => {
         </header>
 
         {/* Page content */}
-        <main id="doctor-main" className="mx-auto w-full max-w-[1360px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <main
+          id="doctor-main"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-[1360px] px-4 py-6 focus:outline-none sm:px-6 sm:py-8 lg:px-8"
+        >
           <Outlet />
         </main>
 
         <footer className="border-t border-line bg-white">
           <div className="mx-auto flex max-w-[1360px] flex-col gap-1.5 px-4 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-            <span>Neulens General Hospital · Neurology &amp; Cognitive Health</span>
+            <span>{deploymentConfig.isConfigured ? `${deploymentConfig.clinicName} · ${deploymentConfig.clinicCity || 'Neurology & Cognitive Health'}` : 'Your clinic · Neurology & Cognitive Health'}</span>
             <span>Screening support, not a diagnosis. Clinician review guides next steps.</span>
           </div>
         </footer>

@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { HospitalDataStore } from '../models/dataStore';
-import { patientRegisterSchema, patientLoginSchema, patientSubmitAssessmentSchema } from '../validation/schemas';
+import { patientRegisterSchema, patientLoginSchema } from '../validation/schemas';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { fetchFhirContext } from '../services/fhirContext';
 import { auditFromRequest, requestIp } from '../services/audit';
 import { clearAttempts, consumeAttempt } from '../services/loginThrottle';
 import { getJwtSecret } from '../config/jwt';
@@ -222,83 +221,6 @@ export class PatientController {
         age: user.age,
         gender: user.gender,
         language: user.language
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  /**
-   * POST /api/v1/patient/assessment/submit
-   * Submits finished assessment responses from the patient portal.
-   * Secure: Saves full clinical data to database but returns only patient-safe confirmation.
-   */
-  public static async submitAssessment(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      const validated = patientSubmitAssessmentSchema.parse(req.body);
-
-      let targetUserId: string = req.user.id;
-      let targetPatientId: string | undefined = req.user.patientId || undefined;
-
-      if (req.user.role === 'CLINICIAN' || req.user.role === 'ADMIN') {
-        const pId = validated.patientId || (req.query.patientId as string);
-        if (pId) {
-          const target = (await HospitalDataStore.findUserByPatientId(pId)) || (await HospitalDataStore.findUserById(pId));
-          if (target) {
-            targetUserId = target.id;
-            targetPatientId = target.patientId || undefined;
-          }
-        }
-      } else if (req.user.role !== 'PATIENT') {
-        return res.status(403).json({ error: 'Patient or clinician authorization required' });
-      }
-
-      const taskResponses = { ...(validated.taskResponses || {}) };
-      const consent = taskResponses.externalContextConsent;
-      if (consent?.granted === true && targetPatientId) {
-        const externalContext = await fetchFhirContext(targetPatientId);
-        taskResponses.externalContext = {
-          ...externalContext,
-          importedAt: new Date().toISOString()
-        };
-      }
-
-      const saved = await HospitalDataStore.submitAssessment(targetUserId, {
-        overallScore: validated.overallScore,
-        riskLevel: validated.riskLevel,
-        reactionTime: validated.reactionTime,
-        blinkRate: validated.blinkRate,
-        fixationScore: validated.fixationScore,
-        speechRate: validated.speechRate,
-        pauseScore: validated.pauseScore,
-        jitter: validated.jitter,
-        shimmer: validated.shimmer,
-        symmetry: validated.symmetry,
-        tremorScore: validated.tremorScore,
-        taskResponses,
-        recommendation: validated.recommendation
-      });
-
-      await auditFromRequest(req, {
-        actorId: req.user.id,
-        actorRole: req.user.role,
-        action: 'ASSESSMENT_SUBMIT',
-        resourceType: 'ASSESSMENT',
-        resourceId: saved.id,
-        metadata: { patientId: targetPatientId },
-      });
-
-      // Return ONLY confirmation data — never internal AI risk calculations or doctor notes to patient
-      return res.status(201).json({
-        success: true,
-        message: 'Assessment completed and stored securely for clinical review.',
-        assessmentId: saved.id,
-        patientId: targetPatientId,
-        completedAt: saved.date
       });
     } catch (err) {
       next(err);

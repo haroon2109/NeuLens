@@ -97,24 +97,54 @@ export interface PatientLoginData {
   verification: string;
 }
 
+// No measurement is optional-with-a-default: an unrecorded value is sent as null.
+// `overallScore` is null when the battery did not produce an interpretable result.
+// There is deliberately no risk tier in the submission contract.
 export interface PatientSubmitAssessmentData {
   patientId?: string;
-  overallScore: number;
-  riskLevel: string;
-  reactionTime: number;
-  blinkRate: number;
-  fixationScore: number;
-  speechRate: number;
-  pauseScore: number;
-  jitter: number;
-  shimmer: number;
-  symmetry: number;
-  tremorScore: number;
+  overallScore: number | null;
+  reactionTime: number | null;
+  blinkRate: number | null;
+  fixationScore: number | null;
+  speechRate: number | null;
+  pauseScore: number | null;
+  jitter: number | null;
+  shimmer: number | null;
+  symmetry: number | null;
+  tremorScore: number | null;
   taskResponses?: any;
   recommendation?: string;
 }
 
-export const patientApi = {
+export type PatientApi = {
+  register(data: PatientRegisterData): Promise<any>;
+  login(data: PatientLoginData): Promise<any>;
+  getSession(): Promise<any>;
+  submitAssessmentComplete(data: any): Promise<any>;
+  getConfirmationCard(): Promise<any>;
+  analyzeArabic(text: string, model?: 'RIGHTNOW_ARABIC' | 'ARABERT'): Promise<any>;
+  getLanguageReadiness(): Promise<LanguageReadinessResponse>;
+};
+
+export interface LanguageReadinessEntry {
+  id: string;
+  name: string;
+  nativeName: string;
+  bcp47: string;
+  dir: 'ltr' | 'rtl';
+  taskAdministrationReady: boolean;
+  readinessPercent: number;
+  pendingStages: Array<{ key: string; label: string }>;
+  participantNotice: string;
+}
+
+export interface LanguageReadinessResponse {
+  generatedAt: string;
+  note: string;
+  languages: LanguageReadinessEntry[];
+}
+
+export const patientApi: PatientApi = {
   async register(data: PatientRegisterData) {
     return apiRequest('/patient/register', {
       method: 'POST',
@@ -146,10 +176,25 @@ export const patientApi = {
     });
   },
 
+  async getLanguageReadiness() {
+    // Public endpoint: the language screen must be able to tell the truth about
+    // which languages can actually administer the tasks.
+    return apiRequest('/language-readiness', {});
+  },
+
   async getConfirmationCard() {
     return apiRequest('/patient/confirmation-card', {
     });
-  }
+  },
+  async analyzeArabic(text: string, model?: 'RIGHTNOW_ARABIC' | 'ARABERT') {
+    return apiRequest('/arabic/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text, model })
+    });
+  },
 };
 
 // ----------------------------------------------------------------------------
@@ -167,7 +212,7 @@ export interface DoctorDashboardStats {
     latestAssessmentDate: string;
     cognitiveChange: number | null;
     worsenedActivityIds: string[];
-    reviewReasons: Array<'OUTSIDE_OBSERVED_BASELINE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
+    reviewReasons: Array<'OUTSIDE_RELIABLE_CHANGE' | 'FUNCTIONAL_CHANGE' | 'CONTEXT_CHANGE'>;
   }>;
   recentAssessments: Array<{
     id: string;
@@ -176,8 +221,8 @@ export interface DoctorDashboardStats {
     age: number;
     date: string;
     assessmentType: string;
-    score: number;
-    riskLevel: string;
+    score: number | null;
+    reviewState: string;
     reviewStatus: string;
   }>;
 }
@@ -201,10 +246,10 @@ export const doctorApi = {
     return json.stats;
   },
 
-  async getPatients(query = '', risk = 'ALL') {
+  async getPatients(query = '', reviewState = 'ALL') {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
-    if (risk && risk !== 'ALL') params.set('risk', risk);
+    if (reviewState && reviewState !== 'ALL') params.set('reviewState', reviewState);
 
     const json = await apiRequest(`/doctor/patients?${params.toString()}`, {
     });
@@ -309,6 +354,28 @@ export const doctorApi = {
     });
   },
 
+  async getExternalInstrumentCatalog() {
+    return apiRequest('/external-instruments/catalog', {});
+  },
+
+  async recordExternalInstrument(patientId: string, record: {
+    instrumentKey: string;
+    instrumentVersion?: string;
+    language: string;
+    administeredOn: string;
+    administeredBy: string;
+    score: number;
+    licenceConfirmed: boolean;
+    licenceReference?: string;
+    notes?: string;
+  }) {
+    return apiRequest(`/external-instruments/patients/${patientId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+  },
+
   async getAppointments() {
     const json = await apiRequest('/doctor/appointments', {
     });
@@ -345,6 +412,40 @@ export const doctorApi = {
 
   async getPlatformInsights() {
     return apiRequest('/doctor/platform-insights', {
+    });
+  },
+
+  async getAssessmentLanguageReadiness() {
+    return apiRequest('/doctor/assessment-language-readiness', {
+    });
+  },
+
+  async recordLanguageSignOff(payload: { language: string; stage: string; status?: string; notes?: string }) {
+    return apiRequest('/doctor/assessment-language-readiness/sign-off', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+  },
+
+  /**
+   * Analyze Arabic text using the research-stage language model.
+   *
+   * Body: { text: string, model?: 'RIGHTNOW_ARABIC' | 'ARABERT' }
+   *
+   * Response: { modelUsed, sentiment?, keyPhrases?, backTranslationOk?, disclaimer }
+   *
+   * Note: Output is exploratory only – not a clinical score or diagnosis.
+   */
+  async analyzeArabic(text: string, model?: 'RIGHTNOW_ARABIC' | 'ARABERT') {
+    return apiRequest('/arabic/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text, model })
     });
   }
 };

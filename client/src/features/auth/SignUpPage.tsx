@@ -54,6 +54,7 @@ const roleCopy: Record<
 
 const languageOptions = [
   { value: 'en', label: 'English' },
+  { value: 'ar', label: 'العربية (Arabic)' },
   { value: 'ta', label: 'Tamil' },
   { value: 'hi', label: 'Hindi' },
   { value: 'te', label: 'Telugu' },

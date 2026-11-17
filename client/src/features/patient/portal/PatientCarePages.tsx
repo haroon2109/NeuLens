@@ -29,13 +29,10 @@ import {
   PortalPageHeader,
   SectionTitle,
   formatDate,
-  formatDateTime
+  formatDateTime,
+  primaryButton,
+  secondaryButton
 } from './ui';
-
-const primaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-primary';
-const secondaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl pp-btn-secondary';
 
 const appointmentTone = (status: string) => {
   if (status === 'CANCELLED') return 'rose' as const;
@@ -104,7 +101,7 @@ export const AppointmentsPage: React.FC = () => {
       </MotionReveal>
 
       {error && (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-[12px] font-semibold text-rose-800" role="alert">
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-[14px] font-semibold text-rose-800" role="alert">
           {error}
         </p>
       )}
@@ -121,7 +118,7 @@ export const AppointmentsPage: React.FC = () => {
                   <div key={appointment.id} className="rounded-xl border border-line p-3.5">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <p className="text-[13px] font-semibold text-ink">{appointment.title}</p>
+                        <p className="text-[14px] font-semibold text-ink">{appointment.title}</p>
                         <p className="mt-0.5 text-xs text-muted">{appointment.clinician}</p>
                       </div>
                       <Pill tone={appointmentTone(appointment.status)} dot>{appointment.status.toLowerCase()}</Pill>
@@ -198,7 +195,7 @@ export const AppointmentsPage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Your clinic" />
-            <p className="text-[12px] font-semibold text-ink">{treatmentTeam.doctor}</p>
+            <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
             <p className="mt-0.5 text-xs text-muted">{treatmentTeam.role}</p>
             <dl className="mt-3 space-y-2 text-xs">
               <div className="flex gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" /><dd className="text-body">{treatmentTeam.institution}<br />{treatmentTeam.department}<br />Block B, Suite 400</dd></div>
@@ -254,7 +251,7 @@ export const CarePlanPage: React.FC = () => {
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
               <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${carePlan.progress}%` }} />
             </div>
-            <span className="text-[12px] font-bold text-emerald-700">{carePlan.progress}%</span>
+            <span className="text-[14px] font-bold text-emerald-700">{carePlan.progress}%</span>
           </div>
 
           <ol className="mt-4 space-y-2.5">
@@ -263,7 +260,7 @@ export const CarePlanPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => toggleCareStep(step.id)}
-                  className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition ${
+                  className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-start transition ${
                     step.done ? 'border-emerald-200 bg-emerald-50/60' : 'border-line hover:border-slate-300'
                   }`}
                 >
@@ -273,7 +270,7 @@ export const CarePlanPage: React.FC = () => {
                     <Check className="h-3 w-3" />
                   </span>
                   <span>
-                    <span className={`block text-[12px] font-semibold ${step.done ? 'text-emerald-950' : 'text-slate-800'}`}>{step.title}</span>
+                    <span className={`block text-[14px] font-semibold ${step.done ? 'text-emerald-950' : 'text-slate-800'}`}>{step.title}</span>
                     <span className="mt-0.5 block text-xs leading-5 text-muted">{step.detail}</span>
                   </span>
                 </button>
@@ -384,7 +381,7 @@ export const NotificationsPage: React.FC = () => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-[12px] font-semibold text-ink">{item.title}</p>
+                      <p className="text-[14px] font-semibold text-ink">{item.title}</p>
                       {!item.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label="Unread" />}
                     </div>
                     <p className="mt-0.5 text-xs leading-5 text-muted">{item.detail}</p>
@@ -444,7 +441,7 @@ export const DocumentsPage: React.FC = () => {
                   <FileText className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-[12px] font-semibold text-ink">{document.title}</p>
+                  <p className="text-[14px] font-semibold text-ink">{document.title}</p>
                   <p className="mt-0.5 text-xs text-muted">{document.type} · {formatDate(document.date)}</p>
                   <p className="mt-1 max-w-lg text-xs leading-5 text-muted">{document.summary}</p>
                 </div>

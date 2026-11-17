@@ -35,14 +35,14 @@ import { Card, InfoRow, Pill, PortalPageHeader, SectionTitle, Toggle, formatDate
 import { ConsentWithdrawnState } from '../../../components/systemStates';
 
 const primaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 text-[12px] font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 text-[14px] font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40';
 const secondaryButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-[12px] font-semibold text-body transition hover:bg-warm';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-[14px] font-semibold text-body transition hover:bg-warm';
 const dangerButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-[12px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-[14px] font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40';
 const fieldClass =
-  'w-full rounded-xl border border-line bg-warm px-3.5 py-2.5 text-[13px] text-slate-800 outline-none transition placeholder:text-muted focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100';
-const labelClass = 'mb-1.5 block text-[12px] font-semibold text-body';
+  'w-full rounded-xl border border-line bg-warm px-3.5 py-2.5 text-[14px] text-slate-800 outline-none transition placeholder:text-muted focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100';
+const labelClass = 'mb-1.5 block text-[14px] font-semibold text-body';
 
 // ---------------------------------------------------------------------------
 // Screen 42 — My Profile
@@ -81,7 +81,7 @@ export const MyProfilePage: React.FC = () => {
       />
 
       {saved && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[12px] font-semibold text-emerald-900" role="status">
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[14px] font-semibold text-emerald-900" role="status">
           <CheckCircle2 className="h-4 w-4" /> Profile details saved.
         </div>
       )}
@@ -119,6 +119,7 @@ export const MyProfilePage: React.FC = () => {
               <label className={labelClass} htmlFor="profile-language">Preferred language</label>
               <select id="profile-language" className={fieldClass} value={personal.language} onChange={(event) => setPersonal({ language: event.target.value })}>
                 <option value="en">English</option>
+                <option value="ar">العربية (Arabic)</option>
                 <option value="ta">Tamil</option>
                 <option value="hi">Hindi</option>
                 <option value="te">Telugu</option>
@@ -171,7 +172,7 @@ export const MyProfilePage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Care team" />
-            <p className="text-[12px] font-semibold text-ink">{treatmentTeam.doctor}</p>
+            <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
             <p className="text-xs text-muted">{treatmentTeam.role}</p>
             <dl className="mt-3">
               <InfoRow label="Hospital" value={treatmentTeam.institution} />
@@ -185,7 +186,7 @@ export const MyProfilePage: React.FC = () => {
           </Card>
 
           <div id="profile-accessibility" className="rounded-2xl border border-line bg-white p-4">
-            <p className="text-[12px] font-semibold text-ink">Accessibility at a glance</p>
+            <p className="text-[14px] font-semibold text-ink">Accessibility at a glance</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Pill tone="slate">{personal.language === 'en' ? 'English' : 'Preferred language set'}</Pill>
               <Pill tone="blue">{health.sensory.length ? health.sensory.join(', ') : 'No sensory needs noted'}</Pill>
@@ -219,7 +220,7 @@ export const AccountSettingsPage: React.FC = () => {
       />
 
       {saved && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[12px] font-semibold text-emerald-900" role="status">
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[14px] font-semibold text-emerald-900" role="status">
           <CheckCircle2 className="h-4 w-4" /> Preferences saved.
         </div>
       )}
@@ -296,7 +297,7 @@ export const AccountSettingsPage: React.FC = () => {
               onChange={(value) => setAccount({ smsReminders: value })}
             />
             <div className="rounded-lg bg-warm px-3 py-2 text-xs leading-5 text-muted">
-              <Info className="mr-1 inline h-3 w-3" />
+              <Info className="me-1 inline h-3 w-3" />
               Urgent account or safety notices cannot be switched off.
             </div>
           </div>
@@ -304,7 +305,7 @@ export const AccountSettingsPage: React.FC = () => {
 
         <Card>
           <SectionTitle title="Language & region" />
-          <label className={labelClass} htmlFor="settings-language"><Globe2 className="mr-1 inline h-3.5 w-3.5" /> Portal and assessment language</label>
+          <label className={labelClass} htmlFor="settings-language"><Globe2 className="me-1 inline h-3.5 w-3.5" /> Portal and assessment language</label>
           <select
             id="settings-language"
             className={fieldClass}
@@ -329,7 +330,7 @@ export const AccountSettingsPage: React.FC = () => {
 
         <Card>
           <SectionTitle title="Display & accessibility" action={<Accessibility className="h-4 w-4 text-muted" />} />
-          <p className="mb-2 text-xs font-semibold text-body"><Type className="mr-1 inline h-3.5 w-3.5" /> Text size</p>
+          <p className="mb-2 text-xs font-semibold text-body"><Type className="me-1 inline h-3.5 w-3.5" /> Text size</p>
           <div className="grid grid-cols-3 gap-2">
             {[
               { value: 'normal' as const, label: 'Standard' },
@@ -507,7 +508,7 @@ export const PrivacyDataPage: React.FC = () => {
               <p className="text-xs text-muted">No requests on record.</p>
             )}
             <div className="mt-3 rounded-lg bg-warm px-3 py-2 text-xs leading-5 text-muted">
-              <Download className="mr-1 inline h-3 w-3" />
+              <Download className="me-1 inline h-3 w-3" />
               To request a portable copy of your records, use the request option below or contact the clinic. Identity verification is required.
             </div>
           </Card>
@@ -620,9 +621,9 @@ export const HelpSupportPage: React.FC = () => {
                       type="button"
                       aria-expanded={open}
                       onClick={() => setOpenFaq(open ? null : index)}
-                      className="flex w-full items-center justify-between gap-3 py-3 text-left"
+                      className="flex w-full items-center justify-between gap-3 py-3 text-start"
                     >
-                      <span className="text-[12px] font-semibold text-slate-800">{faq.question}</span>
+                      <span className="text-[14px] font-semibold text-slate-800">{faq.question}</span>
                       <ChevronDown className={`h-4 w-4 shrink-0 text-muted transition ${open ? 'rotate-180' : ''}`} />
                     </button>
                     {open && <p className="pb-3 text-xs leading-5 text-body">{faq.answer}</p>}
@@ -671,7 +672,7 @@ export const HelpSupportPage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Contact the clinic" />
-            <p className="text-[12px] font-semibold text-ink">{treatmentTeam.doctor}</p>
+            <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
             <p className="text-xs text-muted">{treatmentTeam.department}</p>
             <div className="mt-3 space-y-2.5 text-xs">
               <a href={`tel:${treatmentTeam.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-body hover:text-blue-700">
@@ -712,7 +713,7 @@ export const HelpSupportPage: React.FC = () => {
           </Card>
 
           <div className="rounded-2xl border border-line bg-white p-4">
-            <p className="text-[12px] font-semibold text-ink">Sign out</p>
+            <p className="text-[14px] font-semibold text-ink">Sign out</p>
             <p className="mt-1 text-xs leading-5 text-muted">
               Signing out ends this session on this device. Your saved portal preferences remain for next time.
             </p>

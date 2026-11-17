@@ -19,6 +19,7 @@ class SpeechRecognitionServiceImpl implements ISpeechRecognitionService {
   private recognition: any = null;
   private listening: boolean = false;
   private currentLanguage: SupportedLanguage = 'en';
+  private transcribing: boolean = false;
   private onResultCallback: ((transcript: string, isFinal: boolean) => void) | null = null;
   private onErrorCallback: ((err: any) => void) | null = null;
   private autoRestart: boolean = true;
@@ -151,7 +152,7 @@ class SpeechRecognitionServiceImpl implements ISpeechRecognitionService {
   public async transcribeClip(
     audioBlob: Blob,
     lang: SupportedLanguage
-  ): Promise<{ success: boolean; transcript: string; error?: string }> {
+  ): Promise<{ success: boolean; transcript: string; error?: string }> {      this.transcribing = true;
     try {
       const res = await gnaniVoiceApi.transcribeAudio(audioBlob, lang);
       if (res.success) {
@@ -172,7 +173,18 @@ class SpeechRecognitionServiceImpl implements ISpeechRecognitionService {
         transcript: '',
         error: err.message || 'Service exception'
       };
+    } finally {
+      this.transcribing = false;
     }
+  }
+
+  /**
+   * Whether STT is currently in flight. The TTS service uses this to
+   * defer/announce task-completion speech so it never overlaps a live
+   * transcription request.
+   */
+  public isTranscribing(): boolean {
+    return this.transcribing;
   }
 
   /**

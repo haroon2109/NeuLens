@@ -589,7 +589,7 @@ export const LandingPage: React.FC = () => {
                   </span>
                   <span className="text-xs font-semibold leading-4 text-nl-ink">
                     Four observation types
-                    <span className="block text-[0.68rem] font-normal text-nl-muted">One guided session</span>
+                    <span className="block text-[12px] font-normal text-nl-muted">One guided session</span>
                   </span>
                 </div>
               </div>
@@ -898,7 +898,7 @@ export const LandingPage: React.FC = () => {
                               </span>
                               <div className="sm:mt-2.5">
                                 <p className="text-xs font-semibold text-nl-ink">{node.label}</p>
-                                <p className="text-[0.68rem] leading-4 text-nl-muted">{node.note}</p>
+                                <p className="text-[12px] leading-4 text-nl-muted">{node.note}</p>
                               </div>
                             </div>
                             {index < 2 ? (
@@ -911,7 +911,7 @@ export const LandingPage: React.FC = () => {
                         );
                       })}
                     </div>
-                    <p className="mt-5 border-t border-nl-line pt-4 text-[0.68rem] leading-4 text-nl-muted">
+                    <p className="mt-5 border-t border-nl-line pt-4 text-[12px] leading-4 text-nl-muted">
                       Illustrative workflow only. No clinical thresholds or accuracy figures are shown.
                     </p>
                   </div>
@@ -1160,7 +1160,7 @@ export const LandingPage: React.FC = () => {
                     />
                     <div className="flex items-center justify-between gap-4 px-2 pb-1 pt-3">
                       <p className="text-xs leading-5 text-nl-muted">Illustrative: a clinician-led care team.</p>
-                      <span className="lp-tag shrink-0 text-[0.68rem]">Clinical review</span>
+                      <span className="lp-tag shrink-0 text-[12px]">Clinical review</span>
                     </div>
                   </div>
                 </div>
@@ -1185,7 +1185,7 @@ export const LandingPage: React.FC = () => {
                 <Reveal key={group.label} delay={index * 70}>
                   <div className="lp-card h-full p-6 sm:p-7">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.09em] ${group.tone}`}
+                      className={`inline-flex rounded-full border px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.09em] ${group.tone}`}
                     >
                       {group.label}
                     </span>

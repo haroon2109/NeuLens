@@ -233,7 +233,7 @@ export const CognitiveSessionRunner: React.FC<{
             End session and review
           </button>
         </div>
-        <p className="mt-3 text-[11px] leading-5 text-muted">
+        <p className="mt-3 text-[13px] leading-5 text-muted">
           Ending early records the remaining activities as not completed. A partial session may not be comparable with previous sessions.
         </p>
       </div>
@@ -331,7 +331,7 @@ export const CognitiveSessionRunner: React.FC<{
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full rounded-full bg-forest transition-[width] duration-500" style={{ width: `${Math.max(2, progress)}%` }} />
         </div>
-        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted">
+        <p className="mt-1.5 flex items-center gap-1 text-[13px] text-muted">
           <ShieldCheck className="h-3 w-3" /> {plan.mode === 'STANDARDIZED' ? 'Standardized mode · fixed difficulty' : `Exploratory mode · adaptive level ${current.difficultyLevel}`}
         </p>
       </div>

@@ -32,6 +32,18 @@ More validation work. That means test-retest reliability, clinically reviewed ta
 
 The persistence posture if the database is not reachable. The demo can still run, but the strongest claim is a verified production persistence story, not a fallback one. Fixing the database reachability and migration posture is the clearest next step.
 
+## Is this culturally appropriate for Abu Dhabi?
+
+Arabic is a first-class interface language with right-to-left layout and Arabic-script fonts, covering navigation, consent, the daily-function check-in and results. What we do **not** do is claim validated Arabic task stimuli: assessment instructions remain English in this build and are labelled as pending back-translation, cognitive pretesting and local clinical review. We would rather be honest about that than hand an older Arabic speaker an unvalidated translation. The adaptation workflow is documented per language, and the clinician Assessment Readiness screen makes each stage explicit and blocks task administration until sign-off is recorded. The Arabic task-stimuli pipeline is our headline next milestone.
+
+## Do you use genomic information?
+
+Only if the patient explicitly opts in. What they share is stored as source-labelled context and shown to the reviewing clinician. NeuLens does not interpret variants, calculate genetic risk, or change any score. Family history is handled the same way, as context rather than a risk calculation.
+
+## How do you know it works in the local population?
+
+We measure what our recorded data can support: completion, comparability rate, repeat-session variability within a person, median time to clinical review, referral completion/non-completion, and all of that split by language, age band and education band. We do **not** report sensitivity, specificity, true false-referral burden or meaningful-change accuracy yet, because those require an ethics-approved reference-standard study in the local population. The Abu Dhabi pilot protocol is written down: cohort, reference standard, sensitivity/specificity/ICC targets, and segment analysis by language, age and education (`docs/future-health-challenge/VALIDATION_STUDY_PLAN.md`).
+
 ## What is the prize story, in one line?
 
 A patient completes a guided multimodal screening, and a clinician reviews a structured, explainable record under explicit safety constraints, with deterministic fallbacks when anything upstream is unavailable.

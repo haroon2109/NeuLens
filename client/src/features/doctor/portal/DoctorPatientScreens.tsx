@@ -32,9 +32,10 @@ import {
   PatientWorkflowNav,
   Pill,
   ReviewPill,
-  RiskPill,
+  ReviewStatePill,
   fieldClass,
   formatDate,
+  formatScore,
   labelClass,
   primaryButton,
   secondaryButton
@@ -49,7 +50,7 @@ interface PatientRecord {
   language: string;
   assessmentsCount: number;
   latestScore: number | null;
-  latestRisk: string | null;
+  reviewState: string | null;
   latestAssessmentDate: string | null;
   changeStatus: 'INSUFFICIENT_DATA' | 'NO_CHANGE' | 'REVIEW';
   cognitiveChange: number | null;
@@ -102,7 +103,7 @@ export const DoctorPortalPatientsPage: React.FC = () => {
     language: patient.language,
     assessmentsCount: 0,
     latestScore: null,
-    latestRisk: null,
+    reviewState: null,
     latestAssessmentDate: null,
     changeStatus: 'INSUFFICIENT_DATA',
     cognitiveChange: null,
@@ -293,7 +294,7 @@ export const DoctorPortalPatientsPage: React.FC = () => {
                       {patient.latestScore !== null ? (
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-ink">{Math.round(patient.latestScore)}</span>
-                          <RiskPill risk={patient.latestRisk} />
+                          <ReviewStatePill state={patient.reviewState} />
                         </div>
                       ) : (
                         <Pill tone="slate">No score</Pill>
@@ -401,7 +402,7 @@ export const AddPatientPage: React.FC = () => {
         {error && <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-800" role="alert">{error}</div>}
 
         <Card>
-          <h2 className="text-[13px] font-semibold text-ink">Basic information</h2>
+          <h2 className="text-[14px] font-semibold text-ink">Basic information</h2>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label htmlFor="add-name" className={labelClass}>Full name</label>
@@ -429,6 +430,7 @@ export const AddPatientPage: React.FC = () => {
               <label htmlFor="add-language" className={labelClass}>Preferred language</label>
               <select id="add-language" value={form.language} onChange={(event) => update('language', event.target.value)} className={fieldClass}>
                 <option value="en">English</option>
+                <option value="ar">العربية (Arabic)</option>
                 <option value="hi">Hindi</option>
                 <option value="bn">Bengali</option>
                 <option value="ta">Tamil</option>
@@ -439,7 +441,7 @@ export const AddPatientPage: React.FC = () => {
         </Card>
 
         <Card>
-          <h2 className="text-[13px] font-semibold text-ink">Contact details</h2>
+          <h2 className="text-[14px] font-semibold text-ink">Contact details</h2>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="add-email" className={labelClass}>Email</label>
@@ -479,7 +481,7 @@ export const AddPatientPage: React.FC = () => {
         </Card>
 
         <Card>
-          <h2 className="text-[13px] font-semibold text-ink">Clinical details for context</h2>
+          <h2 className="text-[14px] font-semibold text-ink">Clinical details for context</h2>
           <p className="mt-0.5 text-xs leading-4 text-muted">These details help interpret screening results but do not alter the scoring engine.</p>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <div>
@@ -502,7 +504,7 @@ export const AddPatientPage: React.FC = () => {
         </Card>
 
         <Card>
-          <h2 className="text-[13px] font-semibold text-ink">Consent and invitation</h2>
+          <h2 className="text-[14px] font-semibold text-ink">Consent and invitation</h2>
           <div className="mt-3 space-y-3">
             <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line p-3">
               <input type="checkbox" checked={form.consentConfirmed} onChange={(event) => update('consentConfirmed', event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-line-strong text-blue-700 focus:ring-blue-500" />
@@ -620,7 +622,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <ChangePill status={changeSummary?.status || 'INSUFFICIENT_DATA'} />
               <ReviewPill status={latest?.reviewStatus} />
-              {latest && <RiskPill risk={latest.riskLevel} />}
+              {latest && <ReviewStatePill state={latest.reviewState} />}
               {isLocal && <Pill tone="slate">Local registration · no screening yet</Pill>}
             </div>
           </div>
@@ -649,7 +651,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
           <Card>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-[13px] font-semibold text-ink">Latest assessment</h2>
+                <h2 className="text-[14px] font-semibold text-ink">Latest assessment</h2>
                 <p className="mt-0.5 text-xs text-muted">
                   {latest ? `${formatDate(latest.date)} · ${latest.assessmentType || 'Full screening'}` : 'No completed assessment'}
                 </p>
@@ -664,8 +666,16 @@ export const DoctorPatientOverviewPage: React.FC = () => {
             {latest ? (
               <>
                 <div className="mt-4 grid gap-3 sm:grid-cols-4">
-                  <MetricTile label="Overall score" value={`${Math.round(latest.overallScore)} / 100`} detail="Screening composite" />
-                  <MetricTile label="Risk tier" value={latest.riskLevel ? latest.riskLevel.toLowerCase() : 'Not set'} detail="Not a diagnosis" />
+                  <MetricTile
+                    label="Overall score"
+                    value={latest.overallScore === null ? 'Not interpretable' : `${Math.round(latest.overallScore)} / 100`}
+                    detail={latest.overallScore === null ? 'Session produced no interpretable score' : 'Descriptive task accuracy'}
+                  />
+                  <MetricTile
+                    label="Review state"
+                    value={latest.reviewState ? latest.reviewState.replace(/_/g, ' ').toLowerCase() : 'Not set'}
+                    detail="Administrative — not a diagnosis or risk tier"
+                  />
                   <MetricTile label="Review" value={(latest.reviewStatus || 'PENDING_REVIEW').replace(/_/g, ' ').toLowerCase()} detail={latest.reviewedBy || 'No reviewer recorded'} />
                   <MetricTile label="Comparison" value={baselineStatus} detail={`${comparables.length} comparable session${comparables.length === 1 ? '' : 's'}`} />
                 </div>
@@ -693,7 +703,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
           <Card>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-[13px] font-semibold text-ink">Assessment timeline</h2>
+                <h2 className="text-[14px] font-semibold text-ink">Assessment timeline</h2>
                 <p className="mt-0.5 text-xs text-muted">Most recent sessions first. Missing or low-quality sessions are labelled.</p>
               </div>
               <Link to={`/doctor/patients/${patient.patientId}/longitudinal`} className="text-xs font-semibold text-blue-700 hover:text-blue-900">
@@ -713,7 +723,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-xs font-semibold text-slate-800">{formatDate(assessment.date)}</p>
                         <div className="flex items-center gap-1.5">
-                          <span className="rounded bg-warm px-1.5 py-0.5 text-xs font-bold text-body">{Math.round(assessment.overallScore)} / 100</span>
+                          <span className="rounded bg-warm px-1.5 py-0.5 text-xs font-bold text-body">{formatScore(assessment.overallScore)}</span>
                           <ReviewPill status={assessment.reviewStatus} />
                         </div>
                       </div>
@@ -730,7 +740,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Patient details</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Patient details</h2>
             <dl className="mt-2">
               <InfoRow label="Hospital ID" value={<span className="font-mono text-xs">{patient.patientId}</span>} />
               <InfoRow label="Date of birth" value={patient.dob ? formatDate(patient.dob) : local?.dob ? formatDate(local.dob) : 'Not recorded'} />
@@ -744,7 +754,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
 
           <Card>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-[13px] font-semibold text-ink">Health context</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Health context</h2>
               <Link to={`/doctor/patients/${patient.patientId}/context`} className="text-xs font-semibold text-blue-700">Review</Link>
             </div>
             {context ? (
@@ -763,7 +773,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
           </Card>
 
           <Card>
-            <h2 className="text-[13px] font-semibold text-ink">Upcoming appointment</h2>
+            <h2 className="text-[14px] font-semibold text-ink">Upcoming appointment</h2>
             {nextAppointment ? (
               <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
                 <p className="text-xs font-semibold text-blue-950">{nextAppointment.title}</p>
@@ -787,7 +797,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
 
           <Card>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-[13px] font-semibold text-ink">Review history</h2>
+              <h2 className="text-[14px] font-semibold text-ink">Review history</h2>
               <Link to={`/doctor/patients/${patient.patientId}/notes`} className="text-xs font-semibold text-blue-700">All notes</Link>
             </div>
             {patientNotes.length === 0 ? (

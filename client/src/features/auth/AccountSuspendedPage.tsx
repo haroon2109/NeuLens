@@ -36,7 +36,7 @@ export const AccountSuspendedPage: React.FC = () => {
           onSignOut={handleSignOut}
         />
 
-        <p className="mt-6 text-center text-[13px] leading-6 text-slate-500">
+        <p className="mt-6 text-center text-[14px] leading-6 text-slate-500">
           Signed in as {user.name || user.email}. If you have an appointment already scheduled, contact the clinic
           directly so it is not missed.
         </p>

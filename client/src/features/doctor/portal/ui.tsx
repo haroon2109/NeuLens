@@ -38,6 +38,15 @@ export type { Tone } from '../../patient/portal/ui';
  * portalDesignSystem.css (`doctor-portal` scope), so a clinician and a patient
  * see the same shapes, radii and focus rings across the product.
  */
+/**
+ * Renders a recorded score, or states plainly that no interpretable score exists.
+ * There is no fallback number: a missing score is not a low score and not a normal one.
+ */
+export const formatScore = (value: number | null | undefined): string =>
+  typeof value === 'number' && Number.isFinite(value)
+    ? `${Math.round(value)} / 100`
+    : 'Not interpretable';
+
 export const primaryButton = 'pp-btn pp-btn-primary pp-btn-sm';
 export const secondaryButton = 'pp-btn pp-btn-secondary pp-btn-sm';
 export const dangerButton = 'pp-btn pp-btn-danger pp-btn-sm';
@@ -57,19 +66,32 @@ export const DoctorPageHeader: FC<{
       <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.035em] text-ink sm:text-[30px]">
         {title}
       </h1>
-      {description && <p className="mt-2 max-w-3xl text-[13px] leading-6 text-body">{description}</p>}
+      {description && <p className="mt-2 max-w-3xl text-[14px] leading-6 text-body">{description}</p>}
       {meta && <div className="mt-3 flex flex-wrap items-center gap-2">{meta}</div>}
     </div>
     {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
   </header>
 );
 
-export const RiskPill: FC<{ risk?: string | null }> = ({ risk }) => {
-  const value = (risk || 'PENDING').toUpperCase();
-  if (value === 'HIGH') return <Pill tone="rose" dot>Higher concern</Pill>;
-  if (value === 'MODERATE') return <Pill tone="amber" dot>Monitor</Pill>;
-  if (value === 'LOW') return <Pill tone="forestSoft" dot>Lower concern</Pill>;
-  return <Pill tone="sage">Not screened</Pill>;
+/**
+ * Administrative review state — never a clinical risk tier.
+ *
+ * There is deliberately no green "low concern" pill: an unreviewed record is
+ * not reassurance, and a missing score is not a normal result.
+ */
+export const ReviewStatePill: FC<{ state?: string | null }> = ({ state }) => {
+  switch ((state || '').toUpperCase()) {
+    case 'REVIEW_PROMPT':
+      return <Pill tone="amber" dot>Review prompt</Pill>;
+    case 'NOT_INTERPRETABLE':
+      return <Pill tone="sage">Not interpretable</Pill>;
+    case 'CLINICIAN_REVIEWED':
+      return <Pill tone="forestSoft" dot>Clinician reviewed</Pill>;
+    case 'NOT_REVIEWED':
+      return <Pill tone="mint" dot>Not reviewed</Pill>;
+    default:
+      return <Pill tone="sage">Not screened</Pill>;
+  }
 };
 
 export const ReviewPill: FC<{ status?: string | null }> = ({ status }) => {
@@ -119,7 +141,7 @@ export const PatientWorkflowNav: FC<{ patientId: string }> = ({ patientId }) => 
         to={`/doctor/patients/${patientId}${suffix}`}
         end={end}
         className={({ isActive }) =>
-          `inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-semibold transition-colors ${
+          `inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[14px] font-semibold transition-colors ${
             isActive ? 'bg-mint text-forest' : 'text-body hover:bg-warm hover:text-ink'
           }`
         }
@@ -148,8 +170,8 @@ export const Notice: FC<{
     <div className={styles} role={tone === 'danger' ? 'alert' : 'status'}>
       <Icon className="h-4 w-4" aria-hidden="true" />
       <div>
-        <p className="text-[12px] font-bold">{title}</p>
-        <div className="mt-1 text-[12px] leading-5">{children}</div>
+        <p className="text-[14px] font-bold">{title}</p>
+        <div className="mt-1 text-[14px] leading-5">{children}</div>
       </div>
     </div>
   );
@@ -161,9 +183,9 @@ export const MetricTile: FC<{ label: string; value: string; detail?: string }> =
   detail
 }) => (
   <div className="rounded-xl border border-line bg-warm/60 p-3">
-    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</p>
+    <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</p>
     <p className="mt-1.5 text-[16px] font-semibold tracking-[-0.02em] text-ink">{value}</p>
-    {detail && <p className="mt-0.5 text-[11px] leading-4 text-muted">{detail}</p>}
+    {detail && <p className="mt-0.5 text-[13px] leading-4 text-muted">{detail}</p>}
   </div>
 );
 
@@ -178,7 +200,7 @@ export const TableEmpty: FC<{ title: string; detail: string; action?: ReactNode 
       <ClipboardList className="h-5 w-5" aria-hidden="true" />
     </span>
     <p className="text-[14px] font-semibold text-ink">{title}</p>
-    <p className="max-w-sm text-[12px] leading-5 text-muted">{detail}</p>
+    <p className="max-w-sm text-[14px] leading-5 text-muted">{detail}</p>
     {action && <div className="mt-2">{action}</div>}
   </div>
 );
