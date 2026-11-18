@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useFaceTrackingStore } from '../../store/faceTrackingStore';
 import { useVoiceAssistantStore } from '../../services/voice/VoiceInstructionEngine';
 import { useLanguageStore } from '../../services/language/LanguageManager';
+import { useScreeningCopy } from '../../features/screening/screeningCopy';
 import { Camera, Mic, CheckCircle2, AlertCircle, ArrowRight, Sparkles, Volume2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -16,6 +17,7 @@ export const SensorCheckStage: React.FC<SensorCheckStageProps> = ({ videoRef, ca
   const { speak, stopSpeaking } = useVoiceAssistantStore();
   const { getTranslation } = useLanguageStore();
   const t = getTranslation();
+  const copy = useScreeningCopy();
 
   const [micTested, setMicTested] = useState(false);
   const [micLevel, setMicLevel] = useState(0);
@@ -153,7 +155,7 @@ export const SensorCheckStage: React.FC<SensorCheckStageProps> = ({ videoRef, ca
                   : 'bg-orange-500 bg-opacity-20 border-orange-500 text-orange-400'
               }`}
             >
-              {isCameraReady ? 'Aligned' : 'Align Face'}
+              {isCameraReady ? copy.sensor.aligned : copy.sensor.alignFace}
             </span>
           </div>
 
@@ -180,7 +182,7 @@ export const SensorCheckStage: React.FC<SensorCheckStageProps> = ({ videoRef, ca
             ) : (
               <div className="text-xs text-health-gray-500 animate-pulse flex items-center gap-2">
                 <Camera className="w-4 h-4 animate-spin" />
-                <span>Initializing camera sensor...</span>
+                <span>{copy.sensor.initializingCamera}</span>
               </div>
             )}
 
@@ -216,7 +218,7 @@ export const SensorCheckStage: React.FC<SensorCheckStageProps> = ({ videoRef, ca
                     : 'bg-orange-500 bg-opacity-20 border-orange-500 text-orange-400'
                 }`}
               >
-                {micTested ? 'Detected' : 'Speak to Test'}
+                {micTested ? copy.sensor.detected : copy.sensor.speakToTest}
               </span>
             </div>
 
@@ -227,7 +229,7 @@ export const SensorCheckStage: React.FC<SensorCheckStageProps> = ({ videoRef, ca
             {/* Animated Audio Volume Visualizer Meter */}
             <div className="space-y-2 p-4 bg-health-gray-900 rounded-xl border border-health-gray-800">
               <div className="flex justify-between text-xs font-semibold text-health-gray-400">
-                <span>Microphone Input Level</span>
+                <span>{copy.sensor.micLevel}</span>
                 <span className="font-mono text-health-teal">{micLevel}%</span>
               </div>
 
@@ -259,7 +261,7 @@ export const SensorCheckStage: React.FC<SensorCheckStageProps> = ({ videoRef, ca
                   className="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition-all mt-1"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                  Test AI Voice Output (Timbre v2.5)
+                  {copy.sensor.testVoice}
                 </button>
               </div>
             </div>
@@ -268,7 +270,7 @@ export const SensorCheckStage: React.FC<SensorCheckStageProps> = ({ videoRef, ca
           {/* Overall Sensor Calibration Progress */}
           <div className="space-y-1.5 pt-2 border-t border-health-gray-850">
             <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-health-gray-400">
-              <span>Calibration Progress</span>
+              <span>{copy.sensor.calibrationProgress}</span>
               <span>{calibrationProgress}%</span>
             </div>
             <div className="h-2 bg-health-gray-900 rounded-full overflow-hidden">

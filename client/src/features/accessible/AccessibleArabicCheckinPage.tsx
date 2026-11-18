@@ -78,6 +78,7 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
   const [phase, setPhase] = useState<Phase>('intro');
   const [statusMessage, setStatusMessage] = useState('');
   const [ttsAvailable] = useState(canSpeak());
+  const [hasReadWords, setHasReadWords] = useState(false);
 
   const studyWords = useMemo(() => ARABIC_WORD_LIST, []);
   const recallOptions = useMemo(
@@ -104,6 +105,7 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
   const announce = useCallback((message: string) => setStatusMessage(message), []);
 
   const readStudyWords = useCallback(() => {
+    setHasReadWords(true);
     announce('جارٍ قراءة الكلمات.');
     speakSequence(
       [ARABIC_WORDLIST_COPY.studyIntro, ...studyWords.map((w) => w.ar)],
@@ -219,16 +221,13 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
           <p className="mt-1 text-sm leading-6">
             صياغة عربية أولية لمسار بدون كاميرا أو ميكروفون: لم تُستكمل الترجمة العكسية المستقلة، ولا المقابلات المعرفية (بما فيها تعليم منخفض ومرتفع وإعاقة حسية)، ولا اعتماد سريري محلي. هذا المسار ليس أداة مُحقَّقة ولا تشخيصًا ولا درجة خطر، ولا يُدمج في الدرجة المركّبة.
           </p>
-          <p className="mt-1 text-xs text-amber-900" dir="ltr" lang="en">
-            Draft, not validated. No camera, no microphone. Not a score, not a diagnosis. Evidence protocol: {ACCESSIBLE_CHECKIN_VALIDATION.evidenceDoc}
-          </p>
         </div>
 
         {phase === 'intro' && (
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 sm:text-3xl">متابعة مبسطة يمكن الوصول إليها (عربي)</h1>
-            <p className="mt-2 text-base leading-7 text-slate-700" dir="ltr" lang="en">
-              Accessible Arabic check-in: word-list recall and a daily-function check-in. Completable with buttons and keyboard, compatible with screen readers, and with optional browser read-aloud (audio output only). No camera, no microphone, no movement sensor.
+            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 outline-none sm:text-3xl">متابعة مبسطة يمكن الوصول إليها (عربي)</h1>
+            <p className="mt-2 text-base leading-7 text-slate-700">
+              دون كاميرا أو ميكروفون: تذكّر قائمة كلمات، ثم أسئلة قصيرة عن الأنشطة اليومية. يمكنك إكمالها بالأزرار أو لوحة المفاتيح، وهي متوافقة مع قارئ الشاشة، مع إمكانية الاستماع إلى الكلمات بصوت عالٍ.
             </p>
             <ul className="mt-4 space-y-2 text-base text-slate-800">
               <li>• تذكّر قائمة كلمات (بدون كاميرا/ميكروفون).</li>
@@ -250,13 +249,13 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
 
         {phase === 'word-study' && (
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900">{ARABIC_WORDLIST_COPY.title}</h1>
-            <p className="mt-1 text-sm text-slate-600" dir="ltr" lang="en">{ARABIC_WORDLIST_COPY.titleEn} — study phase, no time limit, no auto-advance.</p>
+            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 outline-none">{ARABIC_WORDLIST_COPY.title}</h1>
+            <p className="mt-1 text-sm text-slate-600">اقرأ الكلمات أو استمع إليها. لا يوجد حد للوقت، ولن تنتقل الشاشة تلقائيًا.</p>
             <p className="mt-4 text-lg leading-8 text-slate-800">{ARABIC_WORDLIST_COPY.studyIntro}</p>
             <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2" aria-label="قائمة الكلمات">
               {studyWords.map((word) => (
                 <li key={word.id} className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-xl font-semibold text-slate-900">
-                  {word.ar} <span className="text-sm font-normal text-slate-600" dir="ltr" lang="en">({word.en})</span>
+                  {word.ar}
                 </li>
               ))}
             </ul>
@@ -267,15 +266,7 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
                 disabled={!ttsAvailable}
                 className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 border-slate-300 bg-white px-5 py-3 text-lg font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-400"
               >
-                <Volume2 className="h-5 w-5" /> {ARABIC_WORDLIST_COPY.readAloud}
-              </button>
-              <button
-                type="button"
-                onClick={readStudyWords}
-                disabled={!ttsAvailable}
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 border-slate-300 bg-white px-5 py-3 text-lg font-semibold text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-400"
-              >
-                {ARABIC_WORDLIST_COPY.readAgain}
+                <Volume2 className="h-5 w-5" /> {hasReadWords ? ARABIC_WORDLIST_COPY.readAgain : ARABIC_WORDLIST_COPY.readAloud}
               </button>
               <button
                 type="button"
@@ -293,9 +284,8 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
 
         {phase === 'word-recall' && (
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900">{ARABIC_WORDLIST_COPY.recallPrompt}</h1>
+            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 outline-none">{ARABIC_WORDLIST_COPY.recallPrompt}</h1>
             <p className="mt-1 text-base text-slate-700">{ARABIC_WORDLIST_COPY.recallHelper}</p>
-            <p className="mt-1 text-sm text-slate-600" dir="ltr" lang="en">{ARABIC_WORDLIST_COPY.recallPromptEn} {ARABIC_WORDLIST_COPY.recallHelperEn}</p>
 
             {!wordRecallDone ? (
               <>
@@ -344,22 +334,19 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
 
         {phase === 'functional' && currentFunctional && (
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900">{ARABIC_FUNCTIONAL_COPY.title}</h1>
+            <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-slate-900 outline-none">{ARABIC_FUNCTIONAL_COPY.title}</h1>
             <p className="mt-2 text-base leading-7 text-slate-700">{ARABIC_FUNCTIONAL_COPY.intro}</p>
-            <p className="mt-1 text-sm text-slate-600" dir="ltr" lang="en">{ARABIC_FUNCTIONAL_COPY.introEn}</p>
 
             <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-600">سؤال {functionalIndex + 1} من {ARABIC_FUNCTIONAL_COPY.items.length}</p>
-              <p className="mt-2 text-lg font-bold text-slate-900">{ARABIC_FUNCTIONAL_COPY.prompt}</p>
-              <h2 className="mt-3 text-xl font-bold text-slate-900">{currentFunctional.ar}</h2>
-              <p className="text-sm text-slate-600" dir="ltr" lang="en">{currentFunctional.en}</p>
+              <h2 className="mt-2 text-xl font-bold text-slate-900">{currentFunctional.ar}</h2>
+              <p className="mt-2 text-base text-slate-700">{ARABIC_FUNCTIONAL_COPY.prompt}</p>
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-2">
               {ARABIC_FUNCTIONAL_COPY.options.map((option) => (
                 <LargeButton key={option.value} onClick={() => answerFunctional(option.value)}>
-                  <span className="block">{option.ar}</span>
-                  <span className="block text-sm font-normal text-slate-600" dir="ltr" lang="en">{option.en}</span>
+                  {option.ar}
                 </LargeButton>
               ))}
               <button
@@ -375,15 +362,17 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
 
         {phase === 'complete' && record && (
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h1 ref={headingRef} tabIndex={-1} className="flex items-center gap-2 text-2xl font-bold text-slate-900">
-              <CheckCircle2 className="h-7 w-7 text-emerald-600" /> اكتملت المتابعة (مسودّة)
+            <h1 ref={headingRef} tabIndex={-1} className="flex items-center gap-2 text-2xl font-bold text-slate-900 outline-none">
+              <CheckCircle2 className="h-7 w-7 shrink-0 text-emerald-600" /> اكتملت المتابعة (مسودّة)
             </h1>
-            <p className="mt-3 text-base leading-7 text-slate-700">{record.clinicianNotice}</p>
-            <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2" dir="ltr" lang="en">
-              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">Administration</dt><dd>No camera, no microphone, {record.administration.sensoryRoute}</dd></div>
-              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">Validation</dt><dd>{record.validation.status} (see evidence protocol)</dd></div>
-              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">Word-list (recorded counts)</dt><dd>{record.wordListRecall.recognisedCount} / {record.wordListRecall.studiedCount} recognised, {record.wordListRecall.falsePositiveIds.length} false positive(s) — not a validated score</dd></div>
-              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">Functional check-in</dt><dd>{record.functionalCheckIn.items.filter((i: any) => i.response !== 'skipped').length} / 4 answered</dd></div>
+            <p className="mt-3 text-base leading-7 text-slate-700">
+              أُجريت المتابعة دون كاميرا أو ميكروفون، وسُجّلت إجاباتك ليراجعها الطبيب. هذا ليس تشخيصًا ولا درجة خطر، ولا يُدمج في الدرجة المركّبة.
+            </p>
+            <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">طريقة الأداء</dt><dd>{ttsAvailable ? 'بدون كاميرا أو ميكروفون، مع قراءة صوتية من المتصفح' : 'بدون كاميرا أو ميكروفون'}</dd></div>
+              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">حالة التحقق</dt><dd>مسودّة غير مُحقَّقة<span className="block text-xs text-slate-500" dir="ltr">DRAFT_NOT_VALIDATED</span></dd></div>
+              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">تذكّر الكلمات (تعداد مسجّل)</dt><dd>{record.wordListRecall.recognisedCount} من {record.wordListRecall.studiedCount} مطابقة، و{record.wordListRecall.falsePositiveIds.length} اختيار غير موجود في القائمة — ليس درجة مُحقَّقة</dd></div>
+              <div className="rounded-xl bg-slate-50 p-3"><dt className="font-semibold text-slate-600">متابعة الأنشطة اليومية</dt><dd>{record.functionalCheckIn.items.filter((i: any) => i.response !== 'skipped').length} من 4 تمت الإجابة عنها</dd></div>
             </dl>
             <div className="mt-6 flex flex-wrap gap-3">
               <button type="button" onClick={downloadRecord} className="inline-flex min-h-14 items-center gap-2 rounded-2xl bg-blue-700 px-6 py-3 text-lg font-bold text-white hover:bg-blue-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-400">
@@ -393,8 +382,8 @@ export const AccessibleArabicCheckinPage: React.FC = () => {
                 العودة إلى البوابة
               </Link>
             </div>
-            <p className="mt-4 text-sm text-slate-600" dir="ltr" lang="en">
-              This record is stored only when you download it. A telephone/IVR script for the same two tasks is designed but not implemented; see the evidence protocol.
+            <p className="mt-4 text-sm text-slate-600">
+              لا يُحفظ هذا السجل إلا عند تنزيله. النسخة الهاتفية لنفس المهمتين مصمَّمة ولم تُنفَّذ بعد.
             </p>
           </section>
         )}

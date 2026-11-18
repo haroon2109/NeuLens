@@ -33,8 +33,8 @@ and defended in front of judges.
 - **Referral completion and referral non-completion** are computed from recorded referral outcomes in `platformInsights` and surfaced on Quality & Equity. This is explicitly labelled as *non-completion*, not as false-referral burden, because knowing a referral was clinically unnecessary requires a reference standard.
 
 **Deliberate limit**
-- Arabic task wording is **partially delivered**: the spoken-repeat (verbal recall) sentence is administered in Arabic (`getTargetSentence()` in `client/src/features/screening/ScreeningPage.tsx`), and the piano-sequencing task is fully localised including its instructions (`client/src/features/screening/PianoSequenceTask.tsx`). The **remaining task copy is English** — activity titles, the other task intros, prompts, button labels and screen-reader announcements.
-- Arabic task administration is therefore **not validated and not released**: the registry marks stimulus translation `DONE` for those two items only, with independent back-translation, cognitive pretesting and local clinical sign-off `PENDING`. In this research build a participant may proceed only after an explicit acknowledgement that is stored with the session and reported to the clinician.
+- Arabic task wording is **delivered for the whole patient-facing battery**: activity titles, intros, prompts, button labels, screen-reader announcements, the spoken-repeat (verbal recall) sentence (`getTargetSentence()` in `client/src/features/screening/ScreeningPage.tsx`) and the piano-sequencing instructions are all Arabic (RTL), from one copy module (`client/src/features/screening/screeningCopy.ts`).
+- Arabic task wording is **not validated**: it is a working translation. The registry marks stimulus translation `DONE` while independent back-translation, cognitive pretesting and local clinical sign-off stay `PENDING`, so a participant may proceed only after an explicit acknowledgement that is stored with the session and reported to the clinician, and the clinician readiness screen keeps showing the language as not approved.
 - Tamil, Hindi, Telugu, Kannada and Malayalam are offered for navigation, consent and results only; their task stimuli are English. No language is presented as a validated translation. See `MEASUREMENT_AND_LOCAL_VALIDATION.md` §5 for the adaptation workflow.
 
 ### 2. Longitudinal change detection
@@ -78,7 +78,7 @@ and defended in front of judges.
 - Risk identification is explicitly separated from diagnosis in UI, reports, exports and the API response.
 - Uncertainty is disclosed: missing context, non-comparable sessions and quality failures are named.
 - Consent records are versioned and stored server-side; urgent/safety flags are extracted deterministically and escalated.
-- Raw video and audio are not uploaded; only derived measurements leave the device.
+- Raw video is never uploaded. The speech clip is uploaded for acoustic analysis and transcription, held in memory (and as a deleted temp file in the AI service), and not retained; only derived measurements and the transcript are stored. Data flows are itemised in [`RESPONSIBLE_AI_AND_DATA_HANDLING.md`](RESPONSIBLE_AI_AND_DATA_HANDLING.md).
 
 ### 6. Validation and local population performance
 

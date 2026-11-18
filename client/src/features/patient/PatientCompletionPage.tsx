@@ -16,9 +16,11 @@ import { deploymentConfig } from '../../config/deployment';
 import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { ClinicalIllustration } from '../../components/ClinicalIllustration';
 import { patientApi } from '../../services/portalApi';
+import { useScreeningCopy } from '../screening/screeningCopy';
 
 export const PatientCompletionPage: React.FC = () => {
   const navigate = useNavigate();
+  const copy = useScreeningCopy();
   const { user, logout } = useAuthStore();
   const [cardData, setCardData] = useState<any | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -107,12 +109,8 @@ Not a diagnosis. Screening support for clinician review.
 
           {/* Heading & Friendly Message */}
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-black font-display text-ink">
-              Assessment Completed
-            </h1>
-            <p className="text-base text-body max-w-md mx-auto leading-relaxed">
-              Thank you. You have completed your screening activities.
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-black font-display text-ink">{copy.completion.title}</h1>
+            <p className="text-base text-body max-w-md mx-auto leading-relaxed">{copy.completion.thanks}</p>
           </div>
 
           {/* ----------------------------------------------------------- */}
@@ -123,17 +121,17 @@ Not a diagnosis. Screening support for clinician review.
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
                 <NeuLensLogo height="h-8" />
-                  <span className="text-xs text-muted font-medium">Hospital Patient ID Confirmation</span>
+                  <span className="text-xs text-muted font-medium">{copy.completion.badge}</span>
               </div>
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                Completed
+                {copy.completion.badge}
               </span>
             </div>
 
             {/* Big Patient ID */}
             <div className="space-y-1">
               <span className="text-xs font-bold text-muted uppercase tracking-wider block">
-                Your Patient Identifier
+                {copy.completion.identifierLabel}
               </span>
               <div className="font-mono text-3xl sm:text-4xl font-black text-medical-700 tracking-wider">
                 {displayId}
@@ -142,20 +140,18 @@ Not a diagnosis. Screening support for clinician review.
 
             <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-line">
               <div>
-                <span className="text-muted font-medium block">Patient Name</span>
+                <span className="text-muted font-medium block">{copy.completion.nameLabel}</span>
                 <span className="font-bold text-slate-800">{displayName}</span>
               </div>
               <div>
-                <span className="text-muted font-medium block">Completed On</span>
+                <span className="text-muted font-medium block">{copy.completion.dateLabel}</span>
                 <span className="font-bold text-slate-800">{completionDate}</span>
               </div>
             </div>
 
             <div className="p-3 bg-white border border-line rounded-xl text-xs text-body leading-relaxed flex items-start gap-2">
               <Lock className="w-4 h-4 text-medical-600 shrink-0 mt-0.5" />
-              <span>
-                Please keep this Patient ID safe for future reference. When returning to the clinic or speaking with your doctor, provide this ID number.
-              </span>
+              <span>{copy.completion.keepNote}</span>
             </div>
 
           </div>
@@ -173,7 +169,7 @@ Not a diagnosis. Screening support for clinician review.
                 className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-card"
               >
                 <Download className="w-4 h-4 text-body" />
-                <span>{downloadSuccess ? 'Downloaded!' : 'Download Slip (.txt)'}</span>
+                <span>{downloadSuccess ? copy.completion.downloaded : copy.completion.download}</span>
               </button>
 
               <button
@@ -182,7 +178,7 @@ Not a diagnosis. Screening support for clinician review.
                 className="py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-card"
               >
                 <Printer className="w-4 h-4 text-body" />
-                <span>Print Confirmation</span>
+                <span>{copy.completion.print}</span>
               </button>
             </div>
 
@@ -193,13 +189,13 @@ Not a diagnosis. Screening support for clinician review.
               className="w-full py-4 px-6 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white text-base font-bold rounded-2xl shadow-md shadow-medical-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <Home className="w-5 h-5" />
-              <span>Return to Home</span>
+              <span>{copy.completion.returnHome}</span>
             </button>
           </div>
 
           <div className="text-xs text-muted flex items-center justify-center gap-1.5 pt-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Confidential clinical record &bull; Session safely closes on return</span>
+            <span>{copy.completion.confidential}</span>
           </div>
 
         </div>

@@ -153,7 +153,7 @@ export const ASSESSMENT_LANGUAGE_READINESS: LanguageReadiness[] = [
       el(
         'stimulus_translation',
         'Task instructions & stimuli translated',
-        'Verbal recall sentence and sequencing-task instructions are administered in Arabic (RTL). Independent review of that wording is still required.'
+        'Patient-facing task wording in this build is Arabic (RTL), including the spoken-repeat sentence and sequencing instructions. Independent review of that wording is still required.'
       ),
       PENDING_BACK_TRANSLATION,
       NOT_PRETESTED,
@@ -165,7 +165,7 @@ export const ASSESSMENT_LANGUAGE_READINESS: LanguageReadiness[] = [
         'Gnani Arabic (ar-AE) speech is configured; clinical review of the voice is still pending. Arabic audio input is not transcribed and falls back to on-screen text.'
       )
     ],
-    'Portal, consent, results and task wording are available in Arabic (RTL). Arabic task administration is blocked until back-translation, pretesting and local clinical sign-off are complete.'
+    'Portal, consent, results and task wording are available in Arabic (RTL). Until back-translation, pretesting and local clinical sign-off are complete, Arabic task administration is allowed only with a recorded participant acknowledgement.'
   ),
   build(
     'Tamil',

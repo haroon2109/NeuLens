@@ -45,6 +45,7 @@ Neulens turns a short, guided multimodal screening into a structured, explainabl
 - **The validation plan is local.** Completion, repeat-session stability, time to clinical review and performance by language, age and education band are computed from recorded data; sensitivity, specificity and cultural validity are named as pending a reference-standard study rather than asserted.
 - **Methodological honesty is visible in the product.** The clinician Assessment Readiness screen lists each language's translation, back-translation, pretesting and sign-off status separately, requires a recorded participant acknowledgement before an unreviewed language can be administered, and lets clinicians record sign-offs. The Arabic task-stimuli pipeline is the headline next milestone, not a hidden caveat.
 - **Wearable summaries are an optional, consent-gated context source** alongside sleep, activity, wellbeing, clinical, family-history and genomic context; they never change the screening score.
+- **Deployment is configuration, not a rewrite.** The services are standard Node/Python/Postgres behind environment variables, integrate over FHIR R4 (read-only today, with write-back named as a next step), and can be pointed at UAE sovereign clouds for in-country residency; the current demo runs on Render in Oregon and we say so.
 
 This is a research-stage, safety-first platform with a validation roadmap — not a validated diagnostic tool. Full pilot protocol: `docs/future-health-challenge/VALIDATION_STUDY_PLAN.md`.
 

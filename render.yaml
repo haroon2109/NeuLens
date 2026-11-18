@@ -41,6 +41,13 @@ services:
         sync: false
       - key: GNANI_TIMEOUT_MS
         value: 15000
+      # Server-side acoustic analysis (FastAPI service below). The internal key
+      # must match INTERNAL_API_KEY on the neulens-ai service; set both in the
+      # Render dashboard (sync: false) to the same generated value.
+      - key: AI_SERVICE_URL
+        value: https://neulens-ai.onrender.com
+      - key: AI_SERVICE_INTERNAL_KEY
+        sync: false
 
   - type: web
     name: neulens-ai
@@ -73,6 +80,10 @@ services:
       # reported as little speech; the value used is recorded in each response.
       - key: VAD_SPEECH_THRESHOLD
         value: "0.5"
+      # Shared secret with the Node service's AI_SERVICE_INTERNAL_KEY. Set in
+      # the Render dashboard to the same value as AI_SERVICE_INTERNAL_KEY.
+      - key: INTERNAL_API_KEY
+        sync: false
 
 databases:
   - name: cognivision-db

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Eye, Loader2, RotateCcw, SkipForward } from 'lucide-react';
 import { useFaceTrackingStore } from '../../../store/faceTrackingStore';
+import { useScreeningCopy } from '../screeningCopy';
 import {
   CALIBRATION_DWELL_MS,
   CALIBRATION_TARGETS,
@@ -29,11 +30,12 @@ interface Props {
 }
 
 export const OcularCalibrationOverlay: React.FC<Props> = ({ onComplete, patientMode = false }) => {
+  const copy = useScreeningCopy();
   const { metrics, cameraStatus, cameraPermission, calibration } = useFaceTrackingStore();
   const [index, setIndex] = useState(0);
   const [isFitting, setIsFitting] = useState(false);
   const [result, setResult] = useState<GazeCalibration | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
+  const [failure, setFailure] = useState<'eyes' | 'fit' | null>(null);
   const [attempt, setAttempt] = useState(0);
   const samplesRef = useRef<CalibrationSample[]>([]);
   const calibratedRef = useRef(false);
@@ -70,7 +72,7 @@ export const OcularCalibrationOverlay: React.FC<Props> = ({ onComplete, patientM
         if (cancelled) return;
 
         if (collected.length < 3) {
-          setFailure('We could not see your eyes clearly at that point. Let us try again.');
+          setFailure('eyes');
           return;
         }
 
@@ -93,9 +95,7 @@ export const OcularCalibrationOverlay: React.FC<Props> = ({ onComplete, patientM
           useFaceTrackingStore.getState().setCalibration(fitted);
           onCompleteRef.current(fitted);
         } else {
-          setFailure(
-            'The calibration did not line up well enough. You can try again, or continue without it — the activity still works.'
-          );
+          setFailure('fit');
         }
         setIsFitting(false);
       }, CALIBRATION_DWELL_MS);
@@ -131,24 +131,23 @@ export const OcularCalibrationOverlay: React.FC<Props> = ({ onComplete, patientM
         <div className="w-10 h-10 rounded-full bg-medical-50 border border-medical-200 text-medical-600 flex items-center justify-center mx-auto mb-2">
           <Eye className="w-5 h-5" />
         </div>
-        <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">Quick camera check</h3>
+        <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">{copy.calibration.title}</h3>
         <p className={`text-sm max-w-md mx-auto ${patientMode ? 'text-slate-600' : 'text-slate-500'}`}>
-          Look at each blue dot as it appears. This helps the camera understand where you are looking. It takes about
-          ten seconds.
+          {copy.calibration.body}
         </p>
       </div>
 
       {!cameraReady ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           {cameraStatus === 'error' || cameraPermission === 'denied'
-            ? 'The camera is not available right now. You can continue without the eye activity.'
-            : 'Starting the camera…'}
+            ? copy.calibration.cameraUnavailable
+            : copy.calibration.starting}
           <button
             type="button"
             onClick={() => onCompleteRef.current(null)}
             className="mt-3 block w-full rounded-xl border border-amber-300 bg-white py-2 text-xs font-bold text-amber-800"
           >
-            Continue without calibration
+            {copy.calibration.continueWithout}
           </button>
         </div>
       ) : (
@@ -159,14 +158,14 @@ export const OcularCalibrationOverlay: React.FC<Props> = ({ onComplete, patientM
         >
           <div className="absolute inset-x-0 top-4 z-10 text-center">
             <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-600 shadow-xs">
-              Point {Math.min(index + 1, CALIBRATION_TARGETS.length)} of {CALIBRATION_TARGETS.length}
+              {copy.calibration.pointOf(Math.min(index + 1, CALIBRATION_TARGETS.length), CALIBRATION_TARGETS.length)}
             </span>
           </div>
 
           {isFitting ? (
             <div className="flex h-full items-center justify-center gap-2 text-sm text-slate-500">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Checking calibration…
+              {copy.calibration.checking}
             </div>
           ) : (
             target && (
@@ -190,21 +189,21 @@ export const OcularCalibrationOverlay: React.FC<Props> = ({ onComplete, patientM
 
       {failure && (
         <div className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <p>{failure}</p>
+          <p>{failure === 'eyes' ? copy.calibration.failedEyes : copy.calibration.failedFit}</p>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={retry}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-white py-2 text-xs font-bold"
             >
-              <RotateCcw className="h-3.5 w-3.5" /> Try again
+              <RotateCcw className="h-3.5 w-3.5" /> {copy.calibration.tryAgain}
             </button>
             <button
               type="button"
               onClick={useEarlierCalibration}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-white py-2 text-xs font-bold"
             >
-              <SkipForward className="h-3.5 w-3.5" /> Continue anyway
+              <SkipForward className="h-3.5 w-3.5" /> {copy.calibration.continueAnyway}
             </button>
           </div>
         </div>
@@ -212,7 +211,7 @@ export const OcularCalibrationOverlay: React.FC<Props> = ({ onComplete, patientM
 
       {!failure && cameraReady && (
         <p className="text-center text-xs text-slate-400">
-          Sit about an arm's length from the screen and keep your head still.
+          {copy.calibration.distance}
         </p>
       )}
     </div>

@@ -1,5 +1,16 @@
 export type FhirContextCategory = 'physical' | 'metabolic' | 'sleep' | 'wellbeing';
 
+/**
+ * What gets attached to the session record. `null` importedAt means we never
+ * reached a server that could return data (not configured, no match, failure),
+ * so the clinician sees the status without a misleading timestamp.
+ */
+export interface FhirContextRecord {
+  status: FhirContextResult['status'];
+  importedAt: string | null;
+  observations: FhirContextObservation[];
+}
+
 export interface FhirContextObservation {
   category: FhirContextCategory;
   code: string;
@@ -148,4 +159,23 @@ export async function fetchFhirContext(patientId: string): Promise<FhirContextRe
     console.error('[FHIR R4]: Context import failed:', error instanceof Error ? error.message : error);
     return { status: 'FAILED', observations: [] };
   }
+}
+
+/**
+ * The only entry point the session path uses. Consent is checked before any
+ * network call, so a patient who did not opt in never has their identifier sent
+ * to an external system, and the attempt is recorded with the session so the
+ * clinician can tell "nothing linked" apart from "not asked".
+ */
+export async function importExternalContext(
+  consentGranted: boolean,
+  patientIdentifier: string
+): Promise<FhirContextRecord | null> {
+  if (!consentGranted) return null;
+  const result = await fetchFhirContext(patientIdentifier);
+  return {
+    status: result.status,
+    importedAt: result.status === 'IMPORTED' ? new Date().toISOString() : null,
+    observations: result.observations
+  };
 }

@@ -16,6 +16,38 @@ import { useScreeningStore } from '../../store/screeningStore';
 import { patientApi, type LanguageReadinessEntry } from '../../services/portalApi';
 import { ClinicalIllustration } from '../../components/ClinicalIllustration';
 
+/**
+ * The chooser is English until a language is picked, then it follows the pick.
+ * Without this, an Arabic-first participant selects العربية and still has to tick
+ * an English consent box and find an English "Continue" button to enter an
+ * Arabic session.
+ */
+const ARABIC_CHROME = {
+  back: 'رجوع',
+  step: 'الخطوة 3 من 6: اختيار اللغة',
+  title: 'اختر لغتك',
+  subtitle: 'اختر اللغة التي ترتاح أكثر للتحدث والاستماع بها. ستُقرأ التعليمات الصوتية بهذه اللغة.',
+  selected: 'محدَّدة',
+  choose: 'اضغط للاختيار',
+  tasksReady: 'المهام جاهزة',
+  underReview: 'الصياغة قيد المراجعة',
+  noticeTitle: 'صياغة المهام بالعربية قيد المراجعة',
+  noticeBody:
+    'لم تكتمل بعد مراجعة الصياغة العربية ولا اعتمادها سريريًا. النتائج استكشافية وينبغي تفسيرها مع فريق رعايتك، وليست تشخيصًا.',
+  acknowledge:
+    'أفهم أن صياغة المهام بهذه اللغة لم تكتمل مراجعتها اللغوية والسريرية، وأرغب في المتابعة بالعربية.',
+  continue: 'المتابعة إلى التقييم',
+  checking: 'جارٍ التحقق من اللغات المتاحة للمهام…',
+  footer: 'الإرشاد الصوتي مدعوم بتوليد كلام عربي عالي الجودة.',
+  stageLabels: {
+    stimulus_translation: 'ترجمة تعليمات المهام',
+    back_translation: 'الترجمة العكسية المستقلة',
+    cognitive_pretesting: 'الاختبار المعرفي مع المشاركين',
+    local_clinical_review: 'المراجعة السريرية المحلية',
+    spoken_voice: 'مراجعة الصوت المسموع'
+  } as Record<string, string>
+};
+
 export const PatientLanguagePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentLanguage, setLanguage, getTranslation } = useLanguageStore();
@@ -45,6 +77,9 @@ export const PatientLanguagePage: React.FC = () => {
       cancelled = true;
     };
   }, []);
+
+  const ar = currentLanguage === 'ar';
+  const t = ar ? ARABIC_CHROME : null;
 
   const selectedReadiness = useMemo(
     () => readiness?.find((entry) => entry.id === currentLanguage) ?? null,
@@ -95,12 +130,12 @@ export const PatientLanguagePage: React.FC = () => {
           to="/patient"
           className="inline-flex items-center gap-2 text-sm font-bold text-body hover:text-ink bg-white border border-line rounded-2xl px-4 py-2.5 transition-all shadow-card"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
+          {ar ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          <span>{t ? t.back : 'Back'}</span>
         </Link>
 
         <div className="text-xs font-semibold text-muted">
-          Step 3 of 6: Language Preference
+          {t ? t.step : 'Step 3 of 6: Language Preference'}
         </div>
       </div>
 
@@ -117,11 +152,13 @@ export const PatientLanguagePage: React.FC = () => {
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black font-display text-ink">
-            Choose Your Language
+            {t ? t.title : 'Choose Your Language'}
           </h1>
 
           <p className="text-sm sm:text-base text-body leading-relaxed font-normal">
-            Select the language you feel most comfortable speaking and listening to. All voice instructions will be spoken in this language.
+            {t
+              ? t.subtitle
+              : 'Select the language you feel most comfortable speaking and listening to. All voice instructions will be spoken in this language.'}
           </p>
         </div>
 
@@ -177,18 +214,18 @@ export const PatientLanguagePage: React.FC = () => {
                 {/* Bottom Row: readiness + selection indicator */}
                 <div className="pt-3 mt-3 border-t border-line flex items-center justify-between gap-2">
                   <span className="text-xs font-bold text-muted">
-                    {isSelected ? 'Selected' : 'Tap to choose'}
+                    {isSelected ? (t ? t.selected : 'Selected') : (t ? t.choose : 'Tap to choose')}
                   </span>
                   {readiness && (() => {
                     const entry = readiness.find((item) => item.id === lang.id);
                     if (!entry) return null;
                     return entry.taskAdministrationReady ? (
                       <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                        Tasks ready
+                        {t ? t.tasksReady : 'Tasks ready'}
                       </span>
                     ) : (
                       <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                        Wording under review
+                        {t ? t.underReview : 'Wording under review'}
                       </span>
                     );
                   })()}
@@ -210,26 +247,27 @@ export const PatientLanguagePage: React.FC = () => {
         {tasksNotReady && selectedReadiness && (
           <div className="max-w-xl mx-auto text-start bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
             <p className="text-sm font-bold text-amber-900">
-              {selectedReadiness.nativeName} task wording is still being reviewed
+              {t ? `${t.noticeTitle}` : `${selectedReadiness.nativeName} task wording is still being reviewed`}
             </p>
             <p className="text-sm text-amber-900/90 leading-relaxed">
-              {selectedReadiness.participantNotice}
+              {t ? t.noticeBody : selectedReadiness.participantNotice}
             </p>
             <ul className="text-xs text-amber-900/80 list-disc ps-5 space-y-1">
               {selectedReadiness.pendingStages.map((stage) => (
-                <li key={stage.key}>{stage.label}</li>
+                <li key={stage.key}>{t?.stageLabels[stage.key] || stage.label}</li>
               ))}
             </ul>
-            <label className="flex items-start gap-3 text-sm text-amber-900 cursor-pointer">
+            <label className="flex items-start gap-3 py-2 text-sm text-amber-900 cursor-pointer">
               <input
                 type="checkbox"
                 checked={acknowledged}
                 onChange={(event) => setAcknowledged(event.target.checked)}
-                className="mt-0.5 h-4 w-4 accent-amber-600"
+                className="mt-0.5 h-5 w-5 shrink-0 accent-amber-600"
               />
               <span>
-                I understand that the task wording in this language has not completed linguistic and
-                clinical review, and I want to continue in {selectedReadiness.nativeName}.
+                {t
+                  ? t.acknowledge
+                  : `I understand that the task wording in this language has not completed linguistic and clinical review, and I want to continue in ${selectedReadiness.nativeName}.`}
               </span>
             </label>
           </div>
@@ -245,11 +283,11 @@ export const PatientLanguagePage: React.FC = () => {
             disabled={readyUnknown || (tasksNotReady && !acknowledged)}
             className="w-full py-4 px-8 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white text-base sm:text-lg font-bold rounded-2xl shadow-md shadow-medical-600/20 transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-medical-600"
           >
-            <span>Continue to Assessment</span>
-            <ArrowRight className="w-5 h-5" />
+            <span>{t ? t.continue : 'Continue to Assessment'}</span>
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
           </button>
           {readyUnknown && (
-            <p className="mt-3 text-xs text-muted">Checking which languages can run the tasks…</p>
+            <p className="mt-3 text-xs text-muted">{t ? t.checking : 'Checking which languages can run the tasks…'}</p>
           )}
         </div>
 
@@ -257,7 +295,9 @@ export const PatientLanguagePage: React.FC = () => {
 
       {/* Footer */}
       <footer className="text-center text-xs text-muted mt-8">
-        Spoken voice guidance is powered by high-fidelity Gnani Timbre speech synthesis in your chosen regional language.
+        {t
+          ? t.footer
+          : 'Spoken voice guidance is powered by high-fidelity Gnani Timbre speech synthesis in your chosen regional language.'}
       </footer>
 
     </div>

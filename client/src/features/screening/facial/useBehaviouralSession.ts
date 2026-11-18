@@ -72,7 +72,17 @@ const REASON_TEXT: Record<BehaviourQuality['reasons'][number], string> = {
   UNSTABLE_TRACKING: 'Tracking was unstable during the activity.',
 };
 
-export const behaviourReasonText = (reason: BehaviourQuality['reasons'][number]) => REASON_TEXT[reason];
+const REASON_TEXT_AR: Record<BehaviourQuality['reasons'][number], string> = {
+  FACE_NOT_VISIBLE: 'لم يكن الوجه ظاهرًا خلال جزء من النشاط.',
+  TOO_FAR: 'كان الوجه بعيدًا جدًا عن الكاميرا.',
+  HEAD_MOVEMENT: 'كانت هناك حركة كثيرة للرأس.',
+  UNSTABLE_TRACKING: 'كان التتبّع غير مستقر خلال النشاط.'
+};
+
+export const behaviourReasonText = (
+  reason: BehaviourQuality['reasons'][number],
+  language?: string
+) => (language === 'ar' ? REASON_TEXT_AR[reason] : REASON_TEXT[reason]);
 
 const emptyQuality: BehaviourQuality = {
   score: 0,

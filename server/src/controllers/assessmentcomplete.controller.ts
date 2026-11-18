@@ -6,6 +6,7 @@ import { patientSubmitAssessmentSchema } from '../validation/schemas';
 import { reviewStateForAssessment } from '../services/reviewState';
 import { scoreBatterySession } from '../services/sessionScoring';
 import { languageSubmissionGate } from '../services/assessmentLanguageReadiness';
+import { importExternalContext } from '../services/fhirContext';
 
 export const submitAssessmentComplete = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -68,6 +69,20 @@ export const submitAssessmentComplete = async (req: AuthenticatedRequest, res: R
       pendingStages: gate.pendingStages.map((stage) => stage.key),
       recordedAt: new Date().toISOString()
     };
+
+    // Patient-consented FHIR R4 context, read-only and limited to the supported
+    // LOINC list. Consent is read from the session record, not the query string,
+    // and a failure here is recorded on the session rather than blocking it: the
+    // screening result never depends on an external system being reachable.
+    try {
+      const externalContext = await importExternalContext(
+        taskResponses.externalContextConsent?.granted === true,
+        req.user.patientId || req.user.id
+      );
+      if (externalContext) taskResponses.externalContext = externalContext;
+    } catch (error) {
+      console.error('[FHIR R4]: context import skipped:', error instanceof Error ? error.message : error);
+    }
 
     // The score comes from the recorded task responses, never from the request.
     const battery = scoreBatterySession(taskResponses);

@@ -100,13 +100,14 @@ Each instrument × language must pass through: forward translation → independe
 back-translation → reconciliation by a bilingual clinician → cognitive
 pretesting with representative participants → local clinical review → documented
 approval. Until a row is approved, the language is offered for navigation, consent
-and results; the assessment is administered in English except for the Arabic items
-named in the table below, which are already delivered but unreviewed.
+and results, and its task wording is a working translation administered only with a
+recorded participant acknowledgement. Arabic has the whole patient-facing battery
+delivered but unreviewed.
 
 | Language | Portal UI | Consent | Results | Task instructions / stimuli | Status |
 | --- | --- | --- | --- | --- | --- |
 | English | Yes | Yes | Yes | Yes | In use (research build) |
-| Arabic (ar-AE) | Yes (RTL) | Yes | Yes | Partial — the spoken-repeat sentence and the piano-sequencing instructions are Arabic; the remaining task copy is English. Back-translation, pretesting and clinical review pending | Partially adapted |
+| Arabic (ar-AE) | Yes (RTL) | Yes | Yes | Delivered — activity titles, intros, prompts, spoken-repeat stimulus and button labels are Arabic (RTL), as a working translation. Back-translation, pretesting and clinical review pending | Partially adapted |
 | Tamil | Yes | Yes | Yes | No — pending | Partially adapted |
 | Hindi | Yes | Yes | Yes | No — pending | Partially adapted |
 | Telugu | Yes | Yes | Yes | No — pending | Partially adapted |

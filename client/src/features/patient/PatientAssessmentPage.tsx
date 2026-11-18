@@ -14,9 +14,11 @@ import {
   PhoneCall
 } from 'lucide-react';
 import { InterruptedState } from '../../components/systemStates';
+import { useScreeningCopy } from '../screening/screeningCopy';
 
 export const PatientAssessmentPage: React.FC = () => {
   const { user } = useAuthStore();
+  const copy = useScreeningCopy();
   const { repeatInstruction, provideSimplerExplanation, isSpeaking } = useVoiceAssistantStore();
 
   const SNAPSHOT_KEY = 'neulens:assessment-progress';
@@ -151,7 +153,7 @@ export const PatientAssessmentPage: React.FC = () => {
             <div className="hidden sm:flex items-center bg-warm p-1 rounded-lg border border-line text-xs font-semibold text-body">
               <span className="px-2 text-[12px] uppercase tracking-[0.12em] text-sage-deep flex items-center gap-1">
                 <Type className="w-3 h-3" />
-                Text
+                {copy.chrome.textLabel}
               </span>
               <button
                 type="button"
@@ -183,8 +185,8 @@ export const PatientAssessmentPage: React.FC = () => {
               className="px-3 py-2 bg-mint hover:bg-mint/70 border border-sage/60 rounded-xl text-xs font-semibold text-forest flex items-center gap-1.5 transition-all"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Repeat Spoken Guidance</span>
-              <span className="sm:hidden">Repeat</span>
+              <span className="hidden sm:inline">{copy.chrome.repeatGuidance}</span>
+              <span className="sm:hidden">{copy.chrome.repeatShort}</span>
             </button>
 
             {/* Simpler Explanation / Help Button */}
@@ -194,7 +196,7 @@ export const PatientAssessmentPage: React.FC = () => {
               className="px-3 py-2 bg-warm hover:bg-white border border-line rounded-xl text-xs font-semibold text-body flex items-center gap-1.5 transition-all"
             >
               <HelpCircle className="w-3.5 h-3.5 text-sage-deep" />
-              <span className="hidden sm:inline">Help</span>
+              <span className="hidden sm:inline">{copy.chrome.help}</span>
             </button>
 
           </div>
@@ -218,7 +220,7 @@ export const PatientAssessmentPage: React.FC = () => {
 
       {/* Discrete Portal Footer */}
       <footer className="border-t border-line py-4 bg-white/70 text-center text-xs text-muted">
-        Hospital Neurological Screening Session &bull; Private & Secure
+        {copy.chrome.footer}
       </footer>
 
     </div>

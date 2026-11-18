@@ -48,10 +48,10 @@ with the caveat that a group difference is a prompt to investigate, not proof of
 - **No substituted values.** If a camera, microphone or activity is unavailable, that domain
   is recorded as unmeasured with a reason and the composite is non-interpretable — never
   filled in with a default.
-- **No validated Arabic.** The spoken-repeat sentence and piano-sequencing instructions are
-  administered in Arabic; the remaining task copy is English; back-translation, cognitive
-  pretesting and local clinical sign-off are pending, and administration is gated on a
-  recorded acknowledgement.
+- **No validated Arabic.** The whole patient-facing battery — activity titles, intros,
+  prompts, the spoken-repeat sentence and button labels — is administered in Arabic as a
+  working translation; back-translation, cognitive pretesting and local clinical sign-off
+  are pending, and administration is gated on a recorded acknowledgement.
 
 ## Every artifact, one link
 
@@ -67,6 +67,7 @@ with the caveat that a group difference is a prompt to investigate, not proof of
 | **Requirement-by-requirement fit** | [`SUBMISSION_FIT.md`](SUBMISSION_FIT.md) |
 | **Arabic review state** | [`ARABIC_REVIEWER_WORKSHEET.md`](ARABIC_REVIEWER_WORKSHEET.md) |
 | **Deployment** | [`UAE_DEPLOYMENT_CHECKLIST.md`](UAE_DEPLOYMENT_CHECKLIST.md) |
+| **Responsible AI and data handling** | [`RESPONSIBLE_AI_AND_DATA_HANDLING.md`](RESPONSIBLE_AI_AND_DATA_HANDLING.md) |
 
 ## Why the honesty is the product
 

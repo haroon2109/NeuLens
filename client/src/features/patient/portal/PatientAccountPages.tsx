@@ -566,7 +566,7 @@ const faqs = [
   {
     question: 'Are my video and audio recordings stored?',
     answer:
-      'The portal reports use derived observations and task responses. The app processes your camera and microphone on your device during screening. Raw video and audio are not recorded or stored; only the derived observations and task responses are saved and visible in your reports. Camera and microphone processing is explained in your consent record.'
+      'The portal reports use derived observations and task responses. Your camera is processed on your device and your video is never uploaded. During the speech activity, one short audio clip is sent so it can be measured and transcribed; it is not kept once that activity ends. What is saved and visible in your reports is the derived observations, the transcript and your task responses. Camera and microphone processing is explained in your consent record.'
   },
   {
     question: 'Can I stop or take a break during an assessment?',

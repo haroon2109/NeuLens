@@ -91,14 +91,15 @@ requirements-to-evidence map and a measurement plan:
 - **[`docs/future-health-challenge/SUBMISSION_FIT.md`](docs/future-health-challenge/SUBMISSION_FIT.md)** — maps the problem, objective and each desired outcome (culturally valid assessment, longitudinal change detection, integrated risk context, personalized prevention and timely care, safety and human oversight, validation and local population performance) to what is implemented, what is deliberately not claimed, and what remains.
 - **[`docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md`](docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md)** — operational definitions for completion, repeat-session stability, sensitivity, specificity, meaningful-change detection, false-referral burden and time to clinical assessment, with the segmented analysis plan and the linguistic/cultural adaptation register.
 - **[`docs/future-health-challenge/VALIDATION_STUDY_PLAN.md`](docs/future-health-challenge/VALIDATION_STUDY_PLAN.md)** — Abu Dhabi pilot protocol: cohort, reference standard, sensitivity/specificity/ICC targets, segment analysis by language/age/education, and acceptance criteria before any clinical claim.
+- **[`docs/future-health-challenge/RESPONSIBLE_AI_AND_DATA_HANDLING.md`](docs/future-health-challenge/RESPONSIBLE_AI_AND_DATA_HANDLING.md)** — one-page self-assessment: what data leaves the device and what is stored, the consent/audit/access controls that exist in the build, the ADHICS `/` UAE IA Regulation `/` PDPL anchors for each, and the controls that are explicitly not in place.
 - **[`docs/future-health-challenge/DEMONSTRABLE_VALUE.md`](docs/future-health-challenge/DEMONSTRABLE_VALUE.md)** — one-page evidence sheet for the "Demonstrable value" requirement: completion, comparability, time to clinical review, referral completion, repeat-session stability and banded fairness measures from a fixed-seed simulated cohort, with the command that reproduces every figure and an explicit statement that none of it is clinical-validity evidence.
 
 This is a research-stage, safety-first screening-support platform with a validation
 roadmap — not a validated diagnostic tool. Arabic task wording is translated and
-delivered (the verbal recall stimulus and the sequencing-task instructions are Arabic;
-the remaining task copy — activity titles, intros, prompts and button labels — is
-English); back-translation, cognitive pretesting, local clinical sign-off and reviewed
-Arabic speech remain open. That state is enforced, not just documented: the language screen
+delivered for the whole patient-facing battery — activity titles, intros, prompts, the
+verbal recall stimulus, spoken prompts and button labels are Arabic (RTL); independent
+back-translation, cognitive pretesting, local clinical sign-off and reviewed Arabic
+speech remain open. That state is enforced, not just documented: the language screen
 reads the same registry the server enforces, marks each language's real status, and a
 participant may only continue in a not-yet-reviewed language after an explicit
 acknowledgement that is stored with the session and reported to the clinician.
@@ -118,7 +119,7 @@ Declared rather than discovered, and placed after the evidence rather than befor
 
 | # | Defect | Consequence | Where |
 | --- | --- | --- | --- |
-| 1 | No locally validated task wording, and no licensed validated screener. Arabic has a delivered verbal-recall stimulus and piano-sequencing instructions plus registry-declared pending stages; the rest of the task copy is English. | No cross-language or cross-cultural score claim can be made. Readiness is enforced, not papered over. | `server/src/services/assessmentLanguageReadiness.ts`; `docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md` |
+| 1 | No locally validated task wording, and no licensed validated screener. Arabic has the full patient-facing task copy delivered as an unreviewed working translation, plus registry-declared pending stages. | No cross-language or cross-cultural score claim can be made. Readiness is enforced, not papered over. | `server/src/services/assessmentLanguageReadiness.ts`; `docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md` |
 | 2 | No population reliability estimate: ICC(2,1) is computed from real repeat pairs only and withheld below three pairs. | Score change is interpreted against the patient's own variability; no population-level SEM or MDC exists. | `server/src/services/reliability.ts`, `changeMonitor.ts` |
 | 3 | Two of the five battery activities need a camera, one needs a microphone. | A participant without them is administered a partial battery whose missing domains are reported unmeasured, not estimated. The cognitive activity route (`/patient/cognitive`) is cameras- and microphone-free but does not feed the composite. There is no telephone or IVR route. | `client/src/features/screening/ScreeningPage.tsx`, `client/src/features/cognitive/TaskPlayer.tsx` |
 | 4 | Change detection is inactive until three comparable repeat pairs exist. | On real data today the detector reports "reliability not established"; it is not silently guessing. | `server/src/services/changeMonitor.ts` |
@@ -167,8 +168,9 @@ Items 1–3 and 5 are not closable by editing code: they need licensing, an ethi
   * Genomic interpretation, variant-level risk modelling and family-history-based genetic risk calculation are explicitly out of scope.
 * **Authorized FHIR R4 Context (Optional)**:
   * With explicit per-session patient permission and server-side configuration, imports recent supported FHIR `Observation` resources using LOINC codes for blood pressure, glucose, cholesterol, weight, step count, sleep duration, and PHQ-2 score.
-  * Supports open FHIR R4 servers such as HAPI FHIR or Medplum through a configured HTTPS endpoint and bearer token. No endpoint or credentials are bundled; live connectivity must be configured and tested in the deployment environment.
-  * Imports are read-only and limited to the supported code list and the previous 12 months. This MVP does not write to the external record or claim interoperability certification.
+  * The import runs on submission (`server/src/services/fhirContext.ts`, called from the assessment completion controller), resolves the patient by identifier, then reads `Observation` for the supported LOINC codes from the previous 12 months. The outcome is stored with the session and shown to the clinician as source-labelled context; it never changes the score, and `NOT_CONFIGURED` / `NO_MATCHING_DATA` / `FAILED` is recorded instead of a value.
+  * Supports open FHIR R4 servers such as HAPI FHIR or Medplum through a configured HTTPS endpoint and bearer token. No endpoint or credentials are bundled; live connectivity must be configured and tested in the deployment environment. `node server/scripts/fhir-stub.mjs` serves a loopback FHIR R4 bundle for demonstrations and local testing.
+  * Imports are read-only and limited to the supported code list and the previous 12 months. This MVP does not write to the external record or claim interoperability certification, and no health information exchange (including Malaffi) is connected.
 * **Clinician-Owned Follow-up**:
   * Clinicians can save a proposed repeat screen, context review, clinical review, or daily-function support action and optional date/notes to an assessment record.
   * Recommendations are discussion prompts; only the qualified clinician confirms next steps. Context associations do not establish causality.
@@ -244,7 +246,7 @@ The detail lives in two companion documents so this file stays readable as a fro
 - **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** — architecture style, privacy-by-design boundaries, high-level data flow, the system diagram, repository layout, per-component responsibilities, and the data model (Prisma schema, ERD, speech/AI model architecture).
 - **[`docs/API_REFERENCE.md`](docs/API_REFERENCE.md)** — every endpoint group: system and health, authentication, patient portal, doctor portal, screenings, analytics, and the Gnani voice/speech integration.
 
-In one paragraph: the React/Vite client performs MediaPipe vision and Web Audio measurement locally and uploads only derived measurements; an Express/TypeScript server owns scoring, comparability gating, change detection and the clinician workflow over PostgreSQL via Prisma; Gnani supplies text-to-speech and speech transcription. Raw video and audio never leave the device.
+In one paragraph: the React/Vite client performs MediaPipe vision and Web Audio measurement locally and uploads only derived measurements; an Express/TypeScript server owns scoring, comparability gating, change detection and the clinician workflow over PostgreSQL via Prisma; Gnani supplies text-to-speech and speech transcription. Raw video never leaves the device; the speech clip is uploaded once for acoustic analysis and transcription, held in memory, and never written to the database or object storage.
 
 ---
 

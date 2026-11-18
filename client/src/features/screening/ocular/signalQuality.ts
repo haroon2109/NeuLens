@@ -46,7 +46,18 @@ const REASON_COPY: Record<QualityReason, string> = {
   HEAD_MOVEMENT: 'There was a lot of head movement.',
 };
 
-export const qualityReasonText = (reason: QualityReason): string => REASON_COPY[reason];
+const REASON_COPY_AR: Record<QualityReason, string> = {
+  FACE_NOT_VISIBLE: 'لم يكن وجهك ظاهرًا خلال جزء من النشاط.',
+  LOW_LIGHT: 'كانت الإضاءة في الغرفة خافتة جدًا للتتبّع بشكل موثوق.',
+  BRIGHT_GLARE: 'أدى الضوء الساطع أو الانعكاس إلى طمس الصورة.',
+  TOO_FAR: 'كنت بعيدًا جدًا عن الكاميرا.',
+  TOO_CLOSE: 'كنت قريبًا جدًا من الكاميرا.',
+  HEAD_MOVEMENT: 'كانت هناك حركة كثيرة للرأس.'
+};
+
+/** Feedback shown to the participant, in the language the session is running in. */
+export const qualityReasonText = (reason: QualityReason, language?: string): string =>
+  language === 'ar' ? REASON_COPY_AR[reason] : REASON_COPY[reason];
 
 export const assessSignalQuality = (input: SignalQualityInput): SignalQuality => {
   const reasons: QualityReason[] = [];

@@ -1,5 +1,14 @@
 # Validation study plan — Abu Dhabi pilot
 
+## Phase 1 — feasibility pilot (target for the challenge)
+- **Setting:** Abu Dhabi primary healthcare centres and senior community screening programmes.
+- **Cohort:** 100–150 community-dwelling adults aged 55+, bilingual Arabic/English, stratified by language, age band and education band, with consent for data collection and linkage to clinical records where authorised.
+- **Reference standard:** comparison against a clinician MoCA-informed neuropsychological assessment plus physician sign-off; reversible causes investigated per protocol.
+- **Primary endpoints:** feasibility (completion, quality flags), test–retest reliability (ICC) under matched conditions, and reduction in unnecessary secondary referrals (false-referral burden).
+- **Secondary:** time to clinical review, referral completion/non-completion, segment-level counts by language/age/education.
+
+This Phase 1 is the entry point; the larger Phase 2 cohort below is what would be needed before any validated-performance claim.
+
 NeuLens is a research-stage screening-support platform. The following study
 would be required before any validated-performance claim. This plan is
 deliberately conservative and mirrors the challenge's "Validation and local
@@ -35,9 +44,9 @@ population performance" outcome.
   sensory-access group. Small cells suppressed or reported with caveats.
 
 ## Acceptance criteria before any clinical claim
-- All Arabic task stimuli translated (two items are administered in Arabic today;
-  the rest remain English), independently back-translated, cognitively pretested
-  with local participants, and signed off by local clinicians.
+- All Arabic task stimuli independently back-translated, cognitively pretested
+  with local participants, and signed off by local clinicians. The whole
+  patient-facing battery is already delivered in Arabic as a working translation.
 - ICC >= 0.70 for overall score; sensitivity/specificity with lower CI
   bound >= 0.70 in the target population.
 - Reliable-change thresholds derived and pre-registered, not post-hoc.

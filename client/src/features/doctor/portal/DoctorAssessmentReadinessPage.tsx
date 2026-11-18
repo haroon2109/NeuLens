@@ -163,8 +163,9 @@ export const DoctorAssessmentReadinessPage: React.FC = () => {
       <Notice tone="warning" title="Portal translation is not task validation">
         A translated interface does not make the assessment valid in that language. Task
         administration requires translated stimuli, independent back-translation, cognitive
-        pretesting and local clinical sign-off. Until all four are complete, the tasks are
-        administered in English and this screen must not be read as approval.
+        pretesting and local clinical sign-off. Until all four are complete the wording is a working
+        translation: it is administered only after the participant records an explicit acknowledgement
+        that is stored with the session, and this screen must not be read as approval.
       </Notice>
 
       {error && (
@@ -198,7 +199,7 @@ export const DoctorAssessmentReadinessPage: React.FC = () => {
             <StatCard
               label="Portal-only languages"
               value={String(data.summary.portalOnly)}
-              detail="Interface only — tasks in English"
+              detail="Interface only — task wording not approved"
               icon={AlertTriangle}
               tone="amber"
             />
@@ -305,7 +306,7 @@ export const DoctorAssessmentReadinessPage: React.FC = () => {
                       ))}
                       <td className="px-2 py-3">
                         <Pill tone={language.taskAdministrationReady ? 'forestSoft' : 'rose'} dot>
-                          {language.taskAdministrationReady ? 'Approved' : 'Blocked'}
+                          {language.taskAdministrationReady ? 'Approved' : 'Not approved'}
                         </Pill>
                       </td>
                     </tr>

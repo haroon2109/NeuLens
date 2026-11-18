@@ -30,6 +30,7 @@ import {
   Languages
 } from 'lucide-react';
 import { useLanguageStore } from '../../services/language/LanguageManager';
+import { useScreeningCopy } from './screeningCopy';
 import { useVoiceAssistantStore } from '../../services/voice/VoiceInstructionEngine';
 import { SpeechRecognitionService } from '../../services/voice/SpeechRecognitionService';
 import { createAcousticCapture, type AcousticCapture, type BrowserAcousticSummary } from '../../services/voice/acousticCapture';
@@ -61,6 +62,10 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
   const { currentStep, setStep, saveResponse, scores, calculateFinalScores, resetSession } = useScreeningStore();
   const { currentLanguage, getTranslation } = useLanguageStore();
   const t = getTranslation();
+  // Wording for the activities themselves, in the participant's language.
+  const copy = useScreeningCopy();
+  const qualityLevelLabel = (level: 'good' | 'fair' | 'poor') =>
+    level === 'good' ? copy.sensor.levelGood : level === 'fair' ? copy.sensor.levelFair : copy.sensor.levelPoor;
   const { 
     speak, 
     stopSpeaking,
@@ -898,28 +903,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
   // -------------------------------------------------------------
   // GAME 4: Mimic Sync (Facial Task)
   // -------------------------------------------------------------
-  const facialPrompts = [
-    { 
-      key: 'smile', 
-      label: currentLanguage === 'ta' ? '🙂 புன்னகைக்கவும்' : currentLanguage === 'hi' ? '🙂 मुस्कुराएं' : currentLanguage === 'te' ? '🙂 నవ్వండి' : currentLanguage === 'ml' ? '🙂 പുഞ്ചിരിക്കുക' : currentLanguage === 'kn' ? '🙂 ನಗಿ' : '🙂 Smile',
-      prompt: currentLanguage === 'ta' ? 'தயவுசெய்து புன்னகைக்கவும்' : currentLanguage === 'hi' ? 'कृपया मुस्कुराएं' : currentLanguage === 'te' ? 'దయచేసి సహజంగా నవ్వండి' : currentLanguage === 'ml' ? 'ദയവായി സ്വാഭാവികമായി പുഞ്ചിരിക്കുക' : currentLanguage === 'kn' ? 'ದಯವಿಟ್ಟು ಸಹಜವಾಗಿ ನಗಿ' : 'Please smile naturally'
-    },
-    { 
-      key: 'relax', 
-      label: currentLanguage === 'ta' ? '😐 இயல்பாக இருக்கவும்' : currentLanguage === 'hi' ? '😐 शांत रहें' : currentLanguage === 'te' ? '😐 ప్రశాంతంగా ఉండండి' : currentLanguage === 'ml' ? '😐 ശാന്തമായിരിക്കുക' : currentLanguage === 'kn' ? '😐 ಶಾಂತರಾಗಿರಿ' : '😐 Relax',
-      prompt: currentLanguage === 'ta' ? 'முகத்தை இயல்பாக வைக்கவும்' : currentLanguage === 'hi' ? 'चेहरे को शांत रखें' : currentLanguage === 'te' ? 'ముఖాన్ని ప్రశాంతంగా ఉంచండి' : currentLanguage === 'ml' ? 'മുഖം ശാന്തമായി വയ്ക്കുക' : currentLanguage === 'kn' ? 'ಮುಖವನ್ನು ಶಾಂತವಾಗಿ ಇರಿಸಿ' : 'Please relax your face'
-    },
-    { 
-      key: 'blink', 
-      label: currentLanguage === 'ta' ? '😉 கண் சிமிட்டவும்' : currentLanguage === 'hi' ? '😉 पलक झपकाएं' : currentLanguage === 'te' ? '😉 కళ్ళు ఆర్పండి' : currentLanguage === 'ml' ? '😉 കണ്ണ് ചിമ്മുക' : currentLanguage === 'kn' ? '😉 ಕಣ್ಣು ಮಿಟುಕಿಸಿ' : '😉 Blink',
-      prompt: currentLanguage === 'ta' ? 'கண்களை சிமிட்டவும்' : currentLanguage === 'hi' ? 'पलकें झपकाएं' : currentLanguage === 'te' ? 'కళ్ళు సహజంగా ఆర్పండి' : currentLanguage === 'ml' ? 'കണ്ണുകൾ ചിമ്മുക' : currentLanguage === 'kn' ? 'ಕಣ್ಣುಗಳನ್ನು ಮಿಟುಕಿಸಿ' : 'Please blink your eyes naturally'
-    },
-    { 
-      key: 'mouth', 
-      label: currentLanguage === 'ta' ? '😲 வாயைத் திறக்கவும்' : currentLanguage === 'hi' ? '😲 मुंह खोलें' : currentLanguage === 'te' ? '😲 నోరు తెరవండి' : currentLanguage === 'ml' ? '😲 വായ തുറക്കുക' : currentLanguage === 'kn' ? '😲 ಬಾಯಿ ತೆರೆಯಿರಿ' : '😲 Open Mouth',
-      prompt: currentLanguage === 'ta' ? 'வாயை லேசாகத் திறக்கவும்' : currentLanguage === 'hi' ? 'मुंह थोड़ा खोलें' : currentLanguage === 'te' ? 'నోరు కొద్దిగా తెరవండి' : currentLanguage === 'ml' ? 'വായ ചെറുതായി തുറക്കുക' : currentLanguage === 'kn' ? 'ಬಾಯಿಯನ್ನು ಸ್ವಲ್ಪ ತೆರೆಯಿರಿ' : 'Please open your mouth gently'
-    }
-  ];
+  const facialPrompts = copy.game4.expressions;
   const [facialIdx, setFacialIdx] = useState(0);
   const [isTrackingFace, setIsTrackingFace] = useState(false);
 
@@ -1172,11 +1156,11 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
           <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex justify-between items-center shadow-xs">
             <div className="flex items-center gap-3">
               <span className="text-sm sm:text-base font-extrabold text-slate-800">
-                {currentStep === 'game1' && 'Activity 1 of 5: Eye Movement Tracking'}
-                {currentStep === 'game2' && 'Activity 2 of 5: Memory Match'}
-                {currentStep === 'game3' && 'Activity 3 of 5: Spoken Repeat'}
-                {currentStep === 'game4' && 'Activity 4 of 5: Facial Movement'}
-                {currentStep === 'game5' && 'Activity 5 of 5: Number Path'}
+                {currentStep === 'game1' && copy.header.activities[0]}
+                {currentStep === 'game2' && copy.header.activities[1]}
+                {currentStep === 'game3' && copy.header.activities[2]}
+                {currentStep === 'game4' && copy.header.activities[3]}
+                {currentStep === 'game5' && copy.header.activities[4]}
               </span>
             </div>
 
@@ -1186,7 +1170,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-medical-700 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
               <Volume2 className="w-4 h-4" />
-              <span>Repeat Instructions</span>
+              <span>{copy.header.repeat}</span>
             </button>
           </div>
         ) : (
@@ -1232,11 +1216,11 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
       {/* The battery's activities are announced to screen readers as they change,
           so a participant who cannot see the layout still knows what to do. */}
       <div className="sr-only" role="status" aria-live="polite">
-        {currentStep === 'game1' && 'Activity 1 of 5: Focus Orbit. Tap or focus the moving blue circle and press Enter when it appears.'}
-        {currentStep === 'game2' && 'Activity 2 of 5: Cortex Match. Turn over two cards at a time and match the pairs.'}
-        {currentStep === 'game3' && 'Activity 3 of 5: Spoken Repeat. Say the sentence you hear out loud.'}
-        {currentStep === 'game4' && 'Activity 4 of 5: Facial Movement. Copy the expression shown on the screen.'}
-        {currentStep === 'game5' && 'Activity 5 of 5: Connect the Numbers. Press the number keys 1 to 6 in order, or tap each circle.'}
+        {currentStep === 'game1' && copy.announcements[0]}
+        {currentStep === 'game2' && copy.announcements[1]}
+        {currentStep === 'game3' && copy.announcements[2]}
+        {currentStep === 'game4' && copy.announcements[3]}
+        {currentStep === 'game5' && copy.announcements[4]}
       </div>
 
       {/* Sensor permission states stay visible next to the activity they block. */}
@@ -1282,10 +1266,10 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
             <div className="space-y-3">
               <h1 className="text-3xl sm:text-4xl font-black font-display text-slate-900">
-                Let's Begin
+                {copy.intro.title}
               </h1>
               <p className="text-base sm:text-lg text-slate-600 max-w-lg mx-auto leading-relaxed">
-                We will guide you through a few simple activities. Listen carefully and follow each instruction. Take your time.
+                {copy.intro.body}
               </p>
             </div>
 
@@ -1293,7 +1277,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left flex items-start gap-3">
               <button
                 type="button"
-                onClick={() => speak("We will guide you through a few simple activities. Listen carefully and follow each instruction. Take your time.")}
+                onClick={() => speak(copy.intro.body)}
                 className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:bg-blue-50 text-medical-600 flex items-center justify-center shrink-0 shadow-xs cursor-pointer"
                 title="Listen to Instructions"
               >
@@ -1301,11 +1285,9 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               </button>
               <div className="space-y-0.5">
                 <span className="text-xs uppercase tracking-wider font-bold text-slate-800 block">
-                  Listen to Instructions
+                  {copy.intro.listenTitle}
                 </span>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  You can listen to instructions aloud at any time during an activity by pressing "Repeat Instructions".
-                </p>
+                <p className="text-xs text-slate-500 leading-relaxed">{copy.intro.listenHelp}</p>
               </div>
             </div>
 
@@ -1313,22 +1295,20 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
             {cameraStatus === 'error' && micPermissionDenied && (
               <div className="flex items-center justify-center gap-2 text-xs font-semibold text-amber-700">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-                <span>Camera and microphone access are needed to continue</span>
+                <span>{copy.intro.cameraNeeded}</span>
               </div>
             )}
             {cameraStatus === 'error' && !micPermissionDenied && (
               <div className="flex items-center justify-center gap-2 text-xs font-semibold text-amber-700">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-                <span>Please allow camera and microphone access to proceed</span>
+                <span>{copy.intro.allowCamera}</span>
               </div>
             )}
             {cameraStatus !== 'error' && (
               <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
                 <span className={`w-2.5 h-2.5 rounded-full ${cameraStatus === 'active' ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'}`} />
                 <span>
-                  {cameraStatus === 'active' 
-                    ? 'Camera and microphone are ready' 
-                    : 'Preparing camera and microphone...'}
+                  {cameraStatus === 'active' ? copy.intro.cameraReady : copy.intro.preparing}
                 </span>
               </div>
             )}
@@ -1346,7 +1326,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               }} 
               className="w-full py-4 px-8 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white text-base sm:text-lg font-bold rounded-2xl shadow-md shadow-medical-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Start Assessment</span>
+              <span>{copy.intro.start}</span>
               <Play className="w-5 h-5 fill-white" />
             </button>
           </motion.div>
@@ -1482,8 +1462,8 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                     <CheckCircle className="w-10 h-10 stroke-[2.2]" />
                   </div>
                   <div>
-                    <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-900">Activity 1 Complete</h3>
-                    <p className="text-base text-slate-600 mt-1">Great job! You have completed the first activity.</p>
+                    <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-900">{copy.game1.completeTitle}</h3>
+                    <p className="text-base text-slate-600 mt-1">{copy.game1.completeBody}</p>
                   </div>
                   <div className="pt-4 max-w-sm mx-auto">
                     <button
@@ -1491,7 +1471,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                       onClick={() => setStep('game2')}
                       className="w-full py-4 px-6 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white font-bold rounded-2xl shadow-md shadow-medical-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-base"
                     >
-                      <span>Continue to Activity 2</span>
+                      <span>{copy.game1.continueTo2}</span>
                       <Play className="w-5 h-5 fill-white" />
                     </button>
                   </div>
@@ -1516,7 +1496,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                       <span className="text-xs text-health-gray-500 uppercase block font-semibold">Stability</span>
                       <span className="text-sm font-bold text-slate-800 block mt-0.5">
                         {game1ScoreDetails.fixationStability === null
-                          ? 'Not measured'
+                          ? copy.game1.notMeasured
                           : `${game1ScoreDetails.fixationStability}%`}
                       </span>
                     </div>
@@ -1553,11 +1533,9 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               <>
                 <div className="space-y-1 text-center">
                   <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">
-                    Follow the Moving Circle
+                    {copy.game1.title}
                   </h3>
-                  <p className="text-sm text-slate-500 max-w-md mx-auto">
-                    Keep your eyes on the blue circle as it moves. You can also touch it on the screen.
-                  </p>
+                  <p className="text-sm text-slate-500 max-w-md mx-auto">{copy.game1.body}</p>
                 </div>
 
                 <div className={`relative w-full h-80 rounded-2xl overflow-hidden cursor-crosshair ${patientMode ? 'bg-slate-50 border border-slate-200' : 'bg-health-gray-950 border border-health-gray-850'}`}>
@@ -1609,7 +1587,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                   )}
 
                   <div className={`absolute top-4 left-4 text-xs font-bold px-3 py-1.5 rounded-full z-10 ${patientMode ? 'bg-white border border-slate-200 text-slate-700 shadow-xs' : 'bg-health-gray-900 border border-health-gray-800 text-health-gray-400'}`}>
-                    Targets Completed: {dotClicks} / 5
+                    {copy.game1.targets}: <bdi dir="ltr">{dotClicks} / 5</bdi>
                   </div>
 
                   {/* Signal-quality feedback: a poor recording is surfaced, never silently scored */}
@@ -1632,11 +1610,11 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                               : 'bg-rose-500'
                         }`}
                       />
-                      Camera: {liveQuality.level}
+                      {copy.game1.camera}: {qualityLevelLabel(liveQuality.level)}
                     </span>
                     {liveQuality.level !== 'good' && liveQuality.reasons[0] && (
-                      <p className={`mt-1 text-xs leading-snug ${patientMode ? 'text-slate-500' : 'text-health-gray-400'}`}>
-                        {qualityReasonText(liveQuality.reasons[0])}
+                      <p dir="auto" className={`mt-1 text-xs leading-snug ${patientMode ? 'text-slate-500' : 'text-health-gray-400'}`}>
+                        {qualityReasonText(liveQuality.reasons[0], currentLanguage)}
                       </p>
                     )}
                   </div>
@@ -1681,8 +1659,8 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               className={patientMode ? "bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm" : "glass-card p-6 space-y-4"}
             >
               <div className="space-y-1 text-center">
-                <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">Find the Matching Pairs</h3>
-                <p className="text-sm text-slate-500">Tap cards to turn them over and match pairs with identical symbols.</p>
+                <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">{copy.game2.title}</h3>
+                <p className="text-sm text-slate-500">{copy.game2.body}</p>
               </div>
 
               <div className="grid grid-cols-4 gap-4 py-4 max-w-md mx-auto">
@@ -1725,39 +1703,24 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
             >
               <div className="space-y-1 text-center">
                 <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">
-                  Repeat the Sentence Aloud
+                  {copy.game3.title}
                 </h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
-                  Listen to the sentence, then tap the microphone button and read it aloud clearly.
-                </p>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">{copy.game3.body}</p>
               </div>
 
               {/* Sentence Display Card */}
               <div className="p-6 bg-blue-50/60 border border-blue-200 rounded-2xl text-center space-y-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    const textToRead = currentLanguage === 'ta' ? 'அறிவாற்றல் குறிப்பான்கள் மற்றும் பார்வை பாதைகள் நரம்பியல் எதிர்வினை வேகத்தை அளவிடுகின்றன.' :
-                      currentLanguage === 'hi' ? 'संज्ञानात्मक मार्कर और दृश्य पथ ट्रैकिंग तंत्रिका प्रतिक्रिया गति को मापते हैं।' :
-                      currentLanguage === 'te' ? 'జ్ఞానపరమైన గుర్తులు మరియు కంటి చూపు కదలికలు నరాల స్పందన వేగాన్ని కొలుస్తాయి.' :
-                      currentLanguage === 'ml' ? 'കോഗ്നിറ്റീവ് മാർക്കറുകളും കാഴ്ചാ പാതകളും നാഡീ പ്രതികരണ വേഗതയെ അളക്കുന്നു.' :
-                      currentLanguage === 'kn' ? 'ಅರಿವಿನ ಗುರುತುಗಳು ಮತ್ತು ದೃಷ್ಟಿ ಪಥದ ಚಲನೆಗಳು ನರವ್ಯೂಹದ ಪ್ರತಿಕ್ರಿಯೆ ವೇಗವನ್ನು ಅಳೆಯುತ್ತವೆ.' :
-                      'Cognitive markers and visual path tracings measure baseline motor coordination and neural reaction delays.';
-                    speak(textToRead);
-                  }}
+                  onClick={() => speak(getTargetSentence())}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-blue-200 rounded-xl text-xs font-bold text-medical-700 hover:bg-blue-100 transition-all cursor-pointer shadow-xs"
                 >
                   <Volume2 className="w-4 h-4" />
-                  <span>Hear Sentence Aloud</span>
+                  <span>{copy.game3.hear}</span>
                 </button>
                 
                 <p className="text-base sm:text-xl font-bold text-slate-900 leading-relaxed max-w-lg mx-auto">
-                  {currentLanguage === 'ta' && '"அறிவாற்றல் குறிப்பான்கள் மற்றும் பார்வை பாதைகள் நரம்பியல் எதிர்வினை வேகத்தை அளவிடுகின்றன."'}
-                  {currentLanguage === 'hi' && '"संज्ञानात्मक मार्कर और दृश्य पथ ट्रैकिंग तंत्रिका प्रतिक्रिया गति को मापते हैं।"'}
-                  {currentLanguage === 'te' && '"జ్ఞానపరమైన గుర్తులు మరియు కంటి చూపు కదలికలు నరాల స్పందన వేగాన్ని కొలుస్తాయి."'}
-                  {currentLanguage === 'ml' && '"കോഗ്നിറ്റീവ് മാർക്കറുകളും കാഴ്ചാ പാതകളും നാഡീ പ്രതികരണ വേഗതയെ അളക്കുന്നു."'}
-                  {currentLanguage === 'kn' && '"ಅರಿವಿನ ಗುರುತುಗಳು ಮತ್ತು ದೃಷ್ಟಿ ಪಥದ ಚಲನೆಗಳು ನರವ್ಯೂಹದ ಪ್ರತಿಕ್ರಿಯೆ ವೇಗವನ್ನು ಅಳೆಯುತ್ತವೆ."'}
-                  {currentLanguage === 'en' && '"Cognitive markers and visual path tracings measure baseline motor coordination and neural reaction delays."'}
+                  &ldquo;{getTargetSentence()}&rdquo;
                 </p>
               </div>
 
@@ -1780,14 +1743,18 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                   <Mic className="w-8 h-8" />
                 </button>
                 <span className="text-sm font-bold text-slate-700">
-                  {isRecording ? `Recording... (${recordDuration}s) Tap to Stop` : voiceComplete ? 'Voice Recorded Successfully!' : 'Tap Microphone to Speak'}
+                  {isRecording
+                    ? `${copy.game3.recording} (${recordDuration}s)`
+                    : voiceComplete
+                      ? copy.game3.recorded
+                      : copy.game3.tapToSpeak}
                 </span>
               </div>
 
               {/* Transcript if available */}
               {recordedTranscript && (
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-1 max-w-md mx-auto">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Recorded Words</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">{copy.game3.recordedWords}</span>
                   <p className="text-sm font-medium text-slate-800 italic">"{recordedTranscript}"</p>
                   {/* Arabic analysis – appears when Arabic language is selected */}
                   {currentLanguage === 'ar' && (
@@ -1819,7 +1786,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                     onClick={() => handleNextGame3(false)}
                     className="w-full py-4 px-6 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white font-bold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-base disabled:opacity-60 disabled:cursor-wait"
                   >
-                    <span>{isAnalyzingVoice ? 'Analysing voice…' : 'Continue to Activity 4'}</span>
+                    <span>{isAnalyzingVoice ? copy.game3.analysing : copy.game3.continueTo4}</span>
                     <Play className="w-5 h-5 fill-white" />
                   </button>
                 </div>
@@ -1843,12 +1810,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                   <Volume2 className="w-3.5 h-3.5" /> Read Out Loud:
                 </span>
                 <p className="text-sm font-semibold text-slate-800 leading-relaxed italic max-w-md mx-auto">
-                  {currentLanguage === 'ta' && '"அறிவாற்றல் குறிப்பான்கள் மற்றும் பார்வை பாதைகள் நரம்பியல் எதிர்வினை வேகத்தை அளவிடுகின்றன."'}
-                  {currentLanguage === 'hi' && '"संज्ञानात्मक मार्कर और दृश्य पथ ट्रैकिंग तंत्रिका प्रतिक्रिया गति को मापते हैं।"'}
-                  {currentLanguage === 'te' && '"జ్ఞానపరమైన గుర్తులు మరియు కంటి చూపు కదలికలు నరాల స్పందన వేగాన్ని కొలుస్తాయి."'}
-                  {currentLanguage === 'ml' && '"കോഗ്നിറ്റീവ് മാർക്കറുകളും കാഴ്ചാ പാതകളും നാഡീ പ്രതികരണ വേഗതയെ അളക്കുന്നു."'}
-                  {currentLanguage === 'kn' && '"ಅರಿವಿನ ಗುರುತುಗಳು ಮತ್ತು ದೃಷ್ಟಿ ಪಥದ ಚಲನೆಗಳು ನರವ್ಯೂಹದ ಪ್ರತಿಕ್ರಿಯೆ ವೇಗವನ್ನು ಅಳೆಯುತ್ತವೆ."'}
-                  {currentLanguage === 'en' && '"Cognitive markers and visual path tracings measure baseline motor coordination and neural reaction delays."'}
+                  &ldquo;{getTargetSentence()}&rdquo;
                 </p>
               </div>
 
@@ -1988,17 +1950,14 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
             animate={{ opacity: 1, y: 0 }}
             className="bg-white border border-amber-200 rounded-3xl p-6 sm:p-8 space-y-4 text-center"
           >
-            <h3 className="text-xl font-black font-display text-slate-900">Camera not available</h3>
-            <p className="text-sm text-slate-600 max-w-md mx-auto">
-              This activity reads facial movement through the camera, so it cannot be scored without one. It will be
-              recorded as not measured — the rest of the assessment still counts.
-            </p>
+            <h3 className="text-xl font-black font-display text-slate-900">{copy.game4.unavailableTitle}</h3>
+            <p className="text-sm text-slate-600 max-w-md mx-auto">{copy.game4.unavailableBody}</p>
             <button
               type="button"
               onClick={() => handleNextGame4(false)}
               className="w-full max-w-xs mx-auto py-3 px-6 bg-medical-600 hover:bg-medical-700 text-white font-bold rounded-2xl"
             >
-              Continue without this activity
+              {copy.game4.continueWithout}
             </button>
           </motion.div>
         )}
@@ -2013,12 +1972,8 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm text-center"
             >
               <div className="space-y-1">
-                <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">
-                  Activity 4: Facial Expressions
-                </h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
-                  Look at the camera and make the facial expression shown below.
-                </p>
+                <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">{copy.game4.title}</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">{copy.game4.body}</p>
               </div>
 
               {/* Spoken Instruction button */}
@@ -2029,14 +1984,14 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-medical-700 hover:bg-blue-100 transition-all cursor-pointer shadow-xs"
                 >
                   <Volume2 className="w-4 h-4" />
-                  <span>Hear Instruction Aloud</span>
+                  <span>{copy.game4.hear}</span>
                 </button>
               </div>
 
               {/* Target Prompt Box */}
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl max-w-md mx-auto space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-medical-600 block">
-                  Expression {facialIdx + 1} of {facialPrompts.length}
+                  {copy.game4.expressionOf(facialIdx + 1, facialPrompts.length)}
                 </span>
                 <p className="text-2xl font-bold text-slate-900">
                   {facialPrompts[facialIdx].label}
@@ -2054,13 +2009,9 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                     <canvas ref={canvasRef} className="hidden" />
                   </>
                 ) : cameraStatus === 'error' ? (
-                  <div className="p-4 text-center text-xs text-red-500">
-                    Camera access error. Please check permissions.
-                  </div>
+                  <div className="p-4 text-center text-xs text-red-500">{copy.game4.unavailableTitle}</div>
                 ) : (
-                  <div className="text-xs text-slate-400 animate-pulse">
-                    Starting camera...
-                  </div>
+                  <div className="text-xs text-slate-400 animate-pulse">{copy.game4.cameraStarting}</div>
                 )}
               </div>
 
@@ -2071,7 +2022,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                   onClick={handleNextGesture}
                   className="w-full py-4 px-6 bg-medical-600 hover:bg-medical-700 active:scale-[0.99] text-white font-bold rounded-2xl shadow-md shadow-medical-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-base"
                 >
-                  <span>{facialIdx < facialPrompts.length - 1 ? 'Next Expression' : 'Continue to Activity 5'}</span>
+                  <span>{facialIdx < facialPrompts.length - 1 ? copy.game4.next : copy.game4.continueTo5}</span>
                   <Play className="w-5 h-5 fill-white" />
                 </button>
               </div>
@@ -2114,7 +2065,7 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                   </span>
                   {facialQuality.level !== 'good' && facialQuality.reasons[0] && (
                     <p className="mt-1 text-xs leading-snug text-health-gray-400">
-                      {behaviourReasonText(facialQuality.reasons[0])}
+                      {behaviourReasonText(facialQuality.reasons[0], currentLanguage)}
                     </p>
                   )}
                 </div>
@@ -2204,26 +2155,22 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm text-center"
             >
               <div className="space-y-1">
-                <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">
-                  Activity 5: Connect the Numbers
-                </h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
-                  Tap each numbered circle in order, starting from 1 to 6.
-                </p>
+                <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900">{copy.game5.title}</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto">{copy.game5.body}</p>
               </div>
 
               <div className="flex items-center justify-center gap-4 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => speak("Tap each numbered circle in order, starting from number 1 up to number 6.")}
+                  onClick={() => speak(copy.game5.hearText)}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-medical-700 hover:bg-blue-100 transition-all cursor-pointer shadow-xs"
                 >
                   <Volume2 className="w-4 h-4" />
-                  <span>Hear Instructions</span>
+                  <span>{copy.game5.hear}</span>
                 </button>
 
                 <div className="px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
-                  Next Number to Tap: <span className="text-medical-600 text-sm font-black">{expectedNode}</span>
+                  {copy.game5.nextNumber}: <span className="text-medical-600 text-sm font-black">{expectedNode}</span>
                 </div>
               </div>
 
@@ -2509,13 +2456,23 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
               </div>
               <div className="space-y-2">
                 <h3 className="text-2xl font-black font-display text-slate-900">
-                  {submissionError ? 'Assessment Not Saved' : 'Saving Your Assessment...'}
+                  {submissionError ? copy.saving.errorTitle : copy.saving.savingTitle}
                 </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {submissionError
-                    ? submissionError
-                    : 'Please wait while your screening activities are securely saved. You will receive your confirmation shortly.'}
-                </p>
+                <div className="text-sm text-slate-600 leading-relaxed">
+                  {submissionError ? (
+                    <>
+                      <p>{copy.saving.errorBody}</p>
+                      <details className="mt-2 text-start">
+                        <summary className="cursor-pointer text-xs font-semibold text-slate-500">
+                          {copy.saving.errorDetailLabel}
+                        </summary>
+                        <p className="mt-1 text-xs text-slate-500" dir="ltr">{submissionError}</p>
+                      </details>
+                    </>
+                  ) : (
+                    <p>{copy.saving.savingBody}</p>
+                  )}
+                </div>
               </div>
               {submissionError && (
                 <button
@@ -2524,12 +2481,12 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                   disabled={isSavingAssessment}
                   className="px-5 py-3 rounded-xl bg-medical-600 hover:bg-medical-700 disabled:opacity-50 text-white text-sm font-bold"
                 >
-                  Retry saving
+                  {copy.saving.retry}
                 </button>
               )}
               <div className="pt-2 flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
                 <span className={`w-2 h-2 rounded-full ${submissionError ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
-                <span>{submissionError ? 'Your completion confirmation is waiting for a successful save' : 'Secure Hospital Connection'}</span>
+                <span>{submissionError ? copy.saving.waiting : copy.saving.secure}</span>
               </div>
             </motion.div>
           ) : (
