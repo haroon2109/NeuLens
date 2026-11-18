@@ -26,7 +26,7 @@ import {
   UsersThree,
   X,
 } from '@phosphor-icons/react';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { HealthcareScene, type SceneKind } from '../../components/illustrations/HealthcareScene';
 import { DemoRequestForm } from './DemoRequestForm';
 
@@ -154,17 +154,9 @@ const SectionIntro: React.FC<{
   </div>
 );
 
-const Brand: React.FC<{ tone?: 'dark' | 'light'; className?: string }> = ({ tone = 'dark', className = '' }) => (
-  <Link to="/" className={`inline-flex items-center gap-2.5 ${className}`} aria-label="NeuLens home">
-    <NeulensLogoMark className="h-9 w-9" />
-    <span
-      className={`text-lg font-extrabold leading-none tracking-[-0.065em] ${
-        tone === 'dark' ? 'text-nl-ink' : 'text-white'
-      }`}
-      aria-hidden="true"
-    >
-      Neu<span className={tone === 'dark' ? 'text-nl-forest' : 'text-nl-mint'}>Lens</span>
-    </span>
+const Brand: React.FC<{ tone?: 'dark' | 'light'; className?: string }> = ({ className = '' }) => (
+  <Link to="/" className={`inline-flex items-center shrink-0 ${className}`} aria-label="NeuLens home">
+    <NeuLensLogo height="h-9" />
   </Link>
 );
 
@@ -415,7 +407,7 @@ export const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="landing-page min-h-screen overflow-x-clip bg-nl-warm text-nl-body">
+    <div className="landing-page min-h-screen overflow-hidden bg-nl-warm text-nl-body">
       <a
         href="#main-content"
         className="sr-only z-50 rounded-xl bg-nl-forest px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -428,30 +420,31 @@ export const LandingPage: React.FC = () => {
         <div className="lp-container flex h-[72px] items-center justify-between gap-4">
           <Brand />
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-7 xl:flex">
+          <nav aria-label="Main navigation" className="hidden items-center gap-5 xl:gap-7 xl:flex">
             {navigation.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-nl-body transition-colors hover:text-nl-forest"
+                className="whitespace-nowrap text-sm font-medium text-nl-body transition-colors hover:text-nl-forest"
               >
                 {item.label}
               </a>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="/doctor/login"
-              className="hidden items-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium text-nl-body transition-colors hover:text-nl-forest lg:inline-flex"
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Link
+              to="/doctor/login"
+              className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-nl-body transition-colors hover:text-nl-forest whitespace-nowrap lg:inline-flex"
             >
-              Clinician portal
-              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </a>
-            <span className="hidden sm:block">
-              <a href="#contact" className="lp-btn lp-btn-primary lp-btn-sm">
-                Request a Clinical Demo
-              </a>
+              <span>Clinician portal</span>
+              <ArrowUpRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            </Link>
+            <span className="hidden sm:inline-block">
+              <Link to="/patient" className="lp-btn lp-btn-primary lp-btn-sm whitespace-nowrap">
+                <span>Patient portal</span>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </Link>
             </span>
             <button
               type="button"
@@ -487,20 +480,20 @@ export const LandingPage: React.FC = () => {
               ))}
             </div>
             <div className="mt-4 grid gap-3 border-t border-nl-line pt-5">
-              <a href="#contact" onClick={closeMenu} className="lp-btn lp-btn-primary w-full">
-                Request a Clinical Demo
+              <Link to="/patient" onClick={closeMenu} className="lp-btn lp-btn-primary w-full">
+                <span>Patient portal</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </a>
+              </Link>
               <a href="#how-it-works" onClick={closeMenu} className="lp-btn lp-btn-secondary w-full">
                 Explore How It Works
               </a>
               <div className="mt-1 flex items-center justify-between gap-3 text-sm">
-                <a href="/doctor/login" className="font-medium text-nl-body hover:text-nl-forest">
+                <Link to="/doctor/login" className="font-medium text-nl-body hover:text-nl-forest">
                   Clinician portal
-                </a>
-                <a href="/patient" className="font-medium text-nl-body hover:text-nl-forest">
+                </Link>
+                <Link to="/patient" className="font-medium text-nl-body hover:text-nl-forest">
                   Patient portal
-                </a>
+                </Link>
               </div>
             </div>
           </nav>
@@ -536,10 +529,10 @@ export const LandingPage: React.FC = () => {
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <a href="#contact" className="lp-btn lp-btn-primary">
-                    Request a Clinical Demo
+                  <Link to="/patient" className="lp-btn lp-btn-primary">
+                    Patient portal
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </a>
+                  </Link>
                   <a href="#how-it-works" className="lp-btn lp-btn-secondary">
                     Explore How It Works
                     <ArrowDown className="h-4 w-4" aria-hidden="true" />

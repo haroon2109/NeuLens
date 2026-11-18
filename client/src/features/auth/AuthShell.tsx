@@ -2,8 +2,7 @@ import type { FC, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { PortalIllustration } from '../../components/PortalIllustration';
 
 type AuthShellProps = {
@@ -40,8 +39,7 @@ export const AuthShell: FC<AuthShellProps> = ({
   <div className="portal-login-page portal-registration-page">
     <header className="portal-login-header">
       <Link to="/" className="portal-brand" aria-label="NeuLens home">
-        <NeulensLogoMark className="h-9 w-9" />
-        <NeulensWordmark size="small" />
+        <NeuLensLogo height="h-9" />
       </Link>
       <Link to={backTo} className="portal-back-link">
         <ArrowLeft className="h-4 w-4" />

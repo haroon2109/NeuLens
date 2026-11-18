@@ -180,6 +180,10 @@ export const DoctorReportViewPage: React.FC = () => {
     : Math.round(assessment.overallScore);
   const reviewState = String(assessment.reviewState || 'NOT_REVIEWED');
   const taskData = assessment.taskResponses || {};
+  // Recorded measurements only. A missing value renders as missing rather than a
+  // plausible-looking default, so the report never presents invented data.
+  const recorded = (value: unknown, suffix = '') =>
+    value === null || value === undefined || value === '' ? 'Not recorded' : `${value}${suffix}`;
 
 
   return (
@@ -300,11 +304,11 @@ export const DoctorReportViewPage: React.FC = () => {
           </div>
           <div>
             <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Handedness</span>
-            <span className="text-sm font-bold text-ink capitalize">{patient.handedness || 'Right'}</span>
+            <span className="text-sm font-bold text-ink capitalize">{patient.handedness || 'Not recorded'}</span>
           </div>
           <div>
             <span className="text-xs font-bold text-muted uppercase tracking-[0.12em] block">Education</span>
-            <span className="text-sm font-bold text-ink">{patient.educationYears || 12} yrs</span>
+            <span className="text-sm font-bold text-ink">{patient.educationYears ? `${patient.educationYears} yrs` : 'Not recorded'}</span>
           </div>
         </div>
 
@@ -389,15 +393,15 @@ export const DoctorReportViewPage: React.FC = () => {
               <div className="text-xs space-y-1 text-body">
                 <div className="flex justify-between">
                   <span>Saccadic Latency:</span>
-                  <span className="font-bold text-ink">{assessment.eyeMetrics?.reactionTime || 240} ms</span>
+                  <span className="font-bold text-ink">{recorded(assessment.eyeMetrics?.reactionTime, ' ms')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Fixation Stability:</span>
-                  <span className="font-bold text-ink">{assessment.eyeMetrics?.fixationScore || 90}%</span>
+                  <span className="font-bold text-ink">{recorded(assessment.eyeMetrics?.fixationScore, '%')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Blink Frequency:</span>
-                  <span className="font-bold text-ink">{assessment.eyeMetrics?.blinkRate || 14}/min</span>
+                  <span className="font-bold text-ink">{recorded(assessment.eyeMetrics?.blinkRate, '/min')}</span>
                 </div>
               </div>
             </div>
@@ -411,16 +415,18 @@ export const DoctorReportViewPage: React.FC = () => {
               <div className="text-xs space-y-1 text-body">
                 <div className="flex justify-between">
                   <span>Speech Rate:</span>
-                  <span className="font-bold text-ink">{assessment.voiceMetrics?.speechRate || 135} WPM</span>
+                  <span className="font-bold text-ink">{recorded(assessment.voiceMetrics?.speechRate, ' WPM')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Pause Integrity:</span>
-                  <span className="font-bold text-ink">{assessment.voiceMetrics?.pauseScore || 88}%</span>
+                  <span className="font-bold text-ink">{recorded(assessment.voiceMetrics?.pauseScore, '%')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Jitter / Shimmer:</span>
                   <span className="font-bold text-ink">
-                    {assessment.voiceMetrics?.jitter || 0.12}% / {assessment.voiceMetrics?.shimmer || 1.2}%
+                    {assessment.voiceMetrics?.jitter === null || assessment.voiceMetrics?.jitter === undefined
+                      ? 'Not recorded'
+                      : `${assessment.voiceMetrics.jitter}% / ${recorded(assessment.voiceMetrics?.shimmer, '%')}`}
                   </span>
                 </div>
               </div>
@@ -435,15 +441,11 @@ export const DoctorReportViewPage: React.FC = () => {
               <div className="text-xs space-y-1 text-body">
                 <div className="flex justify-between">
                   <span>Bilateral Symmetry:</span>
-                  <span className="font-bold text-ink">{assessment.faceMetrics?.symmetry || 95}%</span>
+                  <span className="font-bold text-ink">{recorded(assessment.faceMetrics?.symmetry, '%')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tremor Score:</span>
-                  <span className="font-bold text-ink">{assessment.faceMetrics?.tremorScore || 6.5}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Stability Index:</span>
-                  <span className="font-bold text-ink">92%</span>
+                  <span className="font-bold text-ink">{recorded(assessment.faceMetrics?.tremorScore)}</span>
                 </div>
               </div>
             </div>
@@ -462,14 +464,14 @@ export const DoctorReportViewPage: React.FC = () => {
               <div>
                 <span className="font-bold text-slate-800 block mb-0.5">Focus Orbit & Cortex Match:</span>
                 <p className="text-body">
-                  Target latency: {taskData.task1?.saccadicLatencyMs || 230}ms • Memory matched pairs: {taskData.task2?.matchedPairs || 6} (errors: {taskData.task2?.mismatches || 1})
+                  Target latency: {recorded(taskData.task1?.saccadicLatencyMs, 'ms')} • Memory matched pairs: {recorded(taskData.task2?.matchedPairs)} (errors: {recorded(taskData.task2?.mismatches)})
                 </p>
               </div>
 
               <div>
                 <span className="font-bold text-slate-800 block mb-0.5">Path Mapper Trail-Making:</span>
                 <p className="text-body">
-                  Trail B completed in {taskData.task5?.trailBCompletionSec || 42.1}s with {taskData.task5?.sequencingErrors || 0} sequencing errors.
+                  Trail B completed in {recorded(taskData.task5?.trailBCompletionSec, 's')} with {recorded(taskData.task5?.sequencingErrors)} sequencing errors.
                 </p>
               </div>
             </div>
@@ -477,7 +479,7 @@ export const DoctorReportViewPage: React.FC = () => {
             <div className="pt-2 border-t border-line">
               <span className="font-bold text-slate-800 block mb-0.5">Gnani Prisma v2.5 Speech Transcription:</span>
               <p className="text-body italic">
-                "{taskData.task3?.transcript || 'Today is a bright sunny day and we are walking in the park.'}"
+                {taskData.task3?.transcript ? `“${taskData.task3.transcript}”` : 'No transcript was recorded for this session.'}
               </p>
             </div>
           </div>
@@ -490,8 +492,8 @@ export const DoctorReportViewPage: React.FC = () => {
             AI Algorithmic Screening Impression
           </h3>
           <p className="text-xs text-blue-950 leading-relaxed">
-            {assessment.report?.recommendation || 
-              'Patient demonstrates intact oculomotor fixation and coherent speech repetition. Bilateral facial symmetry is well-preserved. Recommend standard annual clinical follow-up.'}
+            {assessment.report?.recommendation ||
+              'No screening impression was recorded for this session. Review the recorded measurements above and document your own interpretation.'}
           </p>
         </div>
 
@@ -654,7 +656,7 @@ export const DoctorReportViewPage: React.FC = () => {
 
           <div className="flex items-center justify-between pt-2">
             <span className="text-xs text-muted">
-              Reviewed by: <strong className="text-body">{assessment.reviewedBy || 'Dr. Sarah Sharma'}</strong>
+              Reviewed by: <strong className="text-body">{assessment.reviewedBy || '—'}</strong>
             </span>
 
             <button

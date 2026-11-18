@@ -126,7 +126,7 @@ export const BrainHealthOverviewPage: React.FC = () => {
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="flex flex-col items-center justify-center text-center">
-          <ScoreDial value={brainHealth?.profileScore ?? baseline?.overallScore ?? 0} label="Brain health" tone="#2f5e4e" />
+          <ScoreDial value={brainHealth?.profileScore ?? baseline?.overallScore ?? null} label="Brain health" tone="#2f5e4e" />
           <div className="mt-3">
             <Pill tone={status.tone} dot>{status.label}</Pill>
           </div>

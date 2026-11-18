@@ -25,13 +25,14 @@ type Props = {
 export const MotionReveal: React.FC<Props> = ({ children, className = '', delay = 0, y = 8, once = true }) => {
   const reduce = useReducedMotion();
   if (reduce) return <div className={className}>{children}</div>;
+  const safeDelay = delay > 5 ? delay / 1000 : delay;
   return (
     <motion.div
       className={className}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once, amount: 0.15 }}
-      transition={{ duration: MOTION.reveal, ease: MOTION.ease, delay }}
+      transition={{ duration: MOTION.reveal, ease: MOTION.ease, delay: safeDelay }}
     >
       {children}
     </motion.div>

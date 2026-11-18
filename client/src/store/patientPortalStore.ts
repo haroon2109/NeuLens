@@ -347,11 +347,11 @@ export const usePatientPortalStore = create<PatientPortalState>()(
 );
 
 export const treatmentTeam = {
-  doctor: 'Dr. Sarah Sharma',
-  role: 'Consultant Neurologist',
-  institution: 'Neulens General Hospital',
-  department: 'Neurology & Cognitive Health',
-  phone: '+91 44 4000 1200',
-  email: 's.sharma@neulens.health',
-  nextReview: '18 November 2026'
+  doctor: '',
+  role: '',
+  institution: '',
+  department: '',
+  phone: '',
+  email: '',
+  nextReview: ''
 };

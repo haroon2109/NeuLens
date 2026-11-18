@@ -695,7 +695,7 @@ export const DoctorAppointmentsPage: React.FC = () => (
       <HealthcareScene
         kind="followup"
         className="w-full"
-        title="Dr. Rahman reviewing progress with Margaret in a follow-up consultation"
+        title="Dr. Mohamed reviewing progress with Haroon in a follow-up consultation"
       />
     </MotionReveal>
     <AppointmentWorkspace />

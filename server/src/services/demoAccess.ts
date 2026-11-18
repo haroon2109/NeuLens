@@ -1,32 +1,28 @@
 import bcrypt from 'bcryptjs';
 import { accounts, type AccountRecord } from '../controllers/account.controller';
 import { DEMO_CLINICIAN_USER_ID, DEMO_PATIENT_USER_ID } from './demoRecords';
-import {
-  inMemoryAssessments,
-  inMemoryUsers,
-  type AssessmentRecord,
-  type UserRecord,
-} from '../models/dataStore';
+import { inMemoryUsers, type UserRecord } from '../models/dataStore';
 
 /**
  * Fictional jury accounts for the prototype.
  *
  * These are deliberately separate from real clinical accounts: the patient is a
- * made-up person with made-up screening history, and the clinician is a demo
- * profile. No real patient data is used or implied.
+ * made-up person and the clinician is a demo profile. Only the sign-in records
+ * are seeded; no screening history, scores or sensor measurements are invented
+ * for them, so both portals show exactly what has actually been measured.
  */
 export const DEMO_PATIENT = {
   email: 'patient.demo@neulens.ai',
   password: 'DemoPatient2026!',
-  name: 'Margaret Ellis',
-  patientId: 'CV-2026-DEMO01',
+  name: 'Haroon',
+  patientId: 'CV-2026-HAROON',
   pin: '246810',
 };
 
 export const DEMO_DOCTOR = {
   email: 'doctor.demo@neulens.ai',
   password: 'DemoDoctor2026!',
-  name: 'Dr. Amara Okafor',
+  name: 'Dr. Mohamed',
 };
 
 const DEMO_PATIENT_ACCOUNT_ID = 'acct_demo_patient';
@@ -53,16 +49,16 @@ function ensureDemoPatientUser(): UserRecord {
     id: DEMO_PATIENT_USER_ID,
     patientId: DEMO_PATIENT.patientId,
     name: DEMO_PATIENT.name,
-    email: 'margaret.ellis@demo.neulens.ai',
+    email: 'haroon@demo.neulens.ai',
     // The portal uses the PIN; this random hash is only a non-login placeholder.
     passwordHash: bcrypt.hashSync(`internal-${Date.now()}-${Math.random()}`, 10),
     role: 'PATIENT',
-    age: 72,
-    dob: '1954-03-11',
+    age: 62,
+    dob: '1964-03-11',
     pinHash: bcrypt.hashSync(DEMO_PATIENT.pin, 10),
     failedLoginAttempts: 0,
     lockedUntil: null,
-    gender: 'FEMALE',
+    gender: 'MALE',
     language: 'en',
     educationYears: 14,
     handedness: 'RIGHT',
@@ -106,109 +102,6 @@ function ensureDemoDoctorUser(): UserRecord {
   return user;
 }
 
-function demoAssessment(
-  id: string,
-  date: Date,
-  overallScore: number,
-  reviewState: string,
-  reviewStatus: string,
-  activities: Record<string, number>,
-  sleep: number
-): AssessmentRecord {
-  const functionalCheckIn = {
-    completedAt: date.toISOString(),
-    activities: {
-      appointments: activities.appointments ?? 0,
-      medication: activities.medication ?? 0,
-      finances: activities.finances ?? 0,
-      household: activities.household ?? 0,
-    },
-    contextFactors: { sleep, activity: 0, moodStress: 0 },
-    assessmentContext: {
-      language: 'en',
-      ageYears: 72,
-      educationYears: 14,
-      taskVersion: 'v2.4',
-      accessibility: { vision: 0, hearing: 0, motor: 0, digitalFamiliarity: 0 },
-    },
-  };
-
-  return {
-    id,
-    userId: DEMO_PATIENT_USER_ID,
-    date,
-    overallScore,
-    reviewState,
-    status: 'COMPLETED',
-    reviewStatus,
-    reviewedBy: reviewStatus === 'PENDING_REVIEW' ? null : DEMO_DOCTOR.name,
-    reviewedAt: reviewStatus === 'PENDING_REVIEW' ? null : new Date(date.getTime() + 24 * 60 * 60 * 1000),
-    taskResponses: {
-      mode: 'DEMO',
-      functionalCheckIn,
-    },
-    eyeMetrics: { reactionTime: 0.62, blinkRate: 15.4, fixationScore: 86 },
-    voiceMetrics: { speechRate: 4.3, pauseScore: 18, jitter: 0.42, shimmer: 2.1 },
-    faceMetrics: { symmetry: 92, tremorScore: 6 },
-    report: {
-      id: `demo-report-${id}`,
-      recommendation:
-        'Prototype demonstration record. Supports a clinical conversation and follow-up; not a diagnosis.',
-      doctorNotes: reviewStatus === 'PENDING_REVIEW' ? '' : 'Reviewed in the demonstration workspace.',
-    },
-  };
-}
-
-function ensureDemoHistory(): void {
-  const now = Date.now();
-  const day = 24 * 60 * 60 * 1000;
-
-  const seeded: AssessmentRecord[] = [
-    demoAssessment(
-      'demo-assessment-latest',
-      new Date(now - 45 * 60 * 1000),
-      69,
-      'NOT_REVIEWED',
-      'PENDING_REVIEW',
-      { appointments: 1, medication: 1, finances: 1, household: 0 },
-      1
-    ),
-    demoAssessment(
-      'demo-assessment-35d',
-      new Date(now - 35 * day),
-      76,
-      'CLINICIAN_REVIEWED',
-      'REVIEWED',
-      { appointments: 0, medication: 0, finances: 0, household: 1 },
-      0
-    ),
-    demoAssessment(
-      'demo-assessment-95d',
-      new Date(now - 95 * day),
-      80,
-      'CLINICIAN_REVIEWED',
-      'REVIEWED',
-      { appointments: 0, medication: 0, finances: 0, household: 0 },
-      0
-    ),
-    demoAssessment(
-      'demo-assessment-155d',
-      new Date(now - 155 * day),
-      82,
-      'CLINICIAN_REVIEWED',
-      'REVIEWED',
-      { appointments: 0, medication: 0, finances: 0, household: 0 },
-      0
-    ),
-  ];
-
-  for (const assessment of seeded) {
-    if (!inMemoryAssessments.some((entry) => entry.id === assessment.id)) {
-      inMemoryAssessments.push(assessment);
-    }
-  }
-}
-
 function ensureDemoAccount(account: AccountRecord): void {
   if (!accounts.some((entry) => entry.email === account.email)) {
     accounts.push(account);
@@ -216,7 +109,7 @@ function ensureDemoAccount(account: AccountRecord): void {
 }
 
 /**
- * Seeds fictional accounts and history. Called once as the API starts.
+ * Seeds the fictional sign-in accounts. Called once as the API starts.
  * The accounts are verified so the jury is not sent through OTP or approval.
  */
 export function seedDemoAccess(): void {
@@ -224,7 +117,6 @@ export function seedDemoAccess(): void {
 
   const patient = ensureDemoPatientUser();
   ensureDemoDoctorUser();
-  ensureDemoHistory();
 
   const now = new Date();
 
@@ -233,7 +125,7 @@ export function seedDemoAccess(): void {
     role: 'PATIENT',
     name: DEMO_PATIENT.name,
     email: DEMO_PATIENT.email,
-    phone: '+919876500001',
+    phone: '+971501234567',
     passwordHash: bcrypt.hashSync(DEMO_PATIENT.password, 10),
     verificationStatus: 'VERIFIED',
     emailVerified: true,
@@ -249,7 +141,7 @@ export function seedDemoAccess(): void {
     role: 'CLINICIAN',
     name: DEMO_DOCTOR.name,
     email: DEMO_DOCTOR.email,
-    phone: '+919876500002',
+    phone: '+971509876543',
     passwordHash: bcrypt.hashSync(DEMO_DOCTOR.password, 10),
     verificationStatus: 'VERIFIED',
     emailVerified: true,
@@ -259,7 +151,7 @@ export function seedDemoAccess(): void {
     professionalRegistrationNumber: 'DEMO-REG-2026-001',
     yearsExperience: 12,
     institutionName: 'NeuLens Clinical Demonstration',
-    city: 'Bengaluru',
+    city: 'Abu Dhabi',
     language: 'en',
     createdAt: now,
     updatedAt: now,

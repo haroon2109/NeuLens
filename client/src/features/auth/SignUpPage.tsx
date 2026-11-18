@@ -303,7 +303,7 @@ export const SignUpPage: React.FC = () => {
                 autoComplete="email"
                 value={form.email}
                 onChange={(event) => update('email', event.target.value)}
-                placeholder={role === 'institution' ? 'admin@hospital.org' : 'name@example.com'}
+                placeholder={role === 'institution' ? 'admin@hospital.org' : 'name@domain.com'}
                 className="portal-input"
               />
             </div>
@@ -420,7 +420,7 @@ export const SignUpPage: React.FC = () => {
                     required
                     value={form.professionalRegistrationNumber}
                     onChange={(event) => update('professionalRegistrationNumber', event.target.value)}
-                    placeholder="e.g. MCI-2011-44821"
+                    placeholder="e.g. REG-2026-001"
                     className="portal-input"
                   />
                 </div>
@@ -439,7 +439,7 @@ export const SignUpPage: React.FC = () => {
                     autoComplete="organization"
                     value={form.institutionName}
                     onChange={(event) => update('institutionName', event.target.value)}
-                    placeholder="e.g. Neulens General Hospital"
+                    placeholder="e.g. Hospital or clinic name"
                     className="portal-input"
                   />
                 </div>

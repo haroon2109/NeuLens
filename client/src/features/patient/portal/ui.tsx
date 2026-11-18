@@ -339,15 +339,16 @@ export const TrendLine: FC<{
   );
 };
 
-export const ScoreDial: FC<{ value: number; label: string; tone?: string }> = ({
+export const ScoreDial: FC<{ value: number | null; label: string; tone?: string }> = ({
   value,
   label,
   tone = '#2f5e4e'
 }) => {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(100, value));
-  const offset = circumference - (clamped / 100) * circumference;
+  const hasValue = typeof value === 'number' && Number.isFinite(value);
+  const clamped = hasValue ? Math.max(0, Math.min(100, value)) : 0;
+  const offset = hasValue ? circumference - (clamped / 100) * circumference : circumference;
 
   return (
     <div className="relative flex h-[116px] w-[116px] shrink-0 items-center justify-center">
@@ -366,7 +367,7 @@ export const ScoreDial: FC<{ value: number; label: string; tone?: string }> = ({
         />
       </svg>
       <div className="absolute text-center">
-        <span className="block text-[22px] font-semibold leading-none text-ink">{Math.round(clamped)}</span>
+        <span className="block text-[22px] font-semibold leading-none text-ink">{hasValue ? Math.round(clamped) : '—'}</span>
         <span className="mt-1 block text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
       </div>
     </div>

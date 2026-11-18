@@ -46,6 +46,23 @@ const contextLabel = (source: string) => {
 export const PatientDashboardPage: React.FC = () => {
   const { user } = useAuthStore();
   const { appointments, notifications, sleep, wellbeing } = usePatientPortalStore();
+  // Context inputs start empty. Nothing has been recorded until the patient
+  // enters it, so zeros must not be shown as measurements.
+  const hasContext = [
+    sleep.durationHours,
+    sleep.quality,
+    sleep.steps,
+    sleep.activeMinutes,
+    wellbeing.mood,
+    wellbeing.stress
+  ].some((value) => typeof value === 'number' && value > 0);
+  const careTeamInitials = treatmentTeam.doctor
+    .replace(/^Dr\.?\s*/i, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
   const { assessments, latestAssessment, baseline, changes, brainHealth, context, isLoading, error, refresh } =
     usePatientOverview();
 
@@ -128,7 +145,7 @@ export const PatientDashboardPage: React.FC = () => {
               <div className="grid min-w-[250px] grid-cols-2 gap-2.5">
                 {[
                   { icon: Timer, label: 'Duration', value: '10–15 min' },
-                  { icon: Stethoscope, label: 'Care team', value: 'Dr. Sarah Sharma' },
+                  { icon: Stethoscope, label: 'Care team', value: (user as any)?.assignedDoctor || treatmentTeam.doctor || 'Care team' },
                   { icon: CalendarDays, label: 'Next visit', value: nextAppointment ? formatDate(nextAppointment.date, { day: 'numeric', month: 'short' }) : 'Not scheduled' },
                   { icon: Activity, label: 'Monitoring', value: monitoringStatus }
                 ].map(({ icon: Icon, label, value }) => (
@@ -358,7 +375,7 @@ export const PatientDashboardPage: React.FC = () => {
             }
           />
           <div className="space-y-2.5">
-            {[
+            {hasContext ? [
               { icon: Moon, label: 'Sleep last night', detail: `${sleep.durationHours} hours · quality ${sleep.quality}/5`, chip: 'mint' },
               { icon: Activity, label: 'Activity', detail: `${sleep.steps.toLocaleString()} steps · ${sleep.activeMinutes} active minutes`, chip: 'forestSoft' },
               { icon: Users, label: 'Wellbeing', detail: `Mood ${wellbeing.mood}/5 · stress ${wellbeing.stress}/5`, chip: 'amber' }
@@ -372,7 +389,12 @@ export const PatientDashboardPage: React.FC = () => {
                   <p className="text-[13px] text-muted">{detail}</p>
                 </div>
               </div>
-            ))}
+            ))
+            : (
+              <p className="text-[13px] text-muted">
+                No health context recorded yet. Add sleep, activity or wellbeing to see it here.
+              </p>
+            )}
           </div>
           {context.length > 0 && (
             <p className="mt-2.5 text-[13px] text-muted">
@@ -384,17 +406,24 @@ export const PatientDashboardPage: React.FC = () => {
         <Card>
           <SectionTitle title="Your care team" detail="Clinician-led review and follow-up." />
           <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[14px] font-bold text-forest shadow-xs">SS</span>
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[14px] font-bold text-forest shadow-xs">
+              {careTeamInitials || '—'}
+            </span>
             <div>
-              <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
-              <p className="text-[13px] text-muted">{treatmentTeam.role}</p>
-              <p className="mt-0.5 text-[13px] text-muted">{treatmentTeam.department} · {treatmentTeam.institution}</p>
+              <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor || 'Care team not yet assigned'}</p>
+              {treatmentTeam.role && <p className="text-[13px] text-muted">{treatmentTeam.role}</p>}
+              {(treatmentTeam.department || treatmentTeam.institution) && (
+                <p className="mt-0.5 text-[13px] text-muted">
+                  {[treatmentTeam.department, treatmentTeam.institution].filter(Boolean).join(' · ')}
+                </p>
+              )}
             </div>
           </div>
-          <dl className="mt-3 space-y-1.5 border-t border-line pt-3 text-[13px]">
-            <div className="flex justify-between gap-3"><dt className="text-muted">Next review</dt><dd className="font-semibold text-ink">{treatmentTeam.nextReview}</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-muted">Clinic</dt><dd className="font-semibold text-ink">Block B · Suite 400</dd></div>
-          </dl>
+          {treatmentTeam.nextReview && (
+            <dl className="mt-3 space-y-1.5 border-t border-line pt-3 text-[13px]">
+              <div className="flex justify-between gap-3"><dt className="text-muted">Next review</dt><dd className="font-semibold text-ink">{treatmentTeam.nextReview}</dd></div>
+            </dl>
+          )}
           <Link to="/patient/appointments" className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline">
             View appointments <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>

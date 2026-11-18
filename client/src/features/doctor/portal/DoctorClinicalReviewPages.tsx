@@ -72,13 +72,13 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
 
   const warnings: string[] = [];
   if (!assessment) warnings.push('No completed assessment is available.');
-  if (assessment && !quality.comparable) warnings.push('Session marked as limited comparability. Avoid trend interpretation.');
+  if (assessment && quality.comparable === false) warnings.push('Session marked as limited comparability. Avoid trend interpretation.');
   if (quality.audio === 'POOR') warnings.push('Audio quality was poor; vocal measures may be unreliable.');
   if (quality.video === 'POOR') warnings.push('Video quality was poor; ocular or facial measures may be unreliable.');
   if (quality.completion === 'PARTIAL') warnings.push('Session was only partially completed.');
   if (missingTasks.length > 0) warnings.push(`${missingTasks.length} of 5 task${missingTasks.length === 1 ? '' : 's'} did not record usable data.`);
   if (quality.comprehension === 'UNCERTAIN') warnings.push('Task comprehension was recorded as uncertain.');
-  if (quality.interruptions > 0) warnings.push(`${quality.interruptions} interruption${quality.interruptions === 1 ? '' : 's'} occurred during the session.`);
+  if (typeof quality.interruptions === 'number' && quality.interruptions > 0) warnings.push(`${quality.interruptions} interruption${quality.interruptions === 1 ? '' : 's'} occurred during the session.`);
 
   const scoreDelta = assessment && previous
     && typeof assessment.overallScore === 'number'
@@ -115,7 +115,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
         <HealthcareScene
           kind="clinicalReview"
           className="w-full"
-          title="Dr. Rahman reviewing a screening report"
+          title="Dr. Mohamed reviewing a screening report"
         />
       </MotionReveal>
 
@@ -155,7 +155,9 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
                             ? 'Clinician reviewed'
                             : 'No review cue'}
                     </Pill>
-                    <Pill tone={quality.comparable ? 'green' : 'amber'}>{quality.comparable ? 'Comparable session' : 'Limited comparability'}</Pill>
+                    <Pill tone={quality.comparable === true ? 'green' : quality.comparable === false ? 'amber' : 'sage'}>
+                      {quality.comparable === true ? 'Comparable session' : quality.comparable === false ? 'Limited comparability' : 'Quality not recorded'}
+                    </Pill>
                     <Pill tone="slate">{assessment.reviewStatus?.replace(/_/g, ' ').toLowerCase() || 'Not reviewed'}</Pill>
                   </div>
                 </div>
@@ -269,7 +271,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
                 ))}
               </div>
               <p className="mt-3 text-xs leading-4 text-muted">
-                Interruptions: {quality.interruptions}. {quality.comparable ? 'The session met the comparability requirement.' : 'This session should not be used alone to infer change.'}
+                Interruptions: {quality.interruptions ?? 'Not recorded'}. {quality.comparable === true ? 'The session met the comparability requirement.' : quality.comparable === false ? 'This session should not be used alone to infer change.' : 'Session quality was not recorded for this session.'}
               </p>
             </Card>
 

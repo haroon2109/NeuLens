@@ -93,7 +93,7 @@ export const MyProfilePage: React.FC = () => {
             <div>
               <p className="text-[16px] font-semibold text-ink">{displayName}</p>
               <p className="mt-0.5 text-xs text-muted">{user?.email || personal.email || 'No email on record'}</p>
-              <p className="mt-1 font-mono text-xs text-muted">{user?.patientId || 'CV-2026-ACTIVE'}</p>
+              <p className="mt-1 font-mono text-xs text-muted">{user?.patientId || '—'}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -172,12 +172,12 @@ export const MyProfilePage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <SectionTitle title="Care team" />
-            <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
-            <p className="text-xs text-muted">{treatmentTeam.role}</p>
+            <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor || (user as any)?.assignedDoctor || 'Assigned care team'}</p>
+            <p className="text-xs text-muted">{treatmentTeam.role || 'Neurology & Cognitive Health'}</p>
             <dl className="mt-3">
-              <InfoRow label="Hospital" value={treatmentTeam.institution} />
-              <InfoRow label="Department" value={treatmentTeam.department} />
-              <InfoRow label="Patient ID" value={user?.patientId || 'CV-2026-ACTIVE'} />
+              <InfoRow label="Hospital" value={treatmentTeam.institution || 'Clinic'} />
+              <InfoRow label="Department" value={treatmentTeam.department || 'Cognitive Health OPD'} />
+              <InfoRow label="Patient ID" value={user?.patientId || '—'} />
               <InfoRow label="Onboarded" value={health.conditions.length ? 'Health background shared' : 'Health background pending'} />
             </dl>
             <Link to="/patient/appointments" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline">

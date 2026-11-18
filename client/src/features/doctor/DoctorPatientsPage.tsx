@@ -54,7 +54,23 @@ export const DoctorPatientsPage: React.FC = () => {
     setError(null);
     try {
       const data = await doctorApi.getPatients(query, reviewState);
-      setPatients(data || []);
+      // The directory endpoint names these fields differently from the table.
+      // Map them explicitly so an unscored patient renders as "Pending" rather
+      // than a NaN score.
+      setPatients(
+        (data || []).map((row: any) => ({
+          ...row,
+          assessmentsCount: row.assessmentCount ?? row.assessmentsCount ?? 0,
+          latestScore:
+            typeof row.compositeScore === 'number'
+              ? row.compositeScore
+              : typeof row.latestScore === 'number'
+                ? row.latestScore
+                : null,
+          latestAssessmentDate: row.lastScreeningDate ?? row.latestAssessmentDate ?? null,
+          changeStatus: row.changeStatus ?? 'INSUFFICIENT_DATA'
+        }))
+      );
     } catch (err: any) {
       console.error('Failed to load patient records:', err);
       setError(err.message || 'Unable to load patient directory');
@@ -269,8 +285,8 @@ export const DoctorPatientsPage: React.FC = () => {
 
                     {/* Clinical Baseline */}
                     <td className="py-4 px-6 text-body">
-                      <div>Hand: <span className="font-semibold text-slate-800">{p.handedness || 'Right'}</span></div>
-                      <div className="text-xs text-muted">Education: {p.educationYears || 12} yrs</div>
+                      <div>Hand: <span className="font-semibold text-slate-800">{p.handedness || 'Not recorded'}</span></div>
+                      <div className="text-xs text-muted">Education: {p.educationYears ? `${p.educationYears} yrs` : 'Not recorded'}</div>
                     </td>
 
                     {/* Assessments count */}

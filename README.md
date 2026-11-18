@@ -15,6 +15,37 @@
 
 ---
 
+## The problem, in one person
+
+> **Illustrative case — not a real patient record.** Fatima is 68 and screens at
+> baseline. She returns three times over the next two years; with three comparable
+> repeat pairs the platform can measure her own session-to-session variability. Her
+> latest score falls further than that spread accounts for, and because language, task
+> version, education and sensory access match across all four sittings, the movement
+> becomes a question for her clinician — not a diagnosis, and not a number on a
+> dashboard.
+
+Everything below exists to make that paragraph true and defensible: a personal baseline
+instead of a population cut-off, a change signal that stays silent until it beats the
+person's own noise, and an explicit refusal to substitute a score for a measurement that
+never happened. The limitations are listed further down, after the evidence, in
+[Limitations and how they are enforced](#limitations-and-how-they-are-enforced).
+
+**Start here:** [`docs/future-health-challenge/ONE_PAGE_SUMMARY.md`](docs/future-health-challenge/ONE_PAGE_SUMMARY.md) — the one-page front door: summary, video, architecture, evidence, limitations and validation roadmap, one link each.
+
+**Contents**
+
+- [The problem, in one person](#the-problem-in-one-person)
+- [1. Executive Summary & Overview](#1-executive-summary--overview) — what it is, the challenge fit
+- [Limitations and how they are enforced](#limitations-and-how-they-are-enforced)
+- [2. Architecture & API reference](#2-architecture--api-reference) — links to `docs/ARCHITECTURE.md` and `docs/API_REFERENCE.md`
+- [3. Environment Setup & Configuration](#3-environment-setup--configuration)
+- [4. Installation & Local Development](#4-installation--local-development)
+- [5. Deployment & Production Guide](#5-deployment--production-guide)
+- [6. License & Attribution](#6-license--attribution)
+
+---
+
 ## 1. Executive Summary & Overview
 
 ### Positioning
@@ -38,7 +69,7 @@ This is aligned with longitudinal, clinician-in-the-loop brain-health screening 
 NeuLens is a browser-based, clinician-supervised screening aid — not a diagnostic system. It centers personal brain-health baselines, safety-gated meaningful change detection, health-context integration, clinician review, longitudinal follow-up, and quality/fairness measurement. Its interactive tasks collect exploratory signals that may support follow-up conversations; they are not validated measures or diagnostic tests. The platform records exploratory observations across modalities, including:
 1. **Ocular Saccades & Fixation Stability** via sub-pixel iris tracking.
 2. **Vocal Acoustics & Micro-Prosody** via real-time Web Audio fast Fourier transform (FFT) analysis.
-3. **Speech-to-Text Clinical Transcription** via **Gnani AI Prisma v2.5** across 6 regional Indian languages.
+3. **Speech-to-Text Clinical Transcription** via **Gnani AI Prisma v2.5** across English (Indian) and five Indian languages. Arabic audio input is **not** transcribed; Arabic spoken responses fall back to on-screen text.
 4. **Facial Kinematics & Bilateral Symmetry** via 478 3D facial mesh landmarks.
 5. **Psychomotor Processing & Executive Planning** via digital Trail Making and pattern-retention matrices.
 
@@ -50,24 +81,6 @@ The MVP stores a prototype composite score and session telemetry for review. Its
 
 > **Medical Disclaimer**: *Neulens identifies changes in screening and self-reported function that may warrant further assessment. It does not diagnose disease or recommend treatment. Results are exploratory decision support and require review by a qualified professional.*
 
-## Known defects
-
-Declared rather than discovered. Each item names where it lives in the code so it can be checked.
-
-| # | Defect | Consequence | Where |
-| --- | --- | --- | --- |
-| 1 | No locally validated task wording, and no licensed validated screener. Arabic has a translated verbal-recall stimulus and registry-declared pending stages, nothing more. | No cross-language or cross-cultural score claim can be made. Readiness is enforced, not papered over. | `server/src/services/assessmentLanguageReadiness.ts`; `docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md` |
-| 2 | No population reliability estimate: ICC(2,1) is computed from real repeat pairs only and withheld below three pairs. | Score change is interpreted against the patient's own variability; no population-level SEM or MDC exists. | `server/src/services/reliability.ts`, `changeMonitor.ts` |
-| 3 | Two of the five battery activities need a camera, one needs a microphone. | A participant without them is administered a partial battery whose missing domains are reported unmeasured, not estimated. The cognitive activity route (`/patient/cognitive`) is cameras- and microphone-free but does not feed the composite. There is no telephone or IVR route. | `client/src/features/screening/ScreeningPage.tsx`, `client/src/features/cognitive/TaskPlayer.tsx` |
-| 4 | Change detection is inactive until three comparable repeat pairs exist. | On real data today the detector reports "reliability not established"; it is not silently guessing. | `server/src/services/changeMonitor.ts` |
-| 5 | Seven languages in the UI, one language declared task-ready (`en`). | Non-English sessions require an explicit participant acknowledgement and are stamped as such in the record. | `language-readiness` route; `taskResponses.languageReadiness` |
-| 6 | The legacy `/api/v1/screening` history endpoints still serve a demo record from an in-memory array and do not use the demo-isolation gate that the portal endpoints use. | A demo record can appear in that legacy endpoint's output for the demo patient id only. It is unreachable from the current UI, which uses the portal endpoints. | `server/src/controllers/screening.controller.ts` |
-| 7 | Acoustic jitter and shimmer are microphone- and codec-dependent. | They are stored as acoustic quality features only: excluded from scoring, change detection and patient endpoints. | `server/src/services/patientAssessmentView.ts`; `server/src/tests/acousticScope.test.ts` |
-| 8 | No screen-reader usability study has been run, and the battery is not operable without vision. | Live-region announcements and keyboard controls exist; they are not a validated non-visual administration. | `client/src/features/screening/ScreeningPage.tsx` |
-| 9 | The exploratory cognitive task catalogue is research-stage and unvalidated. | Each activity is labelled as such in the UI and never produces a diagnosis. | `client/src/features/cognitive/catalog*.ts` |
-
-Items 1–3 and 5 are not closable by editing code: they need licensing, an ethics-approved reliability study, or an accessibility design study. They are listed here so the gap is a known limitation rather than a discovered one.
-
 ---
 
 ### Challenge fit (Abu Dhabi — Future Health Digital Innovation Challenge)
@@ -78,12 +91,14 @@ requirements-to-evidence map and a measurement plan:
 - **[`docs/future-health-challenge/SUBMISSION_FIT.md`](docs/future-health-challenge/SUBMISSION_FIT.md)** — maps the problem, objective and each desired outcome (culturally valid assessment, longitudinal change detection, integrated risk context, personalized prevention and timely care, safety and human oversight, validation and local population performance) to what is implemented, what is deliberately not claimed, and what remains.
 - **[`docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md`](docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md)** — operational definitions for completion, repeat-session stability, sensitivity, specificity, meaningful-change detection, false-referral burden and time to clinical assessment, with the segmented analysis plan and the linguistic/cultural adaptation register.
 - **[`docs/future-health-challenge/VALIDATION_STUDY_PLAN.md`](docs/future-health-challenge/VALIDATION_STUDY_PLAN.md)** — Abu Dhabi pilot protocol: cohort, reference standard, sensitivity/specificity/ICC targets, segment analysis by language/age/education, and acceptance criteria before any clinical claim.
+- **[`docs/future-health-challenge/DEMONSTRABLE_VALUE.md`](docs/future-health-challenge/DEMONSTRABLE_VALUE.md)** — one-page evidence sheet for the "Demonstrable value" requirement: completion, comparability, time to clinical review, referral completion, repeat-session stability and banded fairness measures from a fixed-seed simulated cohort, with the command that reproduces every figure and an explicit statement that none of it is clinical-validity evidence.
 
 This is a research-stage, safety-first screening-support platform with a validation
 roadmap — not a validated diagnostic tool. Arabic task wording is translated and
-delivered (the verbal recall stimulus and the sequencing-task instructions are Arabic);
-back-translation, cognitive pretesting, local clinical sign-off and reviewed Arabic
-speech remain open. That state is enforced, not just documented: the language screen
+delivered (the verbal recall stimulus and the sequencing-task instructions are Arabic;
+the remaining task copy — activity titles, intros, prompts and button labels — is
+English); back-translation, cognitive pretesting, local clinical sign-off and reviewed
+Arabic speech remain open. That state is enforced, not just documented: the language screen
 reads the same registry the server enforces, marks each language's real status, and a
 participant may only continue in a not-yet-reviewed language after an explicit
 acknowledgement that is stored with the session and reported to the clinician.
@@ -97,6 +112,26 @@ band.
 
 ---
 
+## Limitations and how they are enforced
+
+Declared rather than discovered, and placed after the evidence rather than before it. Each item names where it lives in the code so it can be checked.
+
+| # | Defect | Consequence | Where |
+| --- | --- | --- | --- |
+| 1 | No locally validated task wording, and no licensed validated screener. Arabic has a delivered verbal-recall stimulus and piano-sequencing instructions plus registry-declared pending stages; the rest of the task copy is English. | No cross-language or cross-cultural score claim can be made. Readiness is enforced, not papered over. | `server/src/services/assessmentLanguageReadiness.ts`; `docs/future-health-challenge/MEASUREMENT_AND_LOCAL_VALIDATION.md` |
+| 2 | No population reliability estimate: ICC(2,1) is computed from real repeat pairs only and withheld below three pairs. | Score change is interpreted against the patient's own variability; no population-level SEM or MDC exists. | `server/src/services/reliability.ts`, `changeMonitor.ts` |
+| 3 | Two of the five battery activities need a camera, one needs a microphone. | A participant without them is administered a partial battery whose missing domains are reported unmeasured, not estimated. The cognitive activity route (`/patient/cognitive`) is cameras- and microphone-free but does not feed the composite. There is no telephone or IVR route. | `client/src/features/screening/ScreeningPage.tsx`, `client/src/features/cognitive/TaskPlayer.tsx` |
+| 4 | Change detection is inactive until three comparable repeat pairs exist. | On real data today the detector reports "reliability not established"; it is not silently guessing. | `server/src/services/changeMonitor.ts` |
+| 5 | Seven languages in the UI, one language declared task-ready (`en`). | Non-English sessions require an explicit participant acknowledgement and are stamped as such in the record. | `language-readiness` route; `taskResponses.languageReadiness` |
+| 6 | The legacy `/api/v1/screening` history endpoints still serve a demo record from an in-memory array and do not use the demo-isolation gate that the portal endpoints use. | A demo record can appear in that legacy endpoint's output for the demo patient id only. It is unreachable from the current UI, which uses the portal endpoints. | `server/src/controllers/screening.controller.ts` |
+| 7 | Acoustic jitter and shimmer are microphone- and codec-dependent. | They are stored as acoustic quality features only: excluded from scoring, change detection and patient endpoints. | `server/src/services/patientAssessmentView.ts`; `server/src/tests/acousticScope.test.ts` |
+| 8 | No screen-reader usability study has been run, and the battery is not operable without vision. | Live-region announcements and keyboard controls exist; they are not a validated non-visual administration. | `client/src/features/screening/ScreeningPage.tsx` |
+| 9 | The exploratory cognitive task catalogue is research-stage and unvalidated. | Each activity is labelled as such in the UI and never produces a diagnosis. | `client/src/features/cognitive/catalog*.ts` |
+
+Items 1–3 and 5 are not closable by editing code: they need licensing, an ethics-approved reliability study, or an accessibility design study. They are listed here so the gap is a known limitation rather than a discovered one.
+
+---
+
 ### Key Features
 * **Zero-Install Client-Side Edge Inference**: Operates directly in standard web browsers using WebAssembly (Wasm) and WebGL GPU acceleration. Selected video and audio signals are processed locally in real-time on the device. Raw media is not recorded or uploaded; only derived measurements are sent to the backend.
 * **5 Exploratory Sensory & Cognitive Micro-Tasks** (not locally validated diagnostic instruments):
@@ -106,7 +141,7 @@ band.
   * *Task 4: Mimic Sync* — Dynamic facial mimicry assessing bilateral smile intensity, jaw displacement, eyebrow elevation, and head pose stability (3D yaw/pitch/roll).
   * *Task 5: Path Mapper* — Digital Trail Making Test (TMT Part B equivalent) measuring executive sequencing, psychomotor speed, and path error rates.
 * **Pure Gnani AI Multilingual Voice Assistant ("Neulens")**:
-  * Spoken audio synthesized **exclusively** via **Gnani AI Timbre v2.5** (`https://api.vachana.ai/api/v1/tts/inference`) across 6 languages: English (`en`), Hindi (`hi`), Tamil (`ta`), Telugu (`te`), Kannada (`kn`), and Malayalam (`ml`).
+  * Spoken audio synthesized **exclusively** via **Gnani AI Timbre v2.5** (`https://api.vachana.ai/api/v1/tts/inference`) across all seven interface languages: English (`en`), Arabic (`ar`, `ar-AE`, voice `Zahira`), Hindi (`hi`), Tamil (`ta`), Telugu (`te`), Kannada (`kn`) and Malayalam (`ml`). Arabic output is configured but the voice is not yet clinically reviewed.
   * **Zero Voice Overlap Architecture**: Browser speech synthesis failover is completely eliminated. Active session concurrency guards (`activeSessionId`), `AbortController` network termination, and audio lifecycle teardown ensure that only **one** clean, natural Gnani voice can play at any millisecond.
   * In-memory SHA-256 prompt caching optimizing upstream API credit consumption.
 * **Verbal Assessment Transcription (Gnani Prisma v2.5)**:
@@ -115,7 +150,7 @@ band.
   * **Patient Portal (`/patient`)**: Patient-facing platform experience designed for elderly users and people with low digital literacy, accessible from any browser. A first-run path through registration, language, the screening battery and a completion slip is described below as a **guided first-run journey**; the portal itself has around thirty further screens (history, trends, change, context, prevention, appointments, cognitive activities) reachable from its own navigation, not a fixed nine-screen sequence:
     * **Step 1 (Screen 1 — Welcome Page `/patient`)**: Minimal, spacious homepage with Neulens branding and two large touch targets: "New Patient" and "Existing Patient".
     * **Step 2 (Screen 2 — Registration `/patient/register` & Screen 3 — Login `/patient/login`)**: Simple registration with essential demographics issuing a collision-resistant Patient ID (`CV-2026-XXXXXX`), or 2-field login with Patient ID + PIN (the PIN is the only accepted factor; the fictional jury demo account is listed under [Jury demo access](#jury-demo-access)). A new account lands on its own dashboard (`/patient/dashboard`) — the same destination as signing in — where starting the assessment is an explicit choice rather than an automatic redirect.
-    * **Step 3 (Screen 4 — Language Selection `/patient/language`)**: High-contrast regional language selection (Arabic — right-to-left, English, Tamil, Hindi, Telugu, Kannada, Malayalam) with native script and, where a reviewed voice exists, spoken audio previews powered by Gnani Timbre TTS. Arabic is offered with full RTL layout and Arabic-script fonts for navigation, consent, check-in and results, and the verbal recall stimulus is Arabic. Each entry shows its real status from `GET /api/v1/language-readiness` — English is task-ready, other languages read "wording under review" with the pending stages listed — and continuing in one requires an explicit acknowledgement that travels with the session (`taskResponses.languageReadiness`) and appears in the clinician's evidence/limitations. `POST /patient/assessment` refuses an unacknowledged non-ready language with `422 LANGUAGE_NOT_VALIDATED`. It is a guided option before a first assessment, not a forced step: language is also set in My profile and Account settings.
+    * **Step 3 (Screen 4 — Language Selection `/patient/language`)**: High-contrast regional language selection (Arabic — right-to-left, English, Tamil, Hindi, Telugu, Kannada, Malayalam) with native script and, where a reviewed voice exists, spoken audio previews powered by Gnani Timbre TTS. Arabic is offered with full RTL layout and Arabic-script fonts for navigation, consent, check-in and results; the verbal-recall stimulus and the piano-sequencing instructions are administered in Arabic, while the rest of the task copy remains English. Each entry shows its real status from `GET /api/v1/language-readiness` — English is task-ready, other languages read "wording under review" with the pending stages listed — and continuing in one requires an explicit acknowledgement that travels with the session (`taskResponses.languageReadiness`) and appears in the clinician's evidence/limitations. `POST /patient/assessment` refuses an unacknowledged non-ready language with `422 LANGUAGE_NOT_VALIDATED`. It is a guided option before a first assessment, not a forced step: language is also set in My profile and Account settings.
     * **Step 4 (Screens 5–6 — Welcome & Screening Battery `/patient/assessment`)**: Calm "Let's Begin" welcome followed by exploratory tasks (*Focus Orbit*, *Cortex Match*, *Vocal Echo*, *Mimic Sync*, *Path Mapper*) with spoken voice guidance, repeat instruction button, and dynamic typography scaling (`A` / `A+` / `A++`). Live facial tracking and audio telemetry execute in the background without exposing raw biometric diagnostics (EAR, yaw/pitch/roll) to the patient.
     * **Step 5 (Screen 7 — Optional Daily-Function Check-in)**: Four large-touch questions about everyday activities, presented in the selected language. Responses can be skipped and are stored with the screening for within-person comparison.
     * **Step 6 (Screen 8 — Patient ID Confirmation `/patient/assessment/complete`)**: Reassuring completion message with prominent Patient ID display, downloadable text confirmation slip, and print layout. The completion screen itself shows no scores or notes.
@@ -202,560 +237,18 @@ regulatory path, and the business model to test are documented in
 
 ---
 
-## 2. System Architecture & Design
+## 2. Architecture & API reference
 
-### Architecture Style
-Neulens follows a **Decoupled Client-Server Architecture with Client-Side Edge Inference and Dedicated AI Speech Gateways**:
+The detail lives in two companion documents so this file stays readable as a front door:
 
-1. **Client Tier (Presentation & Edge AI)**: A high-performance Single Page Application (SPA) executing video and acoustic telemetry processing on the user's hardware via WebAssembly and WebGL shaders. Selected signals are processed locally where supported. Raw media is not recorded or uploaded; only derived measurements are forwarded to the backend.
-2. **Backend Tier (Application & AI Speech Proxy)**: A stateless Express REST API handling authentication, profile management, screening persistence, longitudinal analytics, and secure server-to-server Gnani AI speech orchestration.
-3. **Data Tier (Relational & Cache/Memory)**: Prisma ORM interfacing with PostgreSQL for long-term clinical data storage, with dynamic runtime fallback to in-memory transactional collections if the database is unreachable.
+- **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** — architecture style, privacy-by-design boundaries, high-level data flow, the system diagram, repository layout, per-component responsibilities, and the data model (Prisma schema, ERD, speech/AI model architecture).
+- **[`docs/API_REFERENCE.md`](docs/API_REFERENCE.md)** — every endpoint group: system and health, authentication, patient portal, doctor portal, screenings, analytics, and the Gnani voice/speech integration.
 
-### Privacy by Design
-
-```mermaid
-flowchart TD
-    A[Raw video/audio] --> B[Local processing]
-    B --> C[Derived features]
-    C --> D[Clinician-facing output]
-```
-
-Video and audio signals are processed on the device. Raw media is not recorded or uploaded; only derived measurements are forwarded to the backend for clinical review.
+In one paragraph: the React/Vite client performs MediaPipe vision and Web Audio measurement locally and uploads only derived measurements; an Express/TypeScript server owns scoring, comparability gating, change detection and the clinician workflow over PostgreSQL via Prisma; Gnani supplies text-to-speech and speech transcription. Raw video and audio never leave the device.
 
 ---
 
-### High-Level Data Flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Patient as Patient / Clinician
-    participant UI as React 18 SPA (Vite)
-    participant Edge as Edge Vision & Audio (MediaPipe + FFT)
-    participant VoiceEngine as Pure Gnani Voice Service
-    participant API as Express 4 REST API
-    participant Gnani as Gnani AI Cloud (api.vachana.ai)
-    participant DB as Prisma / PostgreSQL
-
-    Patient->>UI: Selects Language & Starts Screening Battery
-    UI->>VoiceEngine: speak(instructionText, lang)
-    VoiceEngine->>API: POST /api/v1/voice/synthesize
-    API->>Gnani: POST /api/v1/tts/inference (Timbre v2.5)
-    Gnani-->>API: 24kHz Linear PCM WAV Audio
-    API-->>VoiceEngine: Binary Audio Stream (with SHA-256 Cache)
-    VoiceEngine->>Patient: Plays Pure Spoken Audio via HTMLAudio
-
-    Patient->>Edge: Repeats Sentence in Task 3 (Vocal Echo)
-    Edge->>Edge: Real-time FFT: F0, Jitter %, Shimmer %, Pauses
-    Edge->>API: POST /api/v1/voice/transcribe (Audio Blob)
-    API->>Gnani: POST /stt/v3 (Prisma v2.5)
-    Gnani-->>API: { transcript, language, confidence }
-    API-->>UI: Real-Time Transcript Display
-
-    Patient->>UI: Completes All 5 Assessment Tasks
-    UI->>API: POST /api/v1/screenings (Aggregated Telemetry)
-    API->>DB: Stores Assessment, EyeMetrics, VoiceMetrics, FaceMetrics
-    DB-->>API: Saved Record Confirmation
-    API-->>UI: Returns exploratory prototype score and screening observations
-```
-
----
-
-### System Architecture Diagram
-
-```
-+--------------------------------------------------------------------------------------------------+
-|                                    CLIENT APPLICATION (BROWSER)                                  |
-+--------------------------------------------------------------------------------------------------+
-|                                                                                                  |
-|   +----------------------------------------------------+   +---------------------------------+   |
-|   |            EDGE BIOMETRIC PIPELINES                |   |        PURE GNANI VOICE SERVICE |   |
-|   |  - MediaPipe Tasks Vision (478 Landmarks)          |   |  - GnaniTTSService (Exclusive)  |   |
-|   |  - Ocular Saccades, Gaze Quadrant & Blink EAR      |   |  - AbortController Cancellation |   |
-|   |  - Facial Symmetry, Head Pose (Yaw/Pitch/Roll)     |   |  - activeSessionId Guards       |   |
-|   |  - Web Audio API FFT (F0, Jitter %, Shimmer %)     |   |  - HTMLAudioElement Lifecycle   |   |
-|   +----------------------------------------------------+   +----------------+----------------+   |
-|                                                                             |                    |
-|   +--------------------------------------------------------------------+    |                    |
-|   |                     REACT 18 & ZUSTAND UI LAYER                    |    |                    |
-|   |  - Patient/Doctor portal screens          - ScreeningPage (5 Tasks)|    |                    |
-|   |  - SensorCheckStage                       - ElderlyLanguageSelector|    |                    |
-|   |  - ResultVoiceExplainer                   - ReportPage (PDF Export)|    |                    |
-|   +--------------------------------------------------------------------+----+                    |
-|                                                                        |                         |
-+------------------------------------------------------------------------|-------------------------+
-                                                                         | HTTPS / REST JSON / Multipart
-                                                                         v
-+--------------------------------------------------------------------------------------------------+
-|                                  BACKEND API SERVER (EXPRESS / NODE)                             |
-+--------------------------------------------------------------------------------------------------+
-|                                                                                                  |
-|   +------------------------------------+          +------------------------------------------+   |
-|   |           CORE MIDDLEWARE          |          |               API ROUTERS                |   |
-|   |  - CORS Security Policy            |--------->|  - /api/v1/auth                          |   |
-|   |  - Express JSON Body Parser        |          |  - /api/v1/screenings                    |   |
-|   |  - Multer In-Memory Audio Storage  |          |  - /api/v1/analytics                     |   |
-|   |  - Centralized Error Handler       |          |  - /api/v1/voice                         |   |
-|   +------------------------------------+          +--------------------+---------------------+   |
-|                                                                        |                         |
-|   +------------------------------------+                               v                         |
-|   |    GNANI AI INTEGRATION SERVICES   |          +--------------------+---------------------+   |
-|   |  - GnaniTtsService (Timbre v2.5)   |          |              DATA ACCESS                 |   |
-|   |    (SHA-256 In-Memory Cache)       |          |  - Prisma Client ORM Singleton           |   |
-|   |  - GnaniSttService (Prisma v2.5)   |          |  - In-Memory Resilient Fallback Store    |   |
-|   |  - GnaniEvonService (Evon 30B)     |          |    (Auto-engages if DB is offline)       |   |
-|   +------------------+-----------------+          +--------------------+---------------------+   |
-|                      |                                                 |                         |
-+----------------------|-------------------------------------------------|-------------------------+
-                       |                                                 |
-                       | HTTPS (X-API-Key-ID)                            | TCP / SSL (Port 5432)
-                       v                                                 v
-+-----------------------------------------------+ +------------------------------------------------+
-|       GNANI AI CLOUD (api.vachana.ai)         | |            PERSISTENCE (POSTGRESQL)            |
-+-----------------------------------------------+ +------------------------------------------------+
-| - Timbre v2.5: /api/v1/tts/inference (WAV)    | | - Users Table            - EyeMetrics Table    |
-| - Prisma v2.5: /stt/v3 (Multipart STT)        | | - Assessments Table      - VoiceMetrics Table  |
-| - Evon 30B: Optional Clinician Reasoning Gateway | - Reports Table          - FaceMetrics Table   |
-+-----------------------------------------------+ +------------------------------------------------+
-```
-
----
-
-## 3. Project Directory Structure
-
-```
-Neulens/
-├── .gitignore                          # Root Git ignore rules (node_modules, dist, envs)
-├── README.md                           # Exhaustive architectural and operational documentation
-│
-├── client/                             # Frontend React 18 + Vite Application
-│   ├── dist/                           # Production optimized build output
-│   ├── index.html                      # Single-page HTML shell with font preconnects
-│   ├── package.json                    # Client dependencies, scripts, and engine metadata
-│   ├── postcss.config.js               # PostCSS pipeline configuration (Tailwind, Autoprefixer)
-│   ├── tailwind.config.js              # Custom Tailwind configuration (medical blues, card shadows)
-│   ├── tsconfig.json                   # TypeScript project compiler options and path aliases
-│   ├── tsconfig.node.json              # TypeScript compilation rules for Vite node plugins
-│   ├── vite.config.ts                  # Vite server config, port 5173, path aliases, proxy rules
-│   │
-│   └── src/                            # Application Source Code
-│       ├── main.tsx                    # React DOM root entry point
-│       ├── App.tsx                     # Top-level router provider integration
-│       │
-│       ├── components/                 # Presentation & Voice UI Components
-│       │   └── voice/                  # Multimodal Voice Assistant Components
-│       │       ├── ElderlyLanguageSelector.tsx  # High-contrast, large-font initial language selector
-│       │       ├── LanguageSelectorModal.tsx    # Modal dialog for changing language mid-session
-│       │       ├── ResultVoiceExplainer.tsx     # Pure Gnani readout component for screening results
-│       │       ├── SensorCheckStage.tsx         # Hardware validation check (camera alignment & mic level)
-│       │       ├── SpokenInstructionBanner.tsx  # Large, readable visual cue banner for seniors
-│       │       └── VoiceAssistantAvatar.tsx     # Floating assistant avatar with dynamic status rings
-│       │
-│       ├── features/                   # Feature-Driven Page Views & Subsystems
-│       │   ├── patient/                         # Patient Portal Experience
-│       │   │   ├── PatientHubPage.tsx           # Portal home (Register / Existing sign-in)
-│       │   │   ├── PatientRegisterPage.tsx      # Portal registration with instant CV-2026 ID generation
-│       │   │   ├── PatientLoginPage.tsx         # Quick check-in via Patient ID + PIN/birth year
-│       │   │   ├── PatientAssessmentPage.tsx    # Age-adaptive distraction-free battery container
-│       │   │   └── PatientCompletionPage.tsx    # Privacy-isolated exit screen with printable ID card
-│       │   ├── doctor/                          # Doctor / Clinician Workspace
-│       │   │   ├── DoctorLoginPage.tsx          # Clinician authentication with 1-click evaluation access
-│       │   │   ├── DoctorDashboardPage.tsx      # Real database KPI metrics & recent assessments queue
-│       │   │   ├── DoctorPatientsPage.tsx       # Searchable patient directory with review-state filter
-│       │   │   ├── DoctorPatientProfilePage.tsx # Complete medical file & task-by-task recorded responses
-│       │   │   └── DoctorReportViewPage.tsx     # Hospital clinical report, radar chart, notes & PDF export
-│       │   ├── about/
-│       │   │   └── AboutPage.tsx                # Technology architecture and platform clinical overview
-│       │   ├── assessments/
-│       │   │   └── AssessmentsPage.tsx          # Battery protocol catalog & micro-test selector
-│       │   ├── auth/                            # Authentication & Onboarding
-│       │   │   ├── ForgotPasswordPage.tsx       # Password recovery interface
-│       │   │   ├── LoginPage.tsx                # Clinician/Patient credentials authentication (1-click demo)
-│       │   │   ├── ProfileSetupPage.tsx         # 4-Step demographic & medical history onboarding
-│       │   │   └── RegisterPage.tsx             # New user profile registration form
-│       │   ├── landing/
-│       │   │   └── LandingPage.tsx              # Public hero landing, core pillars & feature showcases
-│       │   ├── patients/
-│       │   │   └── PatientsPage.tsx              # Patient directory with review filter tabs & modal
-│       │   ├── recommendations/
-│       │   │   └── RecommendationsPage.tsx      # Neurologist referral network & lifestyle pathways
-│       │   ├── report/
-│       │   │   └── ReportPage.tsx               # Printable clinical report, radar chart & doctor share
-│       │   ├── results/
-│       │   │   └── ResultsPage.tsx              # Post-screening score breakdown & telemetry
-│       │   ├── screening/
-│       │   │   └── ScreeningPage.tsx            # 5-test interactive screening battery orchestration
-│       │   └── settings/
-│       │       └── SettingsPage.tsx             # Hardware calibration, accessibility, system preferences
-│       │
-│       ├── hooks/                      # Custom React Hooks
-│       │   └── useFaceLandmarker.ts             # MediaPipe FaceLandmarker lifecycle, EAR & gaze tracking
-│       │
-│       ├── layouts/                    # Persistent Shell Layouts
-│       │   ├── AppLayout.tsx                    # Minimal root layout for landing and patient portal
-│       │   ├── DoctorLayout.tsx                 # Persistent clinician sidebar navigation & top header
-│       │   └── DashboardLayout.tsx              # Legacy clinician dashboard layout
-│       │
-│       ├── routes/                     # Application Routing
-│       │   └── index.tsx                        # Router definitions with Public/Protected route guards
-│       │
-│       ├── services/                   # Frontend Services
-│       │   ├── language/                        # Localization & Regional Translations
-│       │   │   ├── LanguageManager.ts           # Language store & catalog
-│       │   │   ├── translations/                # Dictionaries: en, hi, ta, te, kn, ml
-│       │   │   └── types.ts                     # Language types & translation schemas
-│       │   └── voice/                           # Voice Services
-│       │       ├── gnaniVoiceApi.ts             # Typed HTTP client to backend /api/v1/voice
-│       │       ├── SpeechRecognitionService.ts  # Prisma STT clip transcription & keyword listener
-│       │       ├── TextToSpeechService.ts       # Pure Gnani Timbre v2.5 TTS (Zero Overlap Engine)
-│       │       ├── VoiceInstructionEngine.ts    # Voice assistant orchestration store
-│       │       └── types.ts                     # Voice options, status, and interface definitions
-│       │
-│       ├── store/                      # Zustand State Stores
-│       │   ├── authStore.ts                     # Session authentication & pre-seeded demo clinician
-│       │   ├── faceTrackingStore.ts             # Real-time computer vision metrics (60 FPS)
-│       │   └── screeningStore.ts                # Multi-task scoring engine and prototype score
-│       │
-│       └── styles/
-│           └── index.css                        # Global CSS, Tailwind utilities, and animations
-│
-└── server/                             # Backend Node.js / Express Application
-    ├── dist/                           # Compiled JavaScript output
-    ├── package.json                    # Backend dependencies, scripts, and engine metadata
-    ├── tsconfig.json                   # Backend TypeScript compiler configuration
-    │
-    ├── prisma/                         # Database Schema & Migrations
-    │   ├── schema.prisma               # Prisma data models (Users, Assessments, Metrics, Reports)
-    │   └── migrations/                 # PostgreSQL relational migration history
-    │
-    └── src/                            # Server Source Code
-        ├── app.ts                      # Express app setup, CORS, dotenv/config, route mount
-        │
-        ├── controllers/                # Request Handlers
-        │   ├── patient.controller.ts   # Portal register, login, session, assessment submit
-        │   ├── doctor.controller.ts    # Clinician login, dashboard KPIs, patients, report reviews
-        │   ├── analytics.controller.ts # Longitudinal trend computation
-        │   ├── auth.controller.ts      # User registration, login, profile updates
-        │   ├── screening.controller.ts # Assessment submission, history retrieval
-        │   └── voice.controller.ts     # Gnani STT/TTS proxy, caching, rate limiting
-        │
-        ├── middleware/                 # Express Request Interceptors
-        │   ├── auth.ts                 # JWT Bearer token authentication & role verification
-        │   └── errorHandler.ts         # Centralized error routing & status serialization
-        │
-        ├── routes/                     # API Route Definitions
-        │   ├── patient.routes.ts       # Routes for /api/v1/patient
-        │   ├── doctor.routes.ts        # Routes for /api/v1/doctor
-        │   ├── analytics.routes.ts     # Routes for /api/v1/analytics
-        │   ├── auth.routes.ts          # Routes for /api/v1/auth
-        │   ├── index.ts                # Master router aggregator & /api/v1/health check
-        │   ├── screening.routes.ts     # Routes for /api/v1/screenings
-        │   └── voice.routes.ts         # Multer upload & routes for /api/v1/voice
-        │
-        ├── services/                   # Backend Business Logic & AI Gateways
-        │   └── gnani/                  # Gnani AI Speech Integration
-        │       ├── evon.service.ts     # Evon 30B reasoning model gateway
-        │       ├── gnaniStt.service.ts # Prisma v2.5 STT REST client
-        │       ├── gnaniTts.service.ts # Timbre v2.5 TTS client with SHA-256 LRU cache
-        │       └── types.ts            # Voice catalog, BCP-47 mappings, options
-        │
-        ├── tests/                      # Automated Integration Test Suite
-        │   ├── portalIntegration.test.ts # 8 tests: patient ID, registration, triage, doctor reviews
-        │   └── voiceIntegration.test.ts  # 17 tests: catalog, Timbre TTS, Prisma STT, Evon
-        │
-        └── validation/
-            ├── schemas.ts              # Zod validation schemas for core endpoints
-            └── voice.schemas.ts        # Zod validation schemas for /voice endpoints
-```
-
----
-
-## 4. Deep Dive: Core Components & Modules
-
-### Frontend / User Interface Subsystems
-
-#### 1. Routing & Route Security (`client/src/routes/index.tsx`)
-The routing architecture is constructed using React Router v6 (`createBrowserRouter`). Security is enforced through modular route guard components:
-* `PublicRoute`: Restricts authenticated sessions from accessing landing or login pages, redirecting active users directly to `/dashboard`.
-* `ProtectedRoute`: Evaluates JWT presence and profile completeness. Pre-seeds the `clinician:create` source-data script so a judge can provision a clinician account with one command; the shipped UI does not embed any clinician credentials.
-* `ProfileSetupRoute`: Prevents users with completed onboarding profiles from re-submitting baseline demographics.
-
-#### 2. Centralized State Stores (Zustand)
-* **`screeningStore.ts`**: Coordinates the multi-stage assessment state machine (`currentStep`), stores raw game performance parameters, and runs `calculateFinalScores()` to derive weighted composite indices and standard cognitive domain mappings.
-* **`faceTrackingStore.ts`**: Maintains high-frequency computer vision telemetry (60 FPS) including iris coordinates, Eye Aspect Ratio (EAR), gaze quadrants, blink counter, 3D head pose (yaw/pitch/roll), facial stability standard deviations, and smile/jaw/eyebrow expression percentages.
-* **`VoiceInstructionEngine.ts`**: Implements the audio assistant state machine (`idle`, `speaking`, `listening`, `warning`, `transcribing`), subtitle rendering, contextual cue throttling (preventing prompt spamming via 12-second cooldowns), and voice-control keyword listener.
-* **`authStore.ts`**: Encapsulates user session tokens, user entity data, and persistent browser storage syncing (`localStorage`).
-* **`LanguageManager.ts`**: Houses active language state, native script labels, BCP-47 locale identifiers, and localized spoken translation dictionaries across the supported languages.
-
----
-
-### Backend API & Services Architecture
-
-#### 1. Modular Controller Layer
-* **`auth.controller.ts`**: Manages credential hashing (`bcryptjs` salt rounds: 10), JSON Web Token signing (`7d` session lifespan), profile mutation, and password reset token generation. Integrates dual-write/read logic with automated in-memory fallback.
-* **`screening.controller.ts`**: Ingests compound screening submissions. Unpacks nested records to atomically generate `Assessment`, `EyeMetrics`, `VoiceMetrics`, `FaceMetrics`, and `Report` tables within PostgreSQL transactions.
-* **`analytics.controller.ts`**: Aggregates longitudinal screening results, transforming time-series metrics into coordinate arrays ready for Recharts rendering (`overallScore`, `reactionTime`, `symmetry`). Missing values are returned as `null`, never as `0`. Acoustic jitter and shimmer are deliberately excluded: they are microphone- and codec-sensitive quality features, not cognitive evidence.
-* **`voice.controller.ts`**: Orchestrates Gnani AI Timbre v2.5 synthesis and Prisma v2.5 transcription. Features sliding-window rate limiting (45 TTS req/min, 20 STT req/min) to preserve paid API credits, payload sanitization, and error normalization.
-
-#### 2. Inbound Validation & Serialization (`server/src/validation/`)
-All inbound requests undergo strict runtime schema validation via Zod before reaching controller logic:
-```typescript
-export const synthesizeBodySchema = z.object({
-  text: z.string().min(1, 'Text cannot be empty').max(2500, 'Text exceeds 2,500 characters'),
-  language: z.string().min(2).max(10),
-  voice: z.string().optional(),
-  speed: z.number().min(0.5).max(2.0).optional().default(0.95),
-  sampleRate: z.number().int().optional().default(24000)
-});
-```
-
-#### 3. Error Handling Middleware (`server/src/middleware/errorHandler.ts`)
-Catches uncaught exceptions and Zod schema validation errors, returning structured RFC-7807 compliant error envelopes:
-```json
-{
-  "error": "Validation error",
-  "details": [
-    { "field": "overallScore", "message": "Expected number, received string" }
-  ]
-}
-```
-
----
-
-### Business Logic & Processing Pipelines
-
-#### 1. Ocular Processing Pipeline (`useFaceLandmarker.ts`)
-* **Eye Aspect Ratio (EAR)**: Computed from landmark vertical distances divided by horizontal eye width:
-  $$\text{EAR} = \frac{\|\mathbf{p}_{385} - \mathbf{p}_{380}\| + \|\mathbf{p}_{386} - \mathbf{p}_{374}\|}{2 \cdot \|\mathbf{p}_{362} - \mathbf{p}_{263}\|}$$
-* **Blink State Machine**: Evaluates EAR against a dynamic threshold ($0.20$) combined with MediaPipe blendshapes (`eyeBlinkLeft`, `eyeBlinkRight`). Includes a 200ms debounce cooldown to eliminate false-positive flutter.
-* **Gaze Estimation**: Computes horizontal and vertical iris center displacement relative to the inner and outer canthi of each eye. Ratios categorize gaze into `Center`, `Left`, `Right`, `Up`, or `Down`, and project normalized $X/Y$ coordinates to the screen.
-* **Fixation Stability**: Monitors iris coordinate Euclidean drift over sliding time windows; if drift remains $< 0.015$ units, fixation duration increments continuously.
-
-#### 2. Acoustic Voice Analysis Pipeline (`ScreeningPage.tsx`)
-* **Audio Capture**: Employs Web Audio API `AudioContext` connected via `createMediaStreamSource` to an `AnalyserNode` configured with an FFT size of $128$.
-* **Waveform Animation**: Continuously queries `analyser.getByteTimeDomainData` to draw a live acoustic waveform onto a dynamic canvas overlay.
-* **Acoustic feature synthesis**: Derives vocal metrics during phrase repetition:
-  * *Fundamental Frequency ($F_0$)*: Extracted via auto-correlation pitch detection (normal adult range: 85–255 Hz).
-  * *Acoustic Jitter*: Period-to-period perturbation in pitch frequency.
-  * *Acoustic Shimmer*: Period-to-period variability in peak waveform amplitude.
-  * *Speech Pause Cadence*: Detection of sub-threshold energy troughs ($> 250\text{ ms}$) counting hesitations.
-  * **Scope limit, stated deliberately**: jitter and shimmer are measured through a laptop or phone microphone and are dominated by microphone response, codec, room noise and browser resampling — not by laryngeal status and certainly not by cognition. They are retained as **acoustic quality and engagement signals only**. They never contribute to a domain score, the composite, a review prompt, or any change comparison, and the patient-facing API excludes them entirely. No claim about cognition, pathology or diagnosis is made from them.
-
-#### 3. Pure Gnani AI Speech & Zero Overlap Architecture
-To eliminate robotic speech and prevent overlapping voices during screening:
-* **Browser Failover Completely Removed**: `window.speechSynthesis` and `SpeechSynthesisUtterance` are entirely absent from the speech pipeline. All prompts are delivered via Gnani Timbre v2.5.
-* **Active Session Concurrency Isolation**: `TextToSpeechService` assigns each `speak()` request a unique `activeSessionId`. When a new instruction is issued or `stop()` is triggered, any pending network download or playback callback that does not match the active session ID is dropped before audio can play.
-* **Immediate HTTP Abort**: Incorporates `AbortController`. Triggering a new spoken cue immediately aborts the active fetch to `/api/v1/voice/synthesize`.
-* **Resource Disposal**: Active `HTMLAudioElement` instances have their `src` removed, listeners detached, and object URLs revoked immediately upon interruption.
-
-#### 4. Cognitive Domain Scoring Engine (`screeningStore.ts`)
-Raw test metrics are mapped into four classical neuropsychological domains:
-* **Memory Recall ($M$)**: Derived from Task 2 (Cortex Match) spatial-pair retention and error rates.
-* **Attention & Processing ($A$)**: Weighted mean of Task 1 (Focus Orbit saccades) and Task 4 (Mimic Sync kinematic responsiveness).
-* **Visuospatial Orientation ($V$)**: Derived from Task 5 (Path Mapper) trail connection accuracy.
-* **Executive Function ($E$)**: Composite of Task 5 trail sequencing latency and Task 2 decision speed.
-* **Exploratory Prototype Score**:
-  $$\text{Prototype Score} = \frac{M + A + V + E}{4}$$
-  * The composite and component scores are experimental implementation outputs. They have no validated population norms, clinical cutoffs, or evidence-based follow-up intervals.
-  * Scores must not be interpreted as disease risk, normative performance, or a recommendation for specialist referral. Longitudinal change cues are separate workflow prompts for qualified clinician review.
-
----
-
-## 5. Models & Data Architecture (Top-to-Bottom)
-
-### Database Schema (PostgreSQL via Prisma ORM)
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-model User {
-  id             String       @id @default(uuid())
-  patientId      String?      @unique // Unique Hospital ID e.g. CV-2026-XXXXXX
-  role           String       @default("PATIENT") // PATIENT | CLINICIAN | ADMIN
-  name           String
-  email          String       @unique
-  passwordHash   String
-  age            Int
-  dob            String?      // Birth year or date of birth e.g. 1954
-  pin            String?      // Optional 4-digit portal verification PIN
-  gender         String       // MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY
-  language       String       // en, ta, hi, te, kn, ml
-  educationYears Int?         // Formal education in years
-  handedness     String?      // RIGHT, LEFT, AMBIDEXTROUS
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  assessments    Assessment[]
-}
-
-model Assessment {
-  id           String        @id @default(uuid())
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date         DateTime      @default(now())
-  overallScore Float?        // null when the session produced no interpretable score
-  reviewState  String        // NOT_REVIEWED | NOT_INTERPRETABLE | REVIEW_PROMPT | CLINICIAN_REVIEWED
-  status       String        @default("COMPLETED") // IN_PROGRESS | COMPLETED | ABORTED
-  reviewStatus String        @default("PENDING_REVIEW") // PENDING_REVIEW | REVIEWED | FOLLOWUP_REQUIRED
-  reviewedBy   String?       // Clinician identifier/name
-  reviewedAt   DateTime?     // Verification timestamp
-  taskResponses Json?        // Granular recorded responses across all 5 battery tasks
-  
-  eyeMetrics   EyeMetrics?
-  voiceMetrics VoiceMetrics?
-  faceMetrics  FaceMetrics?
-  report       Report?
-}
-
-model EyeMetrics {
-  id            String     @id @default(uuid())
-  assessmentId  String     @unique
-  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  reactionTime  Float      // milliseconds
-  blinkRate     Float      // blinks per minute
-  fixationScore Float      // percentage (0 - 100)
-}
-
-model VoiceMetrics {
-  id           String     @id @default(uuid())
-  assessmentId String     @unique
-  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  speechRate   Float      // words per minute (WPM)
-  pauseScore   Float      // hesitation index (0 - 100)
-  jitter       Float      // frequency perturbation percentage
-  shimmer      Float      // amplitude perturbation percentage
-}
-
-model FaceMetrics {
-  id           String     @id @default(uuid())
-  assessmentId String     @unique
-  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  symmetry     Float      // bilateral facial symmetry (0 - 100)
-  tremorScore  Float      // involuntary micro-tremor amplitude
-}
-
-model Report {
-  id             String     @id @default(uuid())
-  assessmentId   String     @unique
-  assessment     Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  recommendation String     @db.Text
-  doctorNotes    String?    @db.Text
-  pdfUrl         String?
-}
-```
-
----
-
-### Entity-Relationship Diagram (ERD)
-
-```mermaid
-erDiagram
-    User ||--o{ Assessment : "undergoes"
-    Assessment ||--o| EyeMetrics : "records"
-    Assessment ||--o| VoiceMetrics : "records"
-    Assessment ||--o| FaceMetrics : "records"
-    Assessment ||--o| Report : "generates"
-
-    User {
-        String id PK "UUID"
-        String name
-        String email UK
-        String passwordHash
-        Int age
-        String gender
-        String language
-        DateTime createdAt
-        DateTime updatedAt
-    }
-
-    Assessment {
-        String id PK "UUID"
-        String userId FK
-        DateTime date
-        Float overallScore "nullable"
-        String reviewState
-    }
-
-    EyeMetrics {
-        String id PK "UUID"
-        String assessmentId FK, UK
-        Float reactionTime
-        Float blinkRate
-        Float fixationScore
-    }
-
-    VoiceMetrics {
-        String id PK "UUID"
-        String assessmentId FK, UK
-        Float speechRate
-        Float pauseScore
-        Float jitter
-        Float shimmer
-    }
-
-    FaceMetrics {
-        String id PK "UUID"
-        String assessmentId FK, UK
-        Float symmetry
-        Float tremorScore
-    }
-
-    Report {
-        String id PK "UUID"
-        String assessmentId FK, UK
-        String recommendation
-        String doctorNotes
-        String pdfUrl
-    }
-```
-
----
-
-### AI / ML & Speech Models Architecture
-
-#### 1. MediaPipe FaceLandmarker Task
-* **Architecture**: Deep convolutional multi-stage pipeline utilizing BlazeFace for face detection followed by a 3D mesh regression network predicting 478 3D metric landmarks (468 standard mesh vertices + 10 iris boundary vertices).
-* **Model Asset**: `face_landmarker.task` (Float16 precision, GPU delegate enabled).
-* **Delivery & CDN**: Dynamic runtime retrieval via `@mediapipe/tasks-vision` Wasm binary resolver (`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm`).
-* **Input Pipeline**: Video frame buffers ($640 \times 480$ resolution) acquired via `navigator.mediaDevices.getUserMedia`, passed directly to `detectForVideo(videoElement, timestampMs)` inside `requestAnimationFrame`.
-* **Output Processing**:
-  * 478 3D Normalized Landmark coordinates ($x, y, z \in [0, 1]$).
-  * 52 Facial Blendshape classification scores evaluating specific muscle groups (`mouthSmileLeft`, `mouthSmileRight`, `jawOpen`, `browOuterUpLeft`, `browOuterUpRight`, `browInnerUp`).
-
-#### 2. Gnani AI Timbre v2.5 (Text-to-Speech)
-* **Model ID**: `timbre-v2.5`
-* **Upstream Endpoint**: `POST https://api.vachana.ai/api/v1/tts/inference`
-* **Audio Format**: 24kHz linear PCM, container: WAV, mono channel.
-* **Authentication**: Header `X-API-Key-ID: <GNANI_API_KEY>` kept strictly on the backend.
-* **Verified Voice Catalog**:
-  * Tamil (`ta` / `ta-IN`): **Asmita** (Default), Trisha, Brinda, Vedika, Noopur
-  * Hindi (`hi` / `hi-IN`): **Nalini** (Default), Deepak, Poorvi
-  * English (`en` / `en-IN`): **Kaveri** (Default), Yashvi, Arjun
-  * Telugu (`te` / `te-IN`): **Suhana** (Default), Lehara, Lavanya, Yukti, Varuni
-  * Kannada (`kn` / `kn-IN`): **Saanvi** (Default), Kavin
-  * Malayalam (`ml` / `ml-IN`): **Reshma** (Default), Riyaan
-* **Optimization & Caching**: SHA-256 hash indexing over `(lang + voice + speed + text)` with in-memory LRU caching to preserve the 5,000 credit budget for static screening instructions.
-
-#### 3. Gnani AI Prisma v2.5 (Speech-to-Text)
-* **Model ID**: `gnani-prisma-v2.5` (Prisma v3 REST)
-* **Upstream Endpoint**: `POST https://api.vachana.ai/stt/v3`
-* **Payload Structure**: Multipart form-data with fields `audio_file`, `language_code`, `preferred_language`, `format: "transcribe"`, `itn_native_numerals: "true"`.
-* **Safety Boundaries**: Upper limits of 15MB and 60 seconds per verbal task response.
-
-#### 4. Gnani Evon 30B (Optional Clinician Reasoning Model)
-* **Model ID**: `gnani/gnani-evon-v3.3-30B-A3B` (Hugging Face)
-* **Architecture**: Hybrid Mamba-Transformer Mixture-of-Experts (30B total parameters, ~3.5B active per token).
-* **Role**: Optional clinician synthesis assistant. External calls stay disabled unless both `EVON_INFERENCE_URL` and `EVON_DATA_PROCESSING_APPROVED=true` are set; numeric scores only (no age, IDs or transcripts), and output is a review draft. The recommended path is the local FastAPI `/v1/ai/explanation` endpoint documented in [`docs/ai-report-generation.md`](docs/ai-report-generation.md).
-
----
-
-## 6. Environment Setup & Configuration
+## 3. Environment Setup & Configuration
 
 ### Prerequisites
 * **Runtime**: Node.js `v18.18.0` or higher (`v20.x` LTS recommended).
@@ -830,7 +323,7 @@ VITE_API_URL="/api/v1"
 
 ---
 
-## 7. Installation & Local Development
+## 4. Installation & Local Development
 
 ### Step-by-Step Setup Guide
 
@@ -943,7 +436,7 @@ The server runs either against PostgreSQL or an in-memory fallback, both exposed
 
 ---
 
-## 8. Deployment & Production Guide
+## 5. Deployment & Production Guide
 
 ### Containerization (Docker & Docker Compose)
 
@@ -1062,398 +555,7 @@ npm run start         # Runs compiled production artifact
 
 ---
 
-## 9. API Reference / Core Endpoints
-
-Base URL: `http://localhost:5000/api/v1` (or relative `/api/v1` via Vite proxy).
-
-### System & Health
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/health` | None | Service liveness probe. Returns HTTP 200 and server timestamp. |
-
----
-
-### Authentication (`/auth`)
-
-#### 1. Register User
-* **Endpoint**: `POST /auth/register`
-* **Auth**: None
-* **Request Payload**:
-```json
-{
-  "email": "dr.sharma@hospital.org",
-  "password": "SecurePassword123!",
-  "name": "Dr. Sarah Sharma",
-  "age": 42,
-  "gender": "FEMALE",
-  "language": "ENGLISH"
-}
-```
-* **Response (`201 Created`)**:
-```json
-{
-  "message": "Registration successful",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "c3e981ad-e612-4e44-bca5-b289cf422d14",
-    "email": "dr.sharma@hospital.org",
-    "name": "Dr. Sarah Sharma",
-    "age": 42,
-    "gender": "FEMALE",
-    "language": "ENGLISH",
-    "createdAt": "2026-10-24T15:30:00.000Z"
-  }
-}
-```
-
-#### 2. Login User
-* **Endpoint**: `POST /auth/login`
-* **Auth**: None
-* **Request Payload**:
-```json
-{
-  "email": "dr.sharma@hospital.org",
-  "password": "SecurePassword123!"
-}
-```
-* **Response (`200 OK`)**:
-```json
-{
-  "message": "Login successful",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "c3e981ad-e612-4e44-bca5-b289cf422d14",
-    "email": "dr.sharma@hospital.org",
-    "name": "Dr. Sarah Sharma"
-  }
-}
-```
-
-#### 3. Get Authenticated User Profile
-* **Endpoint**: `GET /auth/me`
-* **Auth**: `Bearer <token>`
-* **Response (`200 OK`)**:
-```json
-{
-  "user": {
-    "id": "c3e981ad-e612-4e44-bca5-b289cf422d14",
-    "email": "dr.sharma@hospital.org",
-    "name": "Dr. Sarah Sharma",
-    "age": 42,
-    "gender": "FEMALE",
-    "language": "ENGLISH"
-  }
-}
-```
-
-#### 4. Update Profile Demographics
-* **Endpoint**: `PUT /auth/profile`
-* **Auth**: `Bearer <token>`
-* **Request Payload**:
-```json
-{
-  "age": 43,
-  "gender": "FEMALE",
-  "language": "ENGLISH"
-}
-```
-* **Response (`200 OK`)**:
-```json
-{
-  "message": "Profile updated successfully",
-  "user": { "id": "...", "age": 43, "gender": "FEMALE", "language": "ENGLISH" }
-}
-```
-
-#### 5. Forgot Password Recovery
-* **Endpoint**: `POST /auth/forgot-password`
-* **Auth**: None
-* **Request Payload**:
-```json
-{
-  "email": "dr.sharma@hospital.org"
-}
-```
-* **Response (`200 OK`)**:
-```json
-{
-  "message": "If the email exists, a password reset link has been dispatched.",
-  "debugResetLink": "http://localhost:5173/auth/reset-password?token=..."
-}
-```
-
----
-
-### Patient Portal Endpoints (`/api/v1/patient`)
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/patient/register` | None | Patient portal registration. Generates collision-resistant Patient ID (`CV-2026-XXXXXX`). |
-| `POST` | `/patient/login` | None | Patient portal authentication using Patient ID + PIN or birth year verification. |
-| `GET` | `/patient/session` | `Bearer <token>` | Returns authenticated patient identity & assigned battery. |
-| `POST` | `/patient/assessment` | `Bearer <token>` | The only assessment submission entry point. Score is derived server-side from `taskResponses`; returns the session record and clinician-review workflow state. |
-| `GET` | `/patient/confirmation-card` | `Bearer <token>` | Downloads/prints patient ID confirmation slip with check-in timestamp. |
-
----
-
-### Doctor Portal Endpoints (`/api/v1/doctor`)
-
-| Method | Endpoint | Auth | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/doctor/login` | None | Clinician credentials authentication (1-click evaluation access available). |
-| `GET` | `/doctor/dashboard` | `Bearer <token>` (Clinician) | Real-time database metrics: total patients, today's screenings, pending reviews, recent queue. |
-| `GET` | `/doctor/patients` | `Bearer <token>` (Clinician) | Searchable patient directory by Patient ID or name, with risk filter (`ALL`, `LOW`, `MODERATE`, `HIGH`). |
-| `GET` | `/doctor/patients/:id` | `Bearer <token>` (Clinician) | Complete clinical patient dossier with task-by-task recorded responses and longitudinal history. |
-| `GET` | `/doctor/reports/:id` | `Bearer <token>` (Clinician) | Official clinical screening report with domain radar chart, AI interpretation, and review notes. |
-| `PATCH` | `/doctor/reports/:id/review` | `Bearer <token>` (Clinician) | Updates review status (`PENDING_REVIEW`, `REVIEWED`, `FOLLOWUP_REQUIRED`) and signs neurologist notes. |
-
----
-
-### Screenings (`/screenings`)
-
-#### 1. Submit Screening Assessment
-* **Endpoint**: `POST /screenings`
-* **Auth**: `Bearer <token>`
-* **Request Payload**:
-```json
-{
-  "taskResponses": {
-    "game1": { "score": 88 },
-    "game2": { "score": 82 },
-    "game3": { "score": 90 },
-    "game4": { "score": 84 },
-    "game5": { "score": 78 },
-    "pianoSequence": { "score": 85 }
-  },
-  "reactionTime": 248.2,
-  "blinkRate": 14.0,
-  "fixationScore": 92.4,
-  "speechRate": 142.0,
-  "pauseScore": 88.0,
-  "jitter": 0.11,
-  "shimmer": 1.15,
-  "symmetry": 95.8,
-  "tremorScore": 8.4,
-  "recommendation": "Session recorded. Clinician review required.",
-  "doctorNotes": "Patient cooperative, high eye-tracking fixation hold."
-}
-```
-
-There is no `overallScore` field: the score is computed server-side from `taskResponses`
-(`server/src/services/sessionScoring.ts`). Sending one is rejected with `400`. A session
-whose tasks do not cover all four domains stores `null` and is marked `NOT_INTERPRETABLE`.
-* **Response (`201 Created`)**:
-```json
-{
-  "message": "Assessment processed successfully",
-  "assessment": {
-    "id": "e4f802d1-7c91-4e78-8d02-123456789abc",
-    "userId": "c3e981ad-e612-4e44-bca5-b289cf422d14",
-    "date": "2026-10-24T15:35:00.000Z",
-    "overallScore": 84.5,
-    "reviewState": "NOT_REVIEWED",
-    "eyeMetrics": {
-      "reactionTime": 248.2,
-      "blinkRate": 14.0,
-      "fixationScore": 92.4
-    },
-    "voiceMetrics": {
-      "speechRate": 142.0,
-      "pauseScore": 88.0,
-      "jitter": 0.11,
-      "shimmer": 1.15
-    },
-    "faceMetrics": {
-      "symmetry": 95.8,
-      "tremorScore": 8.4
-    },
-    "report": {
-      "recommendation": "Normal neurocognitive baseline. Re-evaluate in 12 months.",
-      "doctorNotes": "Patient cooperative, high eye-tracking fixation hold."
-    }
-  }
-}
-```
-
-#### 2. Get Screening History
-* **Endpoint**: `GET /screenings`
-* **Auth**: `Bearer <token>`
-* **Response (`200 OK`)**:
-```json
-{
-  "history": [
-    {
-      "id": "e4f802d1-7c91-4e78-8d02-123456789abc",
-      "date": "2026-10-24T15:35:00.000Z",
-      "overallScore": 84.5,
-      "reviewState": "NOT_REVIEWED",
-      "eyeMetrics": { "reactionTime": 248.2, "blinkRate": 14.0, "fixationScore": 92.4 },
-      "voiceMetrics": { "speechRate": 142.0, "pauseScore": 88.0, "jitter": 0.11, "shimmer": 1.15 },
-      "faceMetrics": { "symmetry": 95.8, "tremorScore": 8.4 },
-      "report": { "recommendation": "Normal baseline." }
-    }
-  ]
-}
-```
-
-#### 3. Get Specific Screening by ID
-* **Endpoint**: `GET /screenings/:id`
-* **Auth**: `Bearer <token>`
-* **Response (`200 OK`)**:
-```json
-{
-  "assessment": {
-    "id": "e4f802d1-7c91-4e78-8d02-123456789abc",
-    "userId": "c3e981ad-e612-4e44-bca5-b289cf422d14",
-    "date": "2026-10-24T15:35:00.000Z",
-    "overallScore": 84.5,
-    "reviewState": "NOT_REVIEWED",
-    "eyeMetrics": { "reactionTime": 248.2, "blinkRate": 14.0, "fixationScore": 92.4 },
-    "voiceMetrics": { "speechRate": 142.0, "pauseScore": 88.0, "jitter": 0.11, "shimmer": 1.15 },
-    "faceMetrics": { "symmetry": 95.8, "tremorScore": 8.4 },
-    "report": { "recommendation": "Normal baseline." }
-  }
-}
-```
-
----
-
-### Analytics (`/analytics`)
-
-#### 1. Retrieve Longitudinal Screening Trends
-* **Endpoint**: `GET /analytics/trends`
-* **Auth**: `Bearer <token>`
-* **Response (`200 OK`)**:
-```json
-{
-  "trends": {
-    "labels": ["May 12", "Jun 14", "Jul 26", "Oct 24"],
-    "datasets": {
-      "overall": [78.0, 81.2, 84.0, 84.5],
-      "reactionTime": [290.0, 275.4, 255.0, 248.2],
-      "symmetry": [91.0, 93.4, 94.0, 95.8],
-      "jitter": [0.14, 0.12, 0.12, 0.11]
-    },
-    "rawCount": 4
-  }
-}
-```
-
----
-
-### Voice & Speech AI (`/voice`) — Gnani AI Integration
-
-#### 1. Service Health & Capabilities
-* **Endpoint**: `GET /voice/health`
-* **Auth**: None
-* **Description**: Returns configuration and model status without making paid external calls.
-* **Response (`200 OK`)**:
-```json
-{
-  "status": "ok",
-  "configured": true,
-  "message": "Gnani AI speech engines active (Prisma STT v2.5 / Timbre TTS v2.5)",
-  "stt": {
-    "model": "Prisma v2.5 (v3 REST)",
-    "endpoint": "/api/v1/voice/transcribe",
-    "supportedLanguages": ["en", "ta", "hi", "te", "ml", "kn"]
-  },
-  "tts": {
-    "model": "Timbre v2.5",
-    "endpoint": "/api/v1/voice/synthesize",
-    "supportedLanguages": ["en", "ta", "hi", "te", "ml", "kn"],
-    "cacheEntries": 14
-  },
-  "evon": {
-    "model": "gnani/gnani-evon-v3.3-30B-A3B",
-    "available": false,
-    "reason": "Disabled. Set EVON_INFERENCE_URL and confirm EVON_DATA_PROCESSING_APPROVED=true only after a privacy/data-processing review. Prefer the local FastAPI explanation endpoint."
-  }
-}
-```
-
-#### 2. Verified Voice Catalog
-* **Endpoint**: `GET /voice/voices`
-* **Auth**: None
-* **Description**: Returns supported Indian languages and verified Timbre v2.5 voice identifiers.
-* **Response (`200 OK`)**:
-```json
-{
-  "success": true,
-  "languages": {
-    "ta": { "languageCode": "ta", "bcp47": "ta-IN", "languageName": "Tamil", "defaultVoice": "Asmita", "availableVoices": ["Asmita", "Trisha", "Brinda", "Vedika", "Noopur"] },
-    "hi": { "languageCode": "hi", "bcp47": "hi-IN", "languageName": "Hindi", "defaultVoice": "Nalini", "availableVoices": ["Nalini", "Deepak", "Poorvi"] },
-    "en": { "languageCode": "en", "bcp47": "en-IN", "languageName": "English (Indian)", "defaultVoice": "Kaveri", "availableVoices": ["Kaveri", "Yashvi", "Arjun"] },
-    "te": { "languageCode": "te", "bcp47": "te-IN", "languageName": "Telugu", "defaultVoice": "Suhana", "availableVoices": ["Suhana", "Lehara", "Lavanya", "Yukti", "Varuni"] },
-    "kn": { "languageCode": "kn", "bcp47": "kn-IN", "languageName": "Kannada", "defaultVoice": "Saanvi", "availableVoices": ["Saanvi", "Kavin"] },
-    "ml": { "languageCode": "ml", "bcp47": "ml-IN", "languageName": "Malayalam", "defaultVoice": "Reshma", "availableVoices": ["Reshma", "Riyaan"] }
-  }
-}
-```
-
-#### 3. Speech-to-Text Transcription (Gnani Prisma v2.5)
-* **Endpoint**: `POST /voice/transcribe`
-* **Auth**: None (Rate limited: 20 req/min)
-* **Content-Type**: `multipart/form-data`
-* **Payload Fields**:
-  * `audio_file`: Audio recording binary (WAV, WebM, MP3 up to 15MB)
-  * `language`: Language code (`ta`, `hi`, `en`, `te`, `kn`, `ml`, or BCP-47 tag)
-  * `format`: Optional, `'transcribe'` (default) or `'detailed'`
-  * `itnNativeNumerals`: Optional boolean (default: `true`)
-* **Response (`200 OK`)**:
-```json
-{
-  "success": true,
-  "transcript": "Cognitive markers and visual path tracings measure baseline motor coordination",
-  "language": "en-IN",
-  "requestId": "req_8b9f1d0a",
-  "confidence": 0.94,
-  "latencyMs": 284
-}
-```
-
-#### 4. Text-to-Speech Synthesis (Gnani Timbre v2.5)
-* **Endpoint**: `POST /voice/synthesize`
-* **Auth**: None (Rate limited: 45 req/min)
-* **Content-Type**: `application/json`
-* **Request Payload**:
-```json
-{
-  "text": "வணக்கம், நான் வழிகாட்டுவேன்.",
-  "language": "ta",
-  "voice": "Asmita",
-  "speed": 0.95
-}
-```
-* **Response (`200 OK`)**:
-  * `Content-Type`: `audio/wav`
-  * `X-Gnani-Voice`: `Asmita`
-  * `X-Gnani-Language`: `ta-IN`
-  * `X-Gnani-Cached`: `true` | `false`
-  * Body: Binary WAV audio stream (24kHz linear PCM)
-
-#### 5. Evon 30B Clinician Synthesis (Optional Gateway)
-* **Endpoint**: `POST /voice/evon-summary`
-* **Auth**: Clinician or admin bearer token
-* **Description**: Optional clinical documentation summarizer powered by Evon 30B. Disabled (503 with a safe reason) unless `EVON_INFERENCE_URL` is set and `EVON_DATA_PROCESSING_APPROVED=true`. Accepts numeric scores only; age, identifiers, free text and transcripts are rejected. Output is always marked as a clinician-review draft.
-* **Request Payload**:
-```json
-{
-  "testScores": {
-    "memoryScore": 85,
-    "attentionScore": 90,
-    "visuospatialScore": 80,
-    "executiveScore": 78,
-    "compositeScore": 83
-  },
-  "language": "en"
-}
-```
-
----
-
-## 10. License & Attribution
+## 6. License & Attribution
 
 Developed for the **National Bio Entrepreneurship Competition (NBEC 2026)**.  
 Licensed under the **MIT License**. See `LICENSE` for details.

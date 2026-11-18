@@ -165,7 +165,7 @@ export const AssessmentIntroductionPage: React.FC = () => {
         <HealthcareScene
           kind="assessmentIntro"
           className="w-full"
-          title="Margaret sitting comfortably in a quiet room before her assessment"
+          title="Haroon sitting comfortably in a quiet room before the assessment"
           animated={false}
         />
       </MotionReveal>
@@ -507,7 +507,7 @@ export const AssessmentCompletionPage: React.FC = () => {
             <HealthcareScene
               kind="explainResults"
               className="w-full"
-              title="Dr. Rahman explaining assessment results to Margaret and Harold"
+              title="Dr. Mohamed explaining assessment results to Haroon and care partner"
               animated={false}
             />
           </MotionReveal>
@@ -587,14 +587,14 @@ export const AssessmentQualityReportPage: React.FC = () => {
   const { latestAssessment, assessments } = usePatientOverview();
   const quality = getQuality(latestAssessment);
   // Three prior comparable sessions are required before a change interpretation is shown.
-  const comparable = quality.comparable && assessments.length >= 4;
+  const comparable = quality.comparable === true && assessments.length >= 4;
 
   const items = [
-    { label: 'Audio quality', value: qualityLabel(quality.audio), icon: Mic, good: quality.audio !== 'POOR' },
-    { label: 'Video quality', value: qualityLabel(quality.video), icon: Camera, good: quality.video !== 'POOR' },
+    { label: 'Audio quality', value: qualityLabel(quality.audio), icon: Mic, good: quality.audio === 'GOOD' || quality.audio === 'ADEQUATE' },
+    { label: 'Video quality', value: qualityLabel(quality.video), icon: Camera, good: quality.video === 'GOOD' || quality.video === 'ADEQUATE' },
     { label: 'Task completion', value: qualityLabel(quality.completion), icon: ListChecks, good: quality.completion === 'FULL' },
     { label: 'Instruction comprehension', value: qualityLabel(quality.comprehension), icon: Languages, good: quality.comprehension === 'CLEAR' },
-    { label: 'Environmental interruptions', value: String(quality.interruptions), icon: Volume2, good: quality.interruptions === 0 }
+    { label: 'Environmental interruptions', value: quality.interruptions === null ? 'Not recorded' : String(quality.interruptions), icon: Volume2, good: quality.interruptions === 0 }
   ];
 
   return (
@@ -810,8 +810,8 @@ export const AssessmentReportPage: React.FC = () => {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <AssessmentStatusPill reviewStatus={assessment.reviewStatus} status={assessment.status} />
-                  <Pill tone={quality.comparable ? 'forestSoft' : 'amber'} dot>
-                    {quality.comparable ? 'Quality checked' : 'Limited quality'}
+                  <Pill tone={quality.comparable === true ? 'forestSoft' : quality.comparable === false ? 'amber' : 'sage'} dot>
+                    {quality.comparable === true ? 'Quality checked' : quality.comparable === false ? 'Limited quality' : 'Quality not recorded'}
                   </Pill>
                 </div>
                 <h2 className="mt-2 text-[18px] font-semibold text-ink">{formatDate(assessment.date)} · Five-part screening</h2>
@@ -894,11 +894,15 @@ export const AssessmentReportPage: React.FC = () => {
           <Card>
             <SectionTitle title="Data quality for this session" />
             <div className="flex flex-wrap gap-2">
-              <Pill tone={quality.audio === 'POOR' ? 'amber' : 'forestSoft'}>Audio · {qualityLabel(quality.audio)}</Pill>
-              <Pill tone={quality.video === 'POOR' ? 'amber' : 'forestSoft'}>Video · {qualityLabel(quality.video)}</Pill>
-              <Pill tone={quality.completion === 'FULL' ? 'forestSoft' : 'amber'}>{qualityLabel(quality.completion)}</Pill>
-              <Pill tone={quality.interruptions ? 'amber' : 'forestSoft'}>{quality.interruptions} interruption{quality.interruptions === 1 ? '' : 's'}</Pill>
-              <Pill tone={quality.comparable ? 'mint' : 'amber'}>{quality.comparable ? 'Comparison conditions met' : 'Comparison withheld'}</Pill>
+              <Pill tone={quality.audio === 'POOR' ? 'amber' : quality.audio ? 'forestSoft' : 'sage'}>Audio · {qualityLabel(quality.audio)}</Pill>
+              <Pill tone={quality.video === 'POOR' ? 'amber' : quality.video ? 'forestSoft' : 'sage'}>Video · {qualityLabel(quality.video)}</Pill>
+              <Pill tone={quality.completion === 'FULL' ? 'forestSoft' : quality.completion ? 'amber' : 'sage'}>{qualityLabel(quality.completion)}</Pill>
+              <Pill tone={quality.interruptions ? 'amber' : quality.interruptions === 0 ? 'forestSoft' : 'sage'}>
+                {quality.interruptions === null ? 'Interruptions not recorded' : `${quality.interruptions} interruption${quality.interruptions === 1 ? '' : 's'}`}
+              </Pill>
+              <Pill tone={quality.comparable === true ? 'mint' : quality.comparable === false ? 'amber' : 'sage'}>
+                {quality.comparable === true ? 'Comparison conditions met' : quality.comparable === false ? 'Comparison withheld' : 'Comparison not recorded'}
+              </Pill>
             </div>
             <p className="mt-3 flex items-start gap-1.5 text-[13px] leading-5 text-muted">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />

@@ -1,29 +1,17 @@
-﻿import React from 'react';
+import React from 'react';
 import { ShieldAlert, HeartHandshake, Phone, Mail, MapPin, ExternalLink, Calendar, Sparkles, Brain, Moon, Footprints, Apple } from 'lucide-react';
 
 export const RecommendationsPage: React.FC = () => {
-  const mockNeurologists = [
-    {
-      name: 'Dr. Evelyn Carter, MD, PhD',
-      specialty: 'Cognitive Neurology & Memory Disorders',
-      clinic: 'Metro Neurosciences Center',
-      distance: '3.2 miles away',
-      phone: '+1 (555) 234-5678',
-      email: 'e.carter@metroneuro.com',
-      address: '742 Evergreen Terrace, Suite 100',
-      availability: 'Next available: Tuesday, 10:00 AM'
-    },
-    {
-      name: 'Dr. Marcus Vance, MD',
-      specialty: 'Behavioral Neurology & Alzheimer Research',
-      clinic: 'St. Jude Memory Assessment Institute',
-      distance: '5.8 miles away',
-      phone: '+1 (555) 876-5432',
-      email: 'm.vance@stjudememory.org',
-      address: '1040 Academic Parkway, Building B',
-      availability: 'Next available: Thursday, 2:30 PM'
-    }
-  ];
+  const specialists: Array<{
+    name: string;
+    specialty: string;
+    clinic: string;
+    distance: string;
+    phone: string;
+    email: string;
+    address: string;
+    availability: string;
+  }> = [];
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-12">
@@ -57,49 +45,56 @@ export const RecommendationsPage: React.FC = () => {
           <p className="text-xs text-slate-500">Accredited memory clinics and cognitive neurology centers accepting referral transfers</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockNeurologists.map((doc, idx) => (
-            <div key={idx} className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 flex flex-col justify-between space-y-6 shadow-card hover:shadow-card-hover transition-all">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs px-3 py-1 bg-medical-50 text-medical-700 border border-medical-200 rounded-full font-bold uppercase tracking-wider">
-                    Partner Network
-                  </span>
-                  <span className="text-xs font-semibold text-slate-400">{doc.distance}</span>
+        {specialists.length === 0 ? (
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-8 text-center shadow-card">
+            <p className="text-sm font-semibold text-slate-700">No specialist referrals currently listed</p>
+            <p className="text-xs text-slate-500 mt-1">Specialist directory listings are configured by your clinical organization.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {specialists.map((doc, idx) => (
+              <div key={idx} className="bg-white border border-slate-200/80 rounded-3xl p-6 md:p-8 flex flex-col justify-between space-y-6 shadow-card hover:shadow-card-hover transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs px-3 py-1 bg-medical-50 text-medical-700 border border-medical-200 rounded-full font-bold uppercase tracking-wider">
+                      Partner Network
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">{doc.distance}</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-900 font-display">{doc.name}</h4>
+                    <p className="text-xs text-medical-600 font-semibold mt-0.5">{doc.specialty}</p>
+                    <p className="text-xs text-slate-500">{doc.clinic}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center gap-2 text-xs text-slate-600">
+                    <Calendar className="w-3.5 h-3.5 text-medical-600 shrink-0" />
+                    <span>{doc.availability}</span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-lg font-bold text-slate-900 font-display">{doc.name}</h4>
-                  <p className="text-xs text-medical-600 font-semibold mt-0.5">{doc.specialty}</p>
-                  <p className="text-xs text-slate-500">{doc.clinic}</p>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center gap-2 text-xs text-slate-600">
-                  <Calendar className="w-3.5 h-3.5 text-medical-600 shrink-0" />
-                  <span>{doc.availability}</span>
-                </div>
-              </div>
 
-              <div className="space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
-                <p className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{doc.address}</span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{doc.phone}</span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>{doc.email}</span>
-                </p>
-              </div>
+                <div className="space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                  <p className="flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{doc.address}</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{doc.phone}</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>{doc.email}</span>
+                  </p>
+                </div>
 
-              <button className="w-full btn-primary text-xs font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-pill">
-                Request Clinical Referral
-                <ExternalLink className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-        </div>
+                <button className="w-full btn-primary text-xs font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-pill">
+                  Request Clinical Referral
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Care Instructions Guidelines */}

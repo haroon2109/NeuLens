@@ -26,8 +26,7 @@ import {
   X,
   type LucideIcon
 } from 'lucide-react';
-import { NeulensLogoMark } from '../../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../../components/NeuLensLogo';
 import { useAuthStore } from '../../../store/authStore';
 import { usePatientPortalStore } from '../../../store/patientPortalStore';
 import { patientPortalApi } from '../../../services/patientPortalApi';
@@ -125,16 +124,10 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
       {/* Brand */}
       <Link
         to="/patient/dashboard"
-        className="flex items-center gap-2.5 px-5 py-5 text-decoration-none"
+        className="flex items-center px-5 py-5 text-decoration-none"
         onClick={onNavigate}
       >
-        <NeulensLogoMark className="h-9 w-9" aria-hidden="true" />
-        <span className="flex flex-col">
-          <NeulensWordmark size="small" />
-          <span className="mt-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
-            {pt.patientPortal}
-          </span>
-        </span>
+        <NeuLensLogo height="h-8" />
       </Link>
 
       {/* User card — mint surface, matching NeuLens identity */}
@@ -148,7 +141,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
               {user?.name || 'Patient'}
             </span>
             <span className="mt-0.5 block font-mono text-[13px] text-muted">
-              {user?.patientId || 'CV-2026-ACTIVE'}
+              {user?.patientId || '—'}
             </span>
           </span>
         </div>
@@ -169,10 +162,9 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
                     end={end}
                     onClick={onNavigate}
                     className={({ isActive }) =>
-                      `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors ${
-                        isActive
-                          ? 'bg-mint text-forest font-semibold'
-                          : 'text-body hover:bg-white/60 hover:text-ink'
+                      `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors ${isActive
+                        ? 'bg-mint text-forest font-semibold'
+                        : 'text-body hover:bg-white/60 hover:text-ink'
                       }`
                     }
                   >

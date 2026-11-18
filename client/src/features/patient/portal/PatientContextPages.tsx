@@ -222,7 +222,7 @@ export const SleepLifestylePage: React.FC = () => {
         <HealthcareScene
           kind="sleeping"
           className="w-full"
-          title="Margaret resting comfortably at home"
+          title="Haroon resting comfortably at home"
         />
       </MotionReveal>
 
@@ -417,7 +417,7 @@ export const MentalWellbeingPage: React.FC = () => {
         <HealthcareScene
           kind="social"
           className="w-full"
-          title="Margaret and Harold sharing time with their caregiver"
+          title="Haroon sharing time with a caregiver"
         />
       </MotionReveal>
 
@@ -479,9 +479,9 @@ export const MentalWellbeingPage: React.FC = () => {
             <p className="text-xs leading-5 text-muted">
               If you feel unsafe or in crisis, contact local emergency services or your hospital support line immediately.
             </p>
-            <a href="tel:+914440001200" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline">
-              <HeartPulse className="h-3.5 w-3.5" /> Hospital support: +91 44 4000 1200
-            </a>
+            <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest">
+              <HeartPulse className="h-3.5 w-3.5" /> Clinical support: Contact your clinic helpline or emergency care
+            </span>
           </Card>
         </div>
       </div>

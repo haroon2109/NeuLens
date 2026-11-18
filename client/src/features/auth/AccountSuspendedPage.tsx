@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { AccountSuspendedState } from '../../components/systemStates';
 import { useAuthStore } from '../../store/authStore';
 
@@ -23,8 +22,7 @@ export const AccountSuspendedPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 px-4 py-12 sm:py-20">
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-8 flex items-center gap-2.5">
-          <NeulensLogoMark />
-          <NeulensWordmark />
+          <NeuLensLogo height="h-10" />
         </div>
 
         <AccountSuspendedState

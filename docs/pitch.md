@@ -1,6 +1,29 @@
 # Pitch
 
-Neulens is a guided, multimodal cognitive screening flow with a clinician-in-the-loop review model and explicit safety constraints. A patient completes a short set of memory, attention, voice, ocular, and facial tasks; the system records structured observations, not a diagnosis; a clinician reviews the same evidence with quality warnings, domain observations, and a deterministic or constrained-draft explanation before anything is shared.
+**Fatima is 68 and screens in March.** Memory, attention, a spoken phrase, a few ocular and
+facial observations, four questions about her week. Nothing is flagged — and nothing is
+supposed to be, because one afternoon cannot tell you whether a person is changing.
+
+**She returns three more times over the next two years.** Language, education, task version
+and sensory access match across all four sittings, so once there are three comparable repeat
+pairs the platform can measure her own session-to-session spread. By the fourth sitting her
+score has fallen further than that spread accounts for — and because the conditions matched,
+the difference is worth acting on. It is not a diagnosis. It is a question her clinician can
+answer: *is this the beginning of something, or was she simply tired that morning?*
+
+That question is the product. Neulens turns a short, guided multimodal screening into a
+structured, explainable record that a clinician reviews and approves. Its most important
+feature is the sentence it refuses to produce: *"you have dementia."*
+
+> Fatima is an illustrative composite, not a real patient record.
+
+## What Neulens is
+
+A guided, multimodal cognitive screening flow with a clinician-in-the-loop review model and
+explicit safety constraints. A patient completes a short set of memory, attention, voice,
+ocular and facial tasks; the system records structured observations, not a diagnosis; a
+clinician reviews the same evidence — quality warnings, domain observations, and a
+deterministic or constrained-draft explanation — before anything is shared.
 
 ## One sentence
 
@@ -20,7 +43,7 @@ Neulens turns a short, guided multimodal screening into a structured, explainabl
 - **Education and sensory access are treated as measurement conditions**, and are visible to the reviewing clinician rather than hidden inside a score.
 - **Family history and consent-gated genomic context are integrated** as source-labelled context, with a hard boundary: NeuLens does not interpret variants or compute genetic risk.
 - **The validation plan is local.** Completion, repeat-session stability, time to clinical review and performance by language, age and education band are computed from recorded data; sensitivity, specificity and cultural validity are named as pending a reference-standard study rather than asserted.
-- **Methodological honesty is visible in the product.** The clinician Assessment Readiness screen lists each language's translation, back-translation, pretesting and sign-off status separately, blocks task administration until all required stages are complete, and lets clinicians record sign-offs. The Arabic task-stimuli pipeline is the headline next milestone, not a hidden caveat.
+- **Methodological honesty is visible in the product.** The clinician Assessment Readiness screen lists each language's translation, back-translation, pretesting and sign-off status separately, requires a recorded participant acknowledgement before an unreviewed language can be administered, and lets clinicians record sign-offs. The Arabic task-stimuli pipeline is the headline next milestone, not a hidden caveat.
 - **Wearable summaries are an optional, consent-gated context source** alongside sleep, activity, wellbeing, clinical, family-history and genomic context; they never change the screening score.
 
 This is a research-stage, safety-first platform with a validation roadmap — not a validated diagnostic tool. Full pilot protocol: `docs/future-health-challenge/VALIDATION_STUDY_PLAN.md`.

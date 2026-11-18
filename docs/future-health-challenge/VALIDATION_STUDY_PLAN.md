@@ -35,8 +35,9 @@ population performance" outcome.
   sensory-access group. Small cells suppressed or reported with caveats.
 
 ## Acceptance criteria before any clinical claim
-- Arabic task stimuli translated, independently back-translated, cognitively
-  pretested with local participants, and signed off by local clinicians.
+- All Arabic task stimuli translated (two items are administered in Arabic today;
+  the rest remain English), independently back-translated, cognitively pretested
+  with local participants, and signed off by local clinicians.
 - ICC >= 0.70 for overall score; sensitivity/specificity with lower CI
   bound >= 0.70 in the target population.
 - Reliable-change thresholds derived and pre-registered, not post-hoc.

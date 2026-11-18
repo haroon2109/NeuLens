@@ -116,7 +116,7 @@ export const LoginPage: React.FC = () => {
               id="auth-identifier"
               type="text"
               autoComplete="username"
-              placeholder="name@example.com or +91 98765 43210"
+              placeholder="name@domain.com or phone number"
               className="portal-input"
               aria-invalid={Boolean(errors.identifier)}
               aria-describedby={errors.identifier ? 'auth-identifier-error' : undefined}

@@ -20,8 +20,7 @@ import {
   Timer,
   Type
 } from 'lucide-react';
-import { NeulensLogoMark } from '../../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../../components/NeuLensLogo';
 import { HealthcareScene } from '../../../components/illustrations/HealthcareScene';
 import { MotionReveal } from '../../../components/motion/Reveal';
 import { useAuthStore } from '../../../store/authStore';
@@ -58,8 +57,7 @@ const OnboardingShell: React.FC<{
     <header className="border-b border-line bg-white">
       <div className="mx-auto flex h-[68px] max-w-5xl items-center justify-between px-4 sm:px-6">
         <Link to="/patient/welcome" className="flex items-center gap-2.5 text-decoration-none" aria-label="NeuLens patient portal">
-          <NeulensLogoMark className="h-9 w-9" aria-hidden="true" />
-          <NeulensWordmark size="small" />
+          <NeuLensLogo height="h-9" />
         </Link>
         {backTo && (
           <Link
@@ -135,7 +133,7 @@ export const PatientWelcomePage: React.FC = () => {
             <HealthcareScene
               kind="registration"
               className="w-full"
-              title="A caregiver helping Margaret begin her NeuLens onboarding"
+              title="A caregiver helping Haroon begin NeuLens onboarding"
               animated={false}
             />
           </MotionReveal>
@@ -181,19 +179,21 @@ export const PatientWelcomePage: React.FC = () => {
           NeuLens identifies changes that may warrant further assessment. It does not diagnose disease or replace professional judgement.
         </p>
         <div className="flex flex-wrap gap-2">
-          {onboardingComplete && (
-            <Link to="/patient/dashboard" className={secondaryButton}>
+          {onboardingComplete ? (
+            <Link to="/patient/dashboard" className={primaryButton}>
               Go to dashboard
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
+          ) : (
+            <button
+              type="button"
+              className={primaryButton}
+              onClick={() => navigate('/patient/onboarding/personal-info')}
+            >
+              Start onboarding
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
           )}
-          <button
-            type="button"
-            className={primaryButton}
-            onClick={() => navigate(onboardingComplete ? '/patient/dashboard' : '/patient/onboarding/personal-info')}
-          >
-            {onboardingComplete ? 'Open my portal' : 'Start onboarding'}
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
         </div>
       </div>
     </OnboardingShell>
@@ -621,7 +621,7 @@ export const ConsentPrivacyPage: React.FC = () => {
             <HealthcareScene
               kind="consent"
               className="w-full"
-              title="Dr. Rahman explaining consent and privacy to Margaret and Harold"
+              title="Dr. Mohamed explaining consent and privacy to Haroon and care partner"
               animated={false}
             />
           </MotionReveal>

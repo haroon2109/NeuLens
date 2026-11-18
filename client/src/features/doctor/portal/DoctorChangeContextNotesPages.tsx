@@ -210,7 +210,7 @@ export const DoctorChangeDetectionPage: React.FC = () => {
               <p className="mt-2 text-xs font-semibold text-slate-800">{confidenceLabel}</p>
               <ul className="mt-2 space-y-1.5 text-xs leading-4 text-body">
                 <li>• Comparison uses {comparable} comparable session{comparable === 1 ? '' : 's'}.</li>
-                <li>• {quality.comparable ? 'Latest session meets comparability criteria.' : 'Latest session has limited comparability.'}</li>
+                <li>• {quality.comparable === true ? 'Latest session meets comparability criteria.' : quality.comparable === false ? 'Latest session has limited comparability.' : 'Comparability was not recorded for the latest session.'}</li>
                 <li>• A single out-of-range observation is not proof of persistent change.</li>
                 <li>• Sleep, stress, medication timing, and environment can affect performance.</li>
               </ul>
@@ -218,14 +218,14 @@ export const DoctorChangeDetectionPage: React.FC = () => {
 
             <Card>
               <h2 className="text-[14px] font-semibold text-ink">Quality warnings</h2>
-              {quality.comparable && quality.completion === 'FULL' ? (
+              {quality.comparable === true && quality.completion === 'FULL' ? (
                 <p className="mt-2 flex items-start gap-1.5 text-xs leading-4 text-emerald-800">
                   <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" /> No session-quality warning is recorded for the latest assessment.
                 </p>
               ) : (
                 <ul className="mt-2 space-y-1.5 text-xs leading-4 text-amber-800">
-                  {!quality.comparable && <li>• Limited comparability; trend interpretation is suppressed.</li>}
-                  {quality.completion !== 'FULL' && <li>• Session completion: {quality.completion.toLowerCase()}.</li>}
+                  {quality.comparable === false && <li>• Limited comparability; trend interpretation is suppressed.</li>}
+                  {quality.completion && quality.completion !== 'FULL' && <li>• Session completion: {quality.completion.toLowerCase()}.</li>}
                   {quality.audio === 'POOR' && <li>• Poor audio quality may limit vocal measures.</li>}
                   {quality.video === 'POOR' && <li>• Poor video quality may limit ocular and facial measures.</li>}
                 </ul>

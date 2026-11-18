@@ -15,8 +15,7 @@ import {
 } from 'lucide-react';
 import { patientApi } from '../../services/portalApi';
 import { useAuthStore } from '../../store/authStore';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { PortalIllustration } from '../../components/PortalIllustration';
 
 export const PatientRegisterPage: React.FC = () => {
@@ -88,8 +87,7 @@ export const PatientRegisterPage: React.FC = () => {
     <div className="portal-login-page portal-registration-page">
       <header className="portal-login-header">
         <Link to="/patient" className="portal-brand" aria-label="NeuLens patient portal home">
-          <NeulensLogoMark className="h-9 w-9" />
-          <NeulensWordmark size="small" />
+          <NeuLensLogo height="h-9" />
         </Link>
         <Link to="/patient" className="portal-back-link">
           <ArrowLeft className="h-4 w-4" />
@@ -155,7 +153,7 @@ export const PatientRegisterPage: React.FC = () => {
                     max="120"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    placeholder="e.g. 72"
+                    placeholder="e.g. 62"
                     className="portal-input"
                   />
                 </div>

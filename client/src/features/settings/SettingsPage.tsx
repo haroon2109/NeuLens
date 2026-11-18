@@ -28,8 +28,8 @@ export const SettingsPage: React.FC = () => {
   const [voiceGuidance, setVoiceGuidance] = useState(true);
   const [audioSpeed, setAudioSpeed] = useState<'normal' | 'slow'>('slow');
   const [cameraResolution, setCameraResolution] = useState('720p');
-  const [clinicName, setClinicName] = useState('Metro Neurosciences Center - Cognitive Health OPD');
-  const [clinicianName, setClinicianName] = useState('Dr. Sharma, MD, DM (Neurology)');
+  const [clinicName, setClinicName] = useState('');
+  const [clinicianName, setClinicianName] = useState('');
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();

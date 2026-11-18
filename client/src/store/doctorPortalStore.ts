@@ -2,7 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type DocumentStatus = 'MISSING' | 'UPLOADED' | 'VERIFIED' | 'REJECTED';
-export type VerificationStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'SUBMITTED' | 'VERIFIED' | 'REJECTED';
+export type VerificationStatus =
+  | 'NOT_STARTED'
+  | 'NOT_SUBMITTED'
+  | 'IN_PROGRESS'
+  | 'SUBMITTED'
+  | 'VERIFIED'
+  | 'REJECTED';
 
 export interface DoctorProfile {
   ownerEmail: string;
@@ -198,36 +204,24 @@ const nowIso = () => new Date().toISOString();
 export const useDoctorPortalStore = create<DoctorPortalState>()(
   persist(
     (set) => ({
-      onboardingComplete: true,
+      onboardingComplete: false,
       profile: {
-        ownerEmail: 'dr.sharma@cognivision.ai',
-        fullName: 'Dr. Sarah Sharma',
-        professionalEmail: 'dr.sharma@cognivision.ai',
-        phone: '+91 44 4000 1200',
-        medicalRegistrationNumber: 'MCI-2011-44821',
-        qualification: 'MBBS, MD, DM (Neurology)',
-        specialization: 'Neurology',
-        yearsExperience: 14
+        ownerEmail: '',
+        fullName: '',
+        professionalEmail: '',
+        phone: '',
+        medicalRegistrationNumber: '',
+        qualification: '',
+        specialization: '',
+        yearsExperience: 0
       },
-      verificationStatus: 'VERIFIED',
+      verificationStatus: 'NOT_SUBMITTED',
       documents: {
-        medicalCertificate: {
-          name: 'medical-registration-certificate.pdf',
-          uploadedAt: '2024-02-12T10:00:00.000Z',
-          status: 'VERIFIED'
-        },
-        identity: {
-          name: 'identity-verification.pdf',
-          uploadedAt: '2024-02-12T10:02:00.000Z',
-          status: 'VERIFIED'
-        },
-        hospitalAffiliation: {
-          name: 'neulens-affiliation-letter.pdf',
-          uploadedAt: '2024-02-12T10:04:00.000Z',
-          status: 'VERIFIED'
-        }
+        medicalCertificate: { name: '', uploadedAt: null, status: 'MISSING' },
+        identity: { name: '', uploadedAt: null, status: 'MISSING' },
+        hospitalAffiliation: { name: '', uploadedAt: null, status: 'MISSING' }
       },
-      identityReference: 'Government ID ending 4821',
+      identityReference: '',
       clinic: {
         // No fabricated clinic identity. These fields are completed during clinic
         // onboarding and deployment configuration; empty values are shown as
@@ -418,9 +412,9 @@ export const useDoctorPortalStore = create<DoctorPortalState>()(
 );
 
 export const doctorPortalDefaults = {
-  clinicianName: 'Dr. Sarah Sharma',
+  clinicianName: '',
   clinicianRole: 'Consultant Neurologist',
-  hospital: 'Neulens General Hospital',
+  hospital: '',
   department: 'Neurology & Cognitive Health'
 };
 

@@ -457,7 +457,7 @@ export const AddPatientPage: React.FC = () => {
                       ? current.invitationEmail
                       : email
                 }));
-              }} className={fieldClass} placeholder="patient@example.com" />
+              }} className={fieldClass} placeholder="patient@domain.com" />
             </div>
             <div>
               <label htmlFor="add-phone" className={labelClass}>Phone</label>

@@ -6,12 +6,11 @@ import { computePlatformInsights } from '../services/platformInsights';
 import { isDemoAssessment } from '../services/demoRecords';
 
 /**
- * The jury demo ships a fictional patient with fictional history. That history is
- * useful in the demo workspace and poisonous in every aggregate: a made-up record
- * silently moves patient counts, comparability rates and reliability estimates,
- * and is indistinguishable from real data once it is in there.
+ * The jury demo ships fictional sign-in accounts. No screening history is
+ * seeded for them: a made-up record is indistinguishable from a real one once
+ * it is in the store, so the portals must only ever show measured sessions.
  */
-describe('Fictional demo records never enter clinical aggregates', () => {
+describe('Fictional demo accounts never enter clinical aggregates', () => {
   seedDemoAccess();
 
   it('hides the demo patient from a clinical patient directory by default', async () => {
@@ -28,7 +27,7 @@ describe('Fictional demo records never enter clinical aggregates', () => {
     );
   });
 
-  it('does not count demo sessions in dashboard statistics', async () => {
+  it('seeds no assessments, scores or sensor measurements for the demo accounts', async () => {
     const clinical = await HospitalDataStore.getDoctorDashboardStats();
     const demoWorkspace = await HospitalDataStore.getDoctorDashboardStats({ includeDemo: true });
 
@@ -38,8 +37,8 @@ describe('Fictional demo records never enter clinical aggregates', () => {
     assert.deepStrictEqual(clinical.recentAssessments, []);
     assert.deepStrictEqual(clinical.changeReviewQueue, []);
 
-    assert.ok(demoWorkspace.totalPatients >= 1);
-    assert.ok(demoWorkspace.completedAssessments >= 1);
+    assert.strictEqual(demoWorkspace.completedAssessments, 0);
+    assert.deepStrictEqual(demoWorkspace.recentAssessments, []);
   });
 
   it('keeps platform insights empty when only demo data exists', async () => {

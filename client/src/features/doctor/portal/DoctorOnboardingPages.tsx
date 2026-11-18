@@ -21,8 +21,7 @@ import {
   Trash2,
   UserRound
 } from 'lucide-react';
-import { NeulensLogoMark } from '../../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../../components/NeuLensLogo';
 import { useAuthStore } from '../../../store/authStore';
 import { useDoctorPortalStore } from '../../../store/doctorPortalStore';
 import { Card, DoctorPageHeader, Notice, fieldClass, labelClass, primaryButton, secondaryButton } from './ui';
@@ -51,13 +50,10 @@ const DoctorOnboardingShell: React.FC<{
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <NeulensLogoMark className="h-9 w-9" />
-            <span>
-              <NeulensWordmark size="small" />
+            <NeuLensLogo height="h-9" />
               <span className="mt-0.5 block text-xs font-semibold uppercase tracking-[0.12em] text-muted">
                 Clinical workspace setup
               </span>
-            </span>
           </Link>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-body">
@@ -165,8 +161,7 @@ export const DoctorRegistrationPage: React.FC = () => {
 
   const profileMatchesUser =
     !profile.ownerEmail ||
-    profile.ownerEmail === user?.email ||
-    (profile.ownerEmail === 'dr.sharma@cognivision.ai' && Boolean(user?.email.includes('sharma') || user?.email === 'doctor@hospital.local'));
+    profile.ownerEmail === user?.email;
 
   const [form, setForm] = useState({
     fullName: profileMatchesUser ? profile.fullName : user?.name || '',
@@ -265,7 +260,7 @@ export const DoctorRegistrationPage: React.FC = () => {
             <label htmlFor="doctor-registration" className={labelClass}>Medical registration number</label>
             <div className="relative">
               <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-              <input id="doctor-registration" value={form.medicalRegistrationNumber} onChange={(event) => update('medicalRegistrationNumber', event.target.value)} className={`${fieldClass} pl-9`} placeholder="e.g. MCI-2011-44821" />
+              <input id="doctor-registration" value={form.medicalRegistrationNumber} onChange={(event) => update('medicalRegistrationNumber', event.target.value)} className={`${fieldClass} pl-9`} placeholder="e.g. REG-2026-001" />
             </div>
           </div>
           <div>

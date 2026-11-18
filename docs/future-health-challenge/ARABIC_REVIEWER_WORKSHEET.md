@@ -4,9 +4,10 @@ Status of item 2 ("Linguistic/cultural review: have UAE-based Arabic
 (MSA/Gulf/Emirati as appropriate) reviewers and clinicians adapt wording,
 stimuli, and examples for local comprehension and cultural fit").
 
-This worksheet lists every user-facing English string that currently ships
-in the Arabic (`ar-AE`) build, grouped by surface, so a UAE-based reviewer
-can forward-review, back-translate, and sign off. **No review has been
+This worksheet lists the user-facing strings that currently ship in the Arabic
+(`ar-AE`) build — both the Arabic copy that needs review and the English copy
+still awaiting translation — grouped by surface, so a UAE-based reviewer can
+forward-review, back-translate, and sign off. **No review has been
 performed yet**; all rows are PENDING. Do not flip `ARABIC_ENABLED` or
 claim Arabic readiness until a reviewer signs the columns below.
 
@@ -43,10 +44,32 @@ IDs P-NAV-01.. already covered by the `ar` block. Reviewer focus:
   confirm local comprehension.
 - TTS voice (`ar-SA`/`ar-AE` depending on browser) — confirm intelligibility.
 
-## E. Cognitive task instructions (English-only today)
-- Task intros, "look at the screen", button labels. These are NOT yet
-  translated; Arabic task administration is not validated. Mark as
-  `NOT_TRANSLATED` until translated and reviewed.
+## E. Cognitive task wording in the main battery (partly Arabic today)
+
+The registry (`server/src/services/assessmentLanguageReadiness.ts`) is the source
+of truth for this section. Two items are already administered in Arabic and are
+therefore **live, unreviewed copy** — they are the highest-priority rows here,
+because a participant hears or reads them verbatim.
+
+**Administered in Arabic — review targets, not approved wording**
+- Spoken-repeat (verbal recall) sentence — `getTargetSentence()` in
+  `client/src/features/screening/ScreeningPage.tsx`. Record an independent
+  back-translation for this sentence specifically; it is the stimulus the
+  participant repeats and it drives the acoustic comparison.
+- Piano-sequencing instructions — all copy in
+  `client/src/features/screening/PianoSequenceTask.tsx` (badge, title, intro,
+  watch/turn/correct/incorrect messages, round counter, buttons, refusal note).
+
+**Still English**
+- Activity titles and step headers ("Activity 1 of 5: …"), the other task intros
+  and prompts, button labels, and the screen-reader status announcements.
+  These are `NOT_TRANSLATED`; mark them so in the table below rather than treating
+  the section as translated.
+
+This split is why `stimulus_translation` is `DONE` while
+`taskAdministrationReady` remains false: translation of the two items above does
+not make the battery reviewable, and administration stays gated on
+back-translation, cognitive pretesting and local clinical sign-off.
 
 ## F. Clinician-facing (doctor portal)
 - Doctor portal is English-only by design (`dir="ltr"`). No Arabic

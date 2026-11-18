@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useFaceTrackingStore } from '../store/faceTrackingStore';
-import { NeulensLogoMark } from '../components/NeulensLogoMark';
-import { NeulensWordmark } from '../components/NeulensWordmark';
+import { NeuLensLogo } from '../components/NeuLensLogo';
 import { ClinicalIllustration } from '../components/ClinicalIllustration';
 import { 
   LayoutDashboard, 
@@ -58,7 +57,11 @@ export const DashboardLayout: React.FC = () => {
   // Helper for dynamic header title & description
   const getHeaderContext = () => {
     const p = location.pathname;
-    const name = user?.firstName ? `Dr. ${user.lastName || user.firstName}` : 'Dr. Sharma';
+    const name = user?.firstName
+      ? `Dr. ${user.lastName || user.firstName}`
+      : user?.name
+        ? (user.name.startsWith('Dr.') ? user.name : `Dr. ${user.name}`)
+        : 'Doctor';
     
     if (p === '/dashboard' || p === '/dashboard/') {
       return {
@@ -144,13 +147,7 @@ export const DashboardLayout: React.FC = () => {
             {/* Logo Brand Header */}
             <div className="flex items-center justify-between px-2 pt-2">
               <Link to="/dashboard" className="flex items-center gap-3 group">
-                <NeulensLogoMark className="group-hover:scale-105 transition-transform" />
-                <div>
-                  <NeulensWordmark size="small" className="block" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-sky-600 block">
-                    Cognitive health screening
-                  </span>
-                </div>
+                <NeuLensLogo height="h-8" className="group-hover:scale-105 transition-transform" />
               </Link>
 
               {/* Close button on mobile */}
@@ -255,13 +252,19 @@ export const DashboardLayout: React.FC = () => {
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold font-display text-xs flex items-center justify-center shrink-0 border border-sky-200">
-                  {user ? `${user.firstName?.[0] || 'D'}${user.lastName?.[0] || 'S'}` : 'DS'}
+                  {user?.firstName
+                    ? `${user.firstName[0]}${user.lastName?.[0] || ''}`
+                    : user?.name
+                      ? user.name.slice(0, 2).toUpperCase()
+                      : 'DR'}
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-slate-800 truncate">
-                    {user ? `${user.firstName} ${user.lastName}` : 'Dr. Sharma'}
+                    {user
+                      ? `${user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.name || 'Doctor'}`
+                      : 'Doctor'}
                   </p>
-                  <p className="text-xs text-slate-400 truncate">Lead Neurologist</p>
+                  <p className="text-xs text-slate-400 truncate">Clinician</p>
                 </div>
               </div>
 

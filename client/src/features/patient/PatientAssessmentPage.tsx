@@ -86,7 +86,7 @@ export const PatientAssessmentPage: React.FC = () => {
     xlarge: 'text-xl [&_h1]:text-5xl [&_h2]:text-4xl [&_p]:text-xl [&_button]:text-lg [&_button]:py-5'
   };
 
-  const patientId = user?.patientId || 'CV-2026-ACTIVE';
+  const patientId = user?.patientId || '';
 
   const currentStep = useScreeningStore((state) => state.currentStep);
 

@@ -6,8 +6,7 @@ import { useAuthStore } from '../store/authStore';
 import { useDoctorPortalStore } from '../store/doctorPortalStore';
 import { deploymentConfig } from '../config/deployment';
 import { doctorApi } from '../services/portalApi';
-import { NeulensLogoMark } from '../components/NeulensLogoMark';
-import { NeulensWordmark } from '../components/NeulensWordmark';
+import { NeuLensLogo } from '../components/NeuLensLogo';
 import { ClinicalIllustration } from '../components/ClinicalIllustration';
 import {
   BarChart3,
@@ -105,15 +104,7 @@ const SidebarContent: React.FC<{
     {/* Brand */}
     <div className={`flex items-center px-4 py-5 ${collapsed ? 'justify-center' : 'justify-between'}`}>
       <Link to="/doctor/dashboard" className="flex items-center gap-2.5" onClick={onNavigate}>
-        <NeulensLogoMark className="h-9 w-9" />
-        {!collapsed && (
-          <span className="flex flex-col">
-            <NeulensWordmark size="small" />
-            <span className="mt-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
-              Clinical workspace
-            </span>
-          </span>
-        )}
+        <NeuLensLogo height="h-8" hideText={collapsed} />
       </Link>
       {!collapsed && !onNavigate && (
         <button

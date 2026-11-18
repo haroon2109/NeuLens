@@ -14,8 +14,7 @@ import {
   UserRoundCheck,
   UserRoundPlus,
 } from 'lucide-react';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { ElderCareMascot } from '../../components/ElderCareMascot';
 import { MotionReveal } from '../../components/motion/Reveal';
 
@@ -33,25 +32,32 @@ export const PatientHubPage: React.FC = () => {
     <div className="flex min-h-screen flex-col bg-warm text-ink selection:bg-mint selection:text-forest">
       <header className="sticky top-0 z-30 border-b border-line/80 bg-warm/90 backdrop-blur">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8">
-          <Link to="/patient" className="flex items-center gap-3" aria-label="Neulens patient portal">
-            <NeulensLogoMark className="h-10 w-10" />
-            <div className="flex flex-col gap-0.5">
-              <NeulensWordmark size="medium" />
-              <span className="flex items-center gap-1.5 text-xs font-medium text-muted">
-                <Building2 className="h-3 w-3 text-sage-deep" aria-hidden="true" />
-                Patient screening
-              </span>
-            </div>
+          <Link to="/" className="flex items-center gap-3" aria-label="NeuLens home">
+            <NeuLensLogo height="h-9" />
+            <span className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-muted">
+              <Building2 className="h-3 w-3 text-sage-deep" aria-hidden="true" />
+              Patient screening
+            </span>
           </Link>
 
-          <Link
-            to="/doctor/login"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line bg-white px-3 text-[14px] font-semibold text-ink transition hover:border-sage-dark hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
-          >
-            <Stethoscope className="h-4 w-4 text-sage-deep" aria-hidden="true" />
-            <span className="hidden sm:inline">Staff sign in</span>
-            <span className="sm:hidden">Staff</span>
-          </Link>
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <Link
+              to="/patient/login"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-forest px-4 text-[14px] font-semibold text-white shadow-pill transition hover:bg-forest-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+            >
+              <UserRoundCheck className="h-4 w-4" aria-hidden="true" />
+              <span>Patient login</span>
+            </Link>
+
+            <Link
+              to="/doctor/login"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line bg-white px-3 text-[14px] font-semibold text-ink transition hover:border-sage-dark hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+            >
+              <Stethoscope className="h-4 w-4 text-sage-deep" aria-hidden="true" />
+              <span className="hidden sm:inline">Staff sign in</span>
+              <span className="sm:hidden">Staff</span>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -101,7 +107,7 @@ export const PatientHubPage: React.FC = () => {
             </div>
           </MotionReveal>
 
-          <MotionReveal delay={120} className="mx-auto w-full max-w-[510px] lg:ml-auto">
+          <MotionReveal delay={0.06} className="mx-auto w-full max-w-[510px] lg:ml-auto">
             <div className="rounded-2xl border border-line bg-white p-5 shadow-card sm:p-8">
               <div className="mb-6">
                 <p className="pp-eyebrow">Patient portal</p>

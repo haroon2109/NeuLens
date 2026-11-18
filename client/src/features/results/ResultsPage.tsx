@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useScreeningStore } from '../../store/screeningStore';
+import { useAuthStore } from '../../store/authStore';
 import {
   Legend,
   PolarAngleAxis,
@@ -35,6 +36,7 @@ import {
 } from 'recharts';
 
 export const ResultsPage: React.FC = () => {
+  const { user } = useAuthStore();
   const { scores, biometricMetrics } = useScreeningStore();
   const compositeScore = scores.compositeScore;
   if (compositeScore === null || compositeScore <= 0 || !biometricMetrics) {
@@ -79,7 +81,7 @@ export const ResultsPage: React.FC = () => {
             Screening Results & Biometrics
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Subject ID: <strong className="text-slate-800">P-1024 (Jane Doe, 75y F)</strong> • Examined on {new Date().toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), { month: 'short', day: 'numeric', year: 'numeric' })}
+            Subject ID: <strong className="text-slate-800">{user?.patientId || 'CV-2026-HAROON'} ({user?.name || 'Haroon'}, {user?.age || 62}y {user?.gender === 'FEMALE' ? 'F' : 'M'})</strong> • Examined on {new Date().toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
 

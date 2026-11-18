@@ -96,7 +96,7 @@ export const AppointmentsPage: React.FC = () => {
         <HealthcareScene
           kind="followup"
           className="w-full"
-          title="Margaret meeting Dr. Rahman for a follow-up consultation"
+          title="Haroon meeting Dr. Mohamed for a follow-up consultation"
         />
       </MotionReveal>
 
@@ -198,8 +198,23 @@ export const AppointmentsPage: React.FC = () => {
             <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
             <p className="mt-0.5 text-xs text-muted">{treatmentTeam.role}</p>
             <dl className="mt-3 space-y-2 text-xs">
-              <div className="flex gap-2"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" /><dd className="text-body">{treatmentTeam.institution}<br />{treatmentTeam.department}<br />Block B, Suite 400</dd></div>
-              <div className="flex items-center gap-2"><Stethoscope className="h-3.5 w-3.5 text-muted" /><dd className="text-body">{treatmentTeam.phone}</dd></div>
+              {(treatmentTeam.institution || treatmentTeam.department) && (
+                <div className="flex gap-2">
+                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" />
+                  <dd className="text-body">
+                    {treatmentTeam.institution && (
+                      <>
+                        {treatmentTeam.institution}
+                        {treatmentTeam.department && <br />}
+                      </>
+                    )}
+                    {treatmentTeam.department}
+                  </dd>
+                </div>
+              )}
+              {treatmentTeam.phone && (
+                <div className="flex items-center gap-2"><Stethoscope className="h-3.5 w-3.5 text-muted" /><dd className="text-body">{treatmentTeam.phone}</dd></div>
+              )}
             </dl>
             <div className="mt-3 flex flex-wrap gap-2">
               <a href={`mailto:${treatmentTeam.email}`} className={secondaryButton}>Email clinic</a>
@@ -240,7 +255,7 @@ export const CarePlanPage: React.FC = () => {
         <HealthcareScene
           kind="walkingOutdoors"
           className="w-full"
-          title="Margaret taking a gentle walk outdoors with her caregiver"
+          title="Haroon taking a gentle walk outdoors with a caregiver"
         />
       </MotionReveal>
 

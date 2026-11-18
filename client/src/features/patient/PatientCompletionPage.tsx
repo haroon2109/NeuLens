@@ -13,8 +13,7 @@ import {
 import { useAuthStore } from '../../store/authStore';
 import { formatDate, formatTime } from './portal/ui';
 import { deploymentConfig } from '../../config/deployment';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { ClinicalIllustration } from '../../components/ClinicalIllustration';
 import { patientApi } from '../../services/portalApi';
 
@@ -32,7 +31,7 @@ export const PatientCompletionPage: React.FC = () => {
         // Fallback using authenticated user session
         if (user) {
           setCardData({
-            patientId: user.patientId || 'CV-2026-ACTIVE',
+            patientId: user.patientId || '',
             patientName: user.name || 'Valued Patient',
             registeredDate: new Date(),
             language: user.language || 'en',
@@ -43,7 +42,7 @@ export const PatientCompletionPage: React.FC = () => {
       });
   }, [user]);
 
-  const displayId = cardData?.patientId || user?.patientId || 'CV-2026-ACTIVE';
+  const displayId = cardData?.patientId || user?.patientId || '—';
   const displayName = cardData?.patientName || user?.name || 'Valued Patient';
   const completionDate = formatDate(new Date(), { month: 'long', day: 'numeric', year: 'numeric' });
   const completionTime = formatTime(new Date());
@@ -67,8 +66,8 @@ INSTRUCTIONS FOR PATIENT:
 3. Your assessment responses have been securely transmitted
    for licensed medical review.
 
-Neulens Hospital Medical Center
-Department of Neurology & Cognitive Health
+NeuLens screening session — patient confirmation
+Not a diagnosis. Screening support for clinician review.
 =====================================================`;
 
     const blob = new Blob([slipText], { type: 'text/plain;charset=utf-8' });
@@ -123,11 +122,8 @@ Department of Neurology & Cognitive Health
             
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
-                <NeulensLogoMark className="h-8 w-8 rounded-lg" />
-                <div>
-                  <NeulensWordmark size="small" className="block" />
+                <NeuLensLogo height="h-8" />
                   <span className="text-xs text-muted font-medium">Hospital Patient ID Confirmation</span>
-                </div>
               </div>
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                 Completed
@@ -212,7 +208,7 @@ Department of Neurology & Cognitive Health
 
       {/* Footer */}
       <footer className="text-center text-xs text-muted mt-8">
-        Neulens Hospital Medical Center &bull; Department of Neurology & Cognitive Health
+        NeuLens &bull; Screening support, not a diagnosis
       </footer>
 
     </div>

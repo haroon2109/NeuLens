@@ -66,4 +66,4 @@ UAE deployment; each line is either `DONE (code)` or `PENDING (human/legal)`.
 ## F. Clinical evidence
 - [BLOCKED] No licensed Arabic screener integrated, no reliability study,
   no pilot, no sensitivity/specificity. Do not claim suitability or
-  validation until evidenced. See `README.md` "Known defects".
+  validation until evidenced. See `README.md` "Limitations and how they are enforced".

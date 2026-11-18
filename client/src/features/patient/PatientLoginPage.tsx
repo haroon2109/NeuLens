@@ -18,8 +18,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useLanguageStore } from '../../services/language/LanguageManager';
 import { DemoAccessPanel } from '../auth/DemoAccessPanel';
 import { SupportedLanguage } from '../../services/language/types';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
-import { NeulensWordmark } from '../../components/NeulensWordmark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { PortalIllustration } from '../../components/PortalIllustration';
 
 const patientLoginSchema = z.object({
@@ -79,8 +78,7 @@ export const PatientLoginPage: React.FC = () => {
     <div className="portal-login-page">
       <header className="portal-login-header">
         <Link to="/patient" className="portal-brand" aria-label="NeuLens patient portal home">
-          <NeulensLogoMark className="h-9 w-9" />
-          <NeulensWordmark size="small" />
+          <NeuLensLogo height="h-9" />
         </Link>
         <Link to="/patient" className="portal-back-link">
           <ArrowLeft className="h-4 w-4" />

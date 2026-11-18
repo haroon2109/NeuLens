@@ -99,23 +99,26 @@ of the sequence below is where they belong.
 Each instrument × language must pass through: forward translation → independent
 back-translation → reconciliation by a bilingual clinician → cognitive
 pretesting with representative participants → local clinical review → documented
-approval. Until a row is approved, the language is offered for navigation and
-consent only, and the assessment is administered in English.
+approval. Until a row is approved, the language is offered for navigation, consent
+and results; the assessment is administered in English except for the Arabic items
+named in the table below, which are already delivered but unreviewed.
 
 | Language | Portal UI | Consent | Results | Task instructions / stimuli | Status |
 | --- | --- | --- | --- | --- | --- |
 | English | Yes | Yes | Yes | Yes | In use (research build) |
-| Arabic (ar-AE) | Yes (RTL) | Yes | Yes | No — pending back-translation, pretesting, clinical review | Partially adapted |
+| Arabic (ar-AE) | Yes (RTL) | Yes | Yes | Partial — the spoken-repeat sentence and the piano-sequencing instructions are Arabic; the remaining task copy is English. Back-translation, pretesting and clinical review pending | Partially adapted |
 | Tamil | Yes | Yes | Yes | No — pending | Partially adapted |
 | Hindi | Yes | Yes | Yes | No — pending | Partially adapted |
 | Telugu | Yes | Yes | Yes | No — pending | Partially adapted |
 | Kannada | Yes | Yes | Yes | No — pending | Partially adapted |
 | Malayalam | Yes | Yes | Yes | No — pending | Partially adapted |
 
-**Spoken Arabic:** the configured speech provider has no reviewed Arabic voice in
-this build. Arabic sessions show on-screen instructions and do not send Arabic
-text to a different-language voice. A reviewed Arabic voice is a prerequisite for
-spoken Arabic administration.
+**Spoken Arabic:** Gnani Arabic output (`ar-AE`, voice `Zahira`) is configured, but
+the voice has not been clinically reviewed. Arabic speech *input* is not transcribed
+— `isArabicVoiceAvailable()` returns false — so an Arabic spoken response falls back
+to on-screen text rather than being routed to a different-language recogniser.
+Reviewed Arabic output and Arabic transcription are both prerequisites for spoken
+Arabic administration.
 
 ## 6. Ethics, governance and reporting
 

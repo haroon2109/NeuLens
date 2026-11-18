@@ -168,7 +168,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             autoComplete="name"
             value={form.name.value}
             onChange={(event) => update('name', event.target.value)}
-            placeholder="Dr. Amina Rahman"
+            placeholder="Dr. Mohamed"
             className="lp-input"
             aria-describedby={form.name.error ? 'demo-name-error' : undefined}
             aria-invalid={form.name.error ? true : undefined}

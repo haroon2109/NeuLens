@@ -29,7 +29,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-slate-50 text-slate-800">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-slate-50 text-slate-800">
       {/* First focusable element: jump past the page shell to the content. */}
       <a
         href="#main-content"
@@ -38,9 +38,11 @@ export const AppLayout: React.FC = () => {
         Skip to content
       </a>
 
-      {/* Decorative subtle medical ambient glows */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-sky-400/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+      {/* Decorative subtle medical ambient glows — clipped to avoid document scroll overflow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-32 -right-32 h-[30rem] w-[30rem] rounded-full bg-sky-400/5 blur-[120px]" />
+        <div className="absolute -bottom-32 -left-32 h-[30rem] w-[30rem] rounded-full bg-blue-500/5 blur-[120px]" />
+      </div>
       
       {/* tabIndex so route changes can move focus here; the outline is
           suppressed because this is a container, not an interactive target. */}

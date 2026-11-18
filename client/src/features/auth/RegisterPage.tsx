@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { NeulensLogoMark } from '../../components/NeulensLogoMark';
+import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { ShieldCheck, User, Calendar, BookOpen, ChevronRight, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,25 +32,8 @@ export const RegisterPage: React.FC = () => {
     }
   });
 
-  const onSubmit = async (data: RegisterFormFields) => {
-    const mockUser = {
-      id: `demo-patient-${Date.now()}`,
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      role: 'PATIENT' as const,
-      profile: {
-        gender: 'MALE',
-        primaryLanguage: 'English',
-        educationYears: data.educationYears,
-        handedness: data.handedness,
-        medicalHistory: {}
-      }
-    };
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    login(mockUser);
-    navigate('/dashboard');
+  const onSubmit = async () => {
+    navigate('/patient/register');
   };
 
   return (
@@ -58,7 +41,7 @@ export const RegisterPage: React.FC = () => {
       <div className="w-full max-w-lg bg-white border border-slate-200/80 rounded-3xl p-8 space-y-6 shadow-card">
         {/* Header */}
         <div className="text-center space-y-2">
-          <NeulensLogoMark className="mx-auto h-12 w-12" />
+          <NeuLensLogo height="h-12" className="mx-auto" />
           <h2 className="font-display text-2xl font-bold text-slate-900">Patient Registration</h2>
           <p className="text-xs text-slate-500">Demographic parameters calibrate age and education-adjusted normative baselines</p>
         </div>
@@ -73,7 +56,7 @@ export const RegisterPage: React.FC = () => {
               <Input
                 type="text"
                 {...register('firstName')}
-                placeholder="Jane"
+                placeholder="First name"
                 aria-invalid={Boolean(errors.firstName)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 transition-all"
               />
@@ -89,7 +72,7 @@ export const RegisterPage: React.FC = () => {
               <Input
                 type="text"
                 {...register('lastName')}
-                placeholder="Doe"
+                placeholder="Last name"
                 aria-invalid={Boolean(errors.lastName)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 transition-all"
               />
@@ -106,7 +89,7 @@ export const RegisterPage: React.FC = () => {
             <Input
               type="email"
               {...register('email')}
-              placeholder="jane.doe@example.com"
+              placeholder="your.email@domain.com"
               aria-invalid={Boolean(errors.email)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-medical-500/20 focus:border-medical-500 transition-all"
             />

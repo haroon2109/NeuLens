@@ -159,15 +159,19 @@ export const useDoctorPatient = (patientId?: string) => {
   };
 };
 
+/**
+ * Session quality as recorded. A session that never recorded quality must not
+ * be presented as good, complete or comparable, so absent values stay null.
+ */
 export const getQuality = (assessment?: DoctorAssessment | null) => {
   const quality = assessment?.taskResponses?.quality || {};
   return {
-    audio: quality.audio || 'GOOD',
-    video: quality.video || 'GOOD',
-    completion: quality.completion || 'FULL',
-    comprehension: quality.comprehension || 'CLEAR',
-    interruptions: quality.interruptions ?? 0,
-    comparable: quality.comparable !== false
+    audio: quality.audio ?? null,
+    video: quality.video ?? null,
+    completion: quality.completion ?? null,
+    comprehension: quality.comprehension ?? null,
+    interruptions: typeof quality.interruptions === 'number' ? quality.interruptions : null,
+    comparable: typeof quality.comparable === 'boolean' ? quality.comparable : null
   };
 };
 
@@ -242,13 +246,22 @@ export const domainObservations = (assessment?: DoctorAssessment | null) => {
         { label: 'Trail-making time', value: tasks.task5?.trailBCompletionSec !== undefined ? `${tasks.task5.trailBCompletionSec}s` : 'Missing' },
         { label: 'Sequencing errors', value: tasks.task5?.sequencingErrors !== undefined ? String(tasks.task5.sequencingErrors) : 'Missing' },
         { label: 'Task completion', value: assessment ? `${taskStatus(assessment).filter((task) => task.complete).length} of 5` : 'Missing' },
-        { label: 'Session quality', value: getQuality(assessment).comparable ? 'Comparable' : 'Limited' }
+        {
+          label: 'Session quality',
+          value:
+            getQuality(assessment).comparable === null
+              ? 'Not recorded'
+              : getQuality(assessment).comparable
+                ? 'Comparable'
+                : 'Limited'
+        }
       ]
     }
   ];
 };
 
-export const qualityLabel = (value: string) => {
+export const qualityLabel = (value: string | null | undefined) => {
+  if (!value) return 'Not recorded';
   switch (value) {
     case 'GOOD':
       return 'Good';

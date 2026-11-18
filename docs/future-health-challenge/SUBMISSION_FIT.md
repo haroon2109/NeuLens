@@ -27,13 +27,15 @@ and defended in front of judges.
 - Large touch targets, scalable typography, high-contrast mode, spoken guidance and repeat/help controls.
 - Accommodations (vision, hearing, motor, digital familiarity) are **recorded per session and enforced in comparability**, so a session completed with help is not silently compared with an unassisted one.
 - Every session stores the language it was administered in. Changing language affects new sessions only.
-- **Clinician Assessment Readiness screen** (`/doctor/assessment-readiness`) shows, per language, the separate status of portal interface, consent, results, task translation, independent back-translation, cognitive pretesting, local clinical sign-off and spoken voice. Task administration is blocked for every language whose required stages are incomplete, and Arabic is surfaced explicitly rather than buried in documentation.
+- **Clinician Assessment Readiness screen** (`/doctor/assessment-readiness`) shows, per language, the separate status of portal interface, consent, results, task translation, independent back-translation, cognitive pretesting, local clinical sign-off and spoken voice. Task administration in a language whose required stages are incomplete is gated behind an explicit, recorded participant acknowledgement, and Arabic is surfaced explicitly rather than buried in documentation.
 - **Arabic portal chrome** (navigation, consent, context pages) now renders in Arabic with RTL layout when the patient's language is Arabic, while task stimuli remain gated by the readiness screen.
 - **Wearables & devices** are surfaced as an optional, consent-gated context source in the health context overview, linked to Privacy & sharing.
 - **Referral completion and referral non-completion** are computed from recorded referral outcomes in `platformInsights` and surfaced on Quality & Equity. This is explicitly labelled as *non-completion*, not as false-referral burden, because knowing a referral was clinically unnecessary requires a reference standard.
 
 **Deliberate limit**
-- Assessment **stimuli and task instructions remain English** in this research build. Arabic and the Indian languages are offered for navigation, consent and results, and are explicitly labelled as pending independent back-translation, cognitive pretesting and local clinical review. They are never presented as validated translations. See `MEASUREMENT_AND_LOCAL_VALIDATION.md` §5 for the adaptation workflow.
+- Arabic task wording is **partially delivered**: the spoken-repeat (verbal recall) sentence is administered in Arabic (`getTargetSentence()` in `client/src/features/screening/ScreeningPage.tsx`), and the piano-sequencing task is fully localised including its instructions (`client/src/features/screening/PianoSequenceTask.tsx`). The **remaining task copy is English** — activity titles, the other task intros, prompts, button labels and screen-reader announcements.
+- Arabic task administration is therefore **not validated and not released**: the registry marks stimulus translation `DONE` for those two items only, with independent back-translation, cognitive pretesting and local clinical sign-off `PENDING`. In this research build a participant may proceed only after an explicit acknowledgement that is stored with the session and reported to the clinician.
+- Tamil, Hindi, Telugu, Kannada and Malayalam are offered for navigation, consent and results only; their task stimuli are English. No language is presented as a validated translation. See `MEASUREMENT_AND_LOCAL_VALIDATION.md` §5 for the adaptation workflow.
 
 ### 2. Longitudinal change detection
 
@@ -89,6 +91,8 @@ and defended in front of judges.
 - Results segmented by **language, age band, education band and gender**, with an explicit caveat that group differences do not establish bias.
 - Follow-up status (on track / due soon / overdue / not started).
 
+**One-page evidence sheet** — [`DEMONSTRABLE_VALUE.md`](DEMONSTRABLE_VALUE.md) reports every measure in this list over a fixed-seed simulated cohort (120 patients, 302 sessions), together with the command that regenerates the figures and the standing of those numbers: they demonstrate that the measurement exists and is reported honestly, and they are **not** clinical evidence or a fairness finding.
+
 **Not yet measurable without a reference-standard study**
 - Sensitivity, specificity, true false-referral burden and validated reliable-change thresholds. These require an ethics-approved comparison against a reference instrument and/or clinician diagnosis in the intended population. The platform does not invent them. Provisional within-platform ICC is computed from real repeat pairs only; it is not a substitute for the study's reliability target.
 
@@ -100,8 +104,9 @@ The single highest-value next step is the Arabic task-stimuli pipeline:
 forward translation, independent back-translation, cognitive pretesting with
 Abu Dhabi participants across age and education bands, and local clinical
 sign-off. The `/doctor/assessment-readiness` screen is the operational record
-of this work: it lists each stage separately, blocks task administration until
-all required stages are complete, and lets clinicians record sign-offs. This is
+of this work: it lists each stage separately, gates task administration in a
+language whose stages are incomplete behind a recorded participant acknowledgement,
+and lets clinicians record sign-offs. This is
 deliberate methodological honesty — the platform shows what is *not* yet valid
 instead of hiding it behind a translated interface.
 

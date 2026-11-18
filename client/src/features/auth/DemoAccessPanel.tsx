@@ -118,11 +118,11 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
             aria-busy={busy === 'patient'}
           >
             <span className="portal-demo-avatar" aria-hidden="true">
-              ME
+              H
             </span>
             <span>
               <strong>{busy === 'patient' ? 'Opening demo patient…' : 'Demo patient'}</strong>
-              <span>Margaret Ellis · fictional record</span>
+              <span>Haroon · demo record</span>
             </span>
             <ArrowRight className="portal-demo-arrow" aria-hidden="true" />
           </button>
@@ -141,7 +141,7 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
             </span>
             <span>
               <strong>{busy === 'doctor' ? 'Opening demo clinician…' : 'Demo clinician'}</strong>
-              <span>Dr. Amara Okafor · fictional clinician</span>
+              <span>Dr. Mohamed · demo clinician</span>
             </span>
             <ArrowRight className="portal-demo-arrow" aria-hidden="true" />
           </button>
