@@ -4,7 +4,12 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: PUPPETEER_SKIP_DOWNLOAD=true npm ci && PUPPETEER_SKIP_DOWNLOAD=true sh -c '(npm --prefix client install && npm --prefix server install)' && npm run build && npm --prefix server run prisma:generate
+    buildCommand: >-
+      PUPPETEER_SKIP_DOWNLOAD=true npm ci
+      && PUPPETEER_SKIP_DOWNLOAD=true sh -c '(npm --prefix client install && npm --prefix server install)'
+      && npm --prefix server run prisma:generate
+      && npm run build
+      && npm --prefix server run prisma:generate
     startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
