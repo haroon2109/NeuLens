@@ -1,0 +1,53 @@
+# Environment variable reference. Values are placeholders; paste the real
+# values into your deploy platform (Render env vars, Docker .env, etc.). This
+# file is intentionally public and safe to commit.
+
+# ---- Database (Supabase) ----
+# Runtime: transaction pooler on 6543, pgbouncer + connection limit.
+DATABASE_URL=postgresql://postgres.xfmmalaywckffesfinou:<DB-PASSWORD>@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslmode=require&schema=public
+
+# One-off migrations: session pooler on 5432, no pgbouncer flag.
+MIGRATE_URL=postgresql://postgres.xfmmalaywckffesfinou:<DB-PASSWORD>@db.xfmmalaywckffesfinou.supabase.co:5432/postgres?sslmode=require&schema=public
+
+# ---- API session ----
+JWT_SECRET=<JWT-SECRET>
+CLIENT_ORIGIN=https://neulens.onrender.com
+
+# ---- Supabase ----
+SUPABASE_URL=https://xfmmalaywckffesfinou.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<SUPABASE-SERVICE-ROLE-KEY>
+SUPABASE_JWT_SECRET=8c7bbe31-3b57-48fd-961e-22d5e39df24f
+SUPABASE_JWKS_URL=
+
+VITE_SUPABASE_URL=https://xfmmalaywckffesfinou.supabase.co
+VITE_SUPABASE_ANON_KEY=<SUPABASE-ANON-KEY>
+
+# ---- Gnani ----
+GNANI_API_BASE_URL=https://api.vachana.ai
+GNANI_API_KEY=<GNANI-API-KEY>
+GNANI_TIMEOUT_MS=15000
+
+# ---- AI service (voice / TTS, optional) ----
+AI_SERVICE_URL=<AI-SERVICE-URL>
+AI_SERVICE_INTERNAL_KEY=<AI-INTERNAL-KEY>
+
+# Google Gemini via OpenAI-compatible endpoint.
+ASSISTANT_LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+ASSISTANT_LLM_API_KEY=<GOOGLE-API-KEY>
+ASSISTANT_LLM_MODEL=gemini-2.5-flash
+
+# ---- Google ----
+GOOGLE_API_KEY=<GOOGLE-API-KEY>
+
+# ---- Email (skip for now) ----
+# RESEND_API_KEY=
+# EMAIL_FROM=
+
+# ---- Runtime ----
+HOST=0.0.0.0
+NODE_ENV=production
+PORT=5000
+
+# ---- Demo access ----
+# false on any instance holding real patient records
+DEMO_ACCESS_ENABLED=true
