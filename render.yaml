@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && (npm --prefix client install && npm --prefix server install) && npm run build && npm --prefix server run prisma:generate
+    buildCommand: PUPPETEER_SKIP_DOWNLOAD=true npm ci && PUPPETEER_SKIP_DOWNLOAD=true sh -c '(npm --prefix client install && npm --prefix server install)' && npm run build && npm --prefix server run prisma:generate
     startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
@@ -28,6 +28,12 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+      # Keep Puppeteer's bundled Chromium download disabled in the Render build.
+      # Puppeteer is a dev dependency in the client and is not used from the
+      # production server path, so skipping the download avoids the long and
+      # frequently failing chrome-headless-shell build step.
+      - key: PUPPETEER_SKIP_DOWNLOAD
+        value: "true"
       # This instance is the public jury/prototype demo whose fictional logins
       # are documented in the README. Set to "false" on any instance that
       # holds real patient records: demo access is otherwise off in production.
