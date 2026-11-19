@@ -21,6 +21,11 @@ services:
         fromDatabase:
           name: cognivision-db
           property: connectionString
+        sync: false
+      - key: DATABASE_URL_DEPLOY
+        fromDatabase:
+          name: cognivision-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: CLIENT_ORIGIN

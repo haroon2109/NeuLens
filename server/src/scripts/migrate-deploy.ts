@@ -12,8 +12,16 @@ import { PrismaClient } from '@prisma/client';
  * in render.yaml.
  */
 async function main() {
-  if (!process.env.DATABASE_URL) {
-    console.error('DATABASE_URL is not configured. Refusing to run migrations.');
+  // Prefer DATABASE_URL injected by Render from the attached database.
+  // Fall back to DATABASE_URL_DEPLOY for hook-only environments where the
+  // service-scoped env var is not yet propagated (e.g. older Render hooks).
+  const resolvedUrl =
+    process.env.DATABASE_URL_DEPLOY ?? process.env.DATABASE_URL ?? '';
+
+  if (!resolvedUrl) {
+    console.error(
+      'DATABASE_URL is not configured. Refusing to run migrations.',
+    );
     process.exitCode = 1;
     return;
   }
