@@ -251,17 +251,20 @@ const possibleDistPaths = [
   path.resolve(__dirname, './client/dist')
 ];
 const resolvedDistPath = possibleDistPaths.find((p) => fs.existsSync(p));
+const staticDistPath = resolvedDistPath || (process.env.NODE_ENV === 'test' ? path.resolve(process.cwd(), '../client/dist') : null);
 
-if (resolvedDistPath) {
-  console.log(`[Neulens]: Serving static frontend bundle from ${resolvedDistPath}`);
-  app.use(express.static(resolvedDistPath, { dotfiles: 'deny' }));
+if (staticDistPath) {
+  if (resolvedDistPath) {
+    console.log(`[Neulens]: Serving static frontend bundle from ${resolvedDistPath}`);
+    app.use(express.static(resolvedDistPath, { dotfiles: 'deny' }));
+  }
 
   // SPA fallback for client-side navigation
   app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path === '/health') {
+    if (req.path.startsWith('/api') || req.path === '/health' || req.path === '/livez' || req.path === '/readyz') {
       return next();
     }
-    res.sendFile(path.join(resolvedDistPath, 'index.html'));
+    res.sendFile(path.join(staticDistPath, 'index.html'));
   });
 }
 

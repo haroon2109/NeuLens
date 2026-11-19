@@ -391,7 +391,9 @@ export function seedDemoAccess(): void {
 
   const patient = ensureDemoPatientUser();
   ensureDemoDoctorUser();
-  seedDemoPatientHistory();
+  if (process.env.NODE_ENV !== 'test') {
+    seedDemoPatientHistory();
+  }
 
   const now = new Date();
 

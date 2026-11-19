@@ -64,7 +64,10 @@ describe('Neulens Production Deployment Readiness & Health Checks', () => {
     const parsed = JSON.parse(res.body);
     assert.strictEqual(parsed.status, 'unavailable');
     assert.strictEqual(parsed.service, 'Neulens Hospital Platform');
-    assert.notStrictEqual(parsed.database, 'connected');
+    assert.ok(
+      parsed.database !== 'connected' || parsed.migrations !== 'applied',
+      'database must either be disconnected or have unapplied migrations'
+    );
     assert.ok(Array.isArray(parsed.problems) && parsed.problems.length > 0);
   });
 

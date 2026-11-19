@@ -8,6 +8,9 @@
  */
 const MIN_SECRET_LENGTH = 32;
 
+/** Only ever used outside production, and never accepted when NODE_ENV=production. */
+const DEVELOPMENT_ONLY_SECRET = 'neulens-development-only-secret-not-for-production';
+
 let warnedAboutWeakSecret = false;
 
 export const JWT_MIN_SECRET_LENGTH = MIN_SECRET_LENGTH;
@@ -30,7 +33,7 @@ export function getJwtSecret(): string {
         'JWT_SECRET is not configured. Refusing to issue or accept session tokens in production.'
       );
     }
-    return ''; // development only; never reach this in production
+    return DEVELOPMENT_ONLY_SECRET;
   }
 
   if (configured.length < MIN_SECRET_LENGTH) {

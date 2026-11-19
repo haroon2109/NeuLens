@@ -12,7 +12,7 @@ import { getJwtSecret } from '../config/jwt';
 import { getAssessmentLanguageReadiness, recordLanguageSignOff } from '../services/assessmentLanguageReadiness';
 import type { ReadinessStageKey } from '../services/assessmentLanguageReadiness';
 import { setSessionCookie, SESSION_MAX_AGE_MS } from '../services/sessionCookie';
-import { isDemoUserId } from '../services/demoRecords';
+import { isDemoUserId, demoAccessEnabled } from '../services/demoRecords';
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS_PER_EMAIL = 10;
 const LOGIN_MAX_ATTEMPTS_PER_IP = 30;
@@ -153,7 +153,7 @@ export class DoctorController {
       // Demo records are invented, so they are only counted inside the demo
       // workspace — never in a real clinician's patient and quality figures.
       const stats = await HospitalDataStore.getDoctorDashboardStats({
-        includeDemo: isDemoUserId(req.user.id)
+        includeDemo: isDemoUserId(req.user.id) || demoAccessEnabled()
       });
       return res.status(200).json({
         success: true,
@@ -181,7 +181,7 @@ export class DoctorController {
         || 'ALL';
 
       const patients = await HospitalDataStore.listPatients(query, reviewFilter, {
-        includeDemo: isDemoUserId(req.user.id)
+        includeDemo: isDemoUserId(req.user.id) || demoAccessEnabled()
       });
       return res.status(200).json({
         success: true,

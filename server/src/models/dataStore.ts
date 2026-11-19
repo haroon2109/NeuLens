@@ -547,8 +547,8 @@ export class HospitalDataStore {
       return Array.from(merged.values());
     };
     // Demonstration records are shown inside demo and jury modes;
-    // they are excluded in clinical production unless demo access is active.
-    const includeDemo = options.includeDemo ?? demoAccessEnabled();
+    // they are excluded in clinical production unless demo access is requested.
+    const includeDemo = options.includeDemo ?? false;
     if (!includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
     const totalPatients = patients.length;
 
@@ -647,7 +647,7 @@ export class HospitalDataStore {
       console.warn('Prisma DB error fetching patient directory. Falling back to memory:', error);
     }
 
-    const includeDemo = options.includeDemo ?? demoAccessEnabled();
+    const includeDemo = options.includeDemo ?? false;
     if (!includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
 
     const result = patients.map(patient => {
