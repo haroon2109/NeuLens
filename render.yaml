@@ -8,6 +8,8 @@ services:
     startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
+    hooks:
+      deploy: node server/dist/scripts/migrate-deploy.js
     envVars:
       - key: NODE_ENV
         value: production
