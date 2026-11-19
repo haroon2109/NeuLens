@@ -41,6 +41,15 @@ services:
         sync: false
       - key: GNANI_TIMEOUT_MS
         value: 15000
+      # Patient voice copilot — any OpenAI-compatible chat endpoint. When these
+      # are blank the assistant keeps its scripted replies and open-ended
+      # questions get the "cannot answer here yet" fallback.
+      - key: ASSISTANT_LLM_BASE_URL
+        sync: false
+      - key: ASSISTANT_LLM_API_KEY
+        sync: false
+      - key: ASSISTANT_LLM_MODEL
+        sync: false
       # Server-side acoustic analysis (FastAPI service below). The internal key
       # must match INTERNAL_API_KEY on the neulens-ai service; set both in the
       # Render dashboard (sync: false) to the same generated value.

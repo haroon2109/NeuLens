@@ -33,7 +33,7 @@ class SpeechRecognitionServiceImpl implements ISpeechRecognitionService {
           this.recognition = new SpeechRecognitionClass();
           this.recognition.continuous = true;
           this.recognition.interimResults = true;
-          this.recognition.maxAlternatives = 1;
+          this.recognition.maxAlternatives = 3;
           this.setupListeners();
         } catch (e) {
           console.warn('[SpeechRecognition] Init error:', e);
@@ -50,11 +50,25 @@ class SpeechRecognitionServiceImpl implements ISpeechRecognitionService {
       let finalTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const text = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += text;
+        const result = event.results[i];
+        // Prefer an alternative that sounds like the wake word, since the
+        // default top alternative often drops or mangles "NeuLens".
+        let chosen = result[0]?.transcript || '';
+        if (result.isFinal && result.length > 1) {
+          const wakey = (text: string) =>
+            /neu|lens|nulens|assistant|niu|نيو|نيول/i.test(text);
+          for (let j = 0; j < result.length; j += 1) {
+            if (wakey(result[j].transcript)) {
+              chosen = result[j].transcript;
+              break;
+            }
+          }
+        }
+
+        if (result.isFinal) {
+          finalTranscript += chosen;
         } else {
-          interimTranscript += text;
+          interimTranscript += chosen;
         }
       }
 

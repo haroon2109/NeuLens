@@ -13,6 +13,9 @@ wording are unchanged from the original.
 
 ## 1. System Architecture & Design
 
+Pre-rendered SVG/PNG copies of the diagrams in this section are in
+[`diagrams/`](diagrams/) for PDF exports that cannot render Mermaid.
+
 ### Architecture Style
 Neulens follows a **Decoupled Client-Server Architecture with Client-Side Edge Inference and Dedicated AI Speech Gateways**:
 

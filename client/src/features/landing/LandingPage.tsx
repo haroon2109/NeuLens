@@ -473,7 +473,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      <main id="main-content">
+      <main>
         {/* 2. Hero --------------------------------------------------------- */}
         <section className="relative isolate overflow-hidden bg-nl-warm">
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">

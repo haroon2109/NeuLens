@@ -18,7 +18,8 @@ server/dist/
 CLAUDE.md
 AGENTS.md
 agents
-.agents
+.agents/*
+!.agents/skills
 
 # editor + os
 .DS_Store

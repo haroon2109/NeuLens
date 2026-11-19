@@ -442,100 +442,66 @@ The server runs either against PostgreSQL or an in-memory fallback, both exposed
 
 ### Containerization (Docker & Docker Compose)
 
-#### 1. Backend Dockerfile (`server/Dockerfile`)
-```dockerfile
-# Multi-stage Node.js build
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-COPY prisma ./prisma/
-RUN npm ci
-COPY . .
-RUN npx prisma generate
-RUN npm run build
+The repository ships three images and one compose file. There is no separate
+web-server container: the Express API serves the compiled React bundle from
+`client/dist`, so the portal and the API share one origin and one set of
+cookies.
 
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY package*.json ./
-COPY prisma ./prisma/
-RUN npm ci --only=production
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-EXPOSE 5000
-CMD ["node", "dist/app.js"]
+| Image | Source | Runs |
+| --- | --- | --- |
+| App (API + SPA) | root [`Dockerfile`](Dockerfile) | Express on `:5000`, serving `/api/v1/*` and the built SPA |
+| Schema job | same `Dockerfile`, `migrate` stage | `prisma migrate deploy`, then exits |
+| Acoustics service | [`ai-service/Dockerfile`](ai-service/Dockerfile) | FastAPI/uvicorn on `:8000` |
+
+#### Quick start
+
+```bash
+cp .env.example .env          # optional: every value has a local default
+docker compose up --build     # http://localhost:5000
+docker compose down           # keeps the database volume
+docker compose down -v        # discards data as well
 ```
 
-#### 2. Frontend Dockerfile (`client/Dockerfile`)
-```dockerfile
-# Stage 1: Build static assets with Vite
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+`docker compose up` starts PostgreSQL 16, applies migrations as a one-shot job,
+then starts the API and the Python service. Sign in with the fictional jury
+accounts (`DEMO_ACCESS_ENABLED=true` in `.env`).
 
-# Stage 2: Serve via high-performance Nginx Alpine
-FROM nginx:alpine AS runner
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
+#### What the app image does
 
-#### 3. Production Multi-Container Compose (`docker-compose.yml`)
-```yaml
-version: '3.8'
+- **Multi-stage build.** `npm ci` from the two lockfiles, Vite build, `tsc`,
+  `prisma generate`, then `npm prune --omit=dev`. The runtime stage copies only
+  `server/dist`, production `node_modules`, the Prisma schema and `client/dist`.
+- **Non-root.** Runs as the `node` user; secrets arrive as environment
+  variables at run time and are never present in a layer.
+- **Liveness, not readiness.** The image healthcheck calls `/livez`. `/health`
+  is the readiness probe and returns 503 when Postgres is unreachable, which
+  would otherwise restart a container that is behaving correctly.
+- **Build-time client variables.** Only `VITE_AI_SERVICE_URL`, `VITE_SUPABASE_URL`
+  and `VITE_SUPABASE_ANON_KEY` are baked into the bundle (compose passes them
+  as build args). Everything secret stays server-side.
 
-services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: cognivision_postgres
-    restart: always
-    environment:
-      POSTGRES_USER: cogni_user
-      # Set a strong value in the environment; do not commit a real password.
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a strong POSTGRES_PASSWORD}
-      POSTGRES_DB: cognivision_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+#### Environment
 
-  server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    container_name: cognivision_api
-    restart: always
-    environment:
-      PORT: 5000
-      NODE_ENV: production
-      DATABASE_URL: "postgresql://cogni_user:${POSTGRES_PASSWORD}@postgres:5432/cognivision_db?schema=public"
-      JWT_SECRET: "${JWT_SECRET}"
-      CLIENT_ORIGIN: "https://cognivision.yourdomain.com"
-      GNANI_API_KEY: "${GNANI_API_KEY}"
-      GNANI_API_BASE_URL: "https://api.vachana.ai"
-    ports:
-      - "5000:5000"
-    depends_on:
-      - postgres
+Compose reads [`.env.example`](.env.example) (copy it to `.env`). Defaults give a
+working local stack; the optional integrations stay disabled while empty:
 
-  client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    container_name: cognivision_web
-    restart: always
-    ports:
-      - "80:80"
-    depends_on:
-      - server
+- `GNANI_API_KEY` — empty means written instructions instead of speech; the
+  portal stays fully usable.
+- `ASSISTANT_LLM_*` — empty keeps the copilot on its scripted replies.
+- `RESEND_API_KEY` — empty logs verification codes instead of emailing them.
+- `SUPABASE_*` — empty routes all speech analysis through the API's internal key
+  rather than browser-direct calls to the Python service.
 
-volumes:
-  pgdata:
-```
+Set `JWT_SECRET` to at least 32 characters (`openssl rand -hex 32`); production
+mode refuses to start otherwise, and `AI_SERVICE_INTERNAL_KEY` must match
+`INTERNAL_API_KEY` in the Python service — compose wires both from one value.
+
+#### Deploying these images
+
+The same three processes run on Render today, declared in
+[`render.yaml`](render.yaml). If you deploy the images instead, keep the
+topology: the Python service is not public — only the API should reach it, using
+the shared internal key.
 
 ---
 

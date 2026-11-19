@@ -202,6 +202,17 @@ class GnaniTTSService implements ITextToSpeechService {
 
       const cleanup = () => {
         this.isAudioPlaying = false;
+        audio.onplay = null;
+        audio.onended = null;
+        audio.onerror = null;
+        // Detach the source before revoking: revoking a blob URL that the
+        // element is still loading makes the browser log a spurious
+        // net::ERR_FILE_NOT_FOUND for the media request.
+        try {
+          audio.pause();
+          audio.removeAttribute('src');
+          audio.load();
+        } catch (e) {}
         if (this.currentObjectUrl === url) {
           try {
             URL.revokeObjectURL(url);

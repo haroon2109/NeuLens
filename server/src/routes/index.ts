@@ -15,6 +15,7 @@ import cognitiveRoutes from './cognitive.routes';
 import arabicRoutes from './arabic.routes';
 import languageRoutes from './language.routes';
 import externalInstrumentRoutes from './externalinstruments.routes';
+import assistantRoutes from './assistant.routes';
 
 const router = Router();
 
@@ -44,5 +45,8 @@ router.use('/language-readiness', languageRoutes);
 
 // Clinician-entered scores from validated instruments administered outside the platform.
 router.use('/external-instruments', externalInstrumentRoutes);
+
+// Patient voice copilot: open-ended questions answered by the configured LLM.
+router.use('/assistant', assistantRoutes);
 
 export default router;

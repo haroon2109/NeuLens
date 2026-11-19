@@ -19,6 +19,8 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Mic,
+  MicOff,
   Moon,
   ShieldCheck,
   SlidersHorizontal,
@@ -39,6 +41,9 @@ import { getPortalTranslation } from '../../../services/language/portalTranslati
 import { SUPPORTED_LANGUAGES, getLanguageInfo } from '../../../services/language/translations';
 import type { SupportedLanguage } from '../../../services/language/types';
 import { useVoiceAssistantStore } from '../../../services/voice/VoiceInstructionEngine';
+import { VoiceCopilot } from '../../../components/voice/VoiceCopilot';
+import { useVoiceCopilotStore } from '../../../services/voice/VoiceCopilotEngine';
+import { getVoiceAssistantCopy } from '../../../services/voice/voiceAssistantCopy';
 import { deploymentConfig } from '../../../config/deployment';
 
 type NavItem = { path: string; label: string; icon: LucideIcon; end?: boolean };
@@ -183,6 +188,33 @@ const VoiceLanguageSwitcher: React.FC = () => {
         </>
       )}
     </div>
+  );
+};
+
+const VoiceHandsFreeToggle: React.FC = () => {
+  const { currentLanguage } = useLanguageStore();
+  const copy = getVoiceAssistantCopy(currentLanguage);
+  const { backgroundEnabled, setBackgroundEnabled } = useVoiceCopilotStore();
+
+  return (
+    <button
+      type="button"
+      onClick={() => setBackgroundEnabled(!backgroundEnabled)}
+      aria-pressed={backgroundEnabled}
+      aria-label={backgroundEnabled ? copy.backgroundOn : copy.backgroundOff}
+      title={copy.backgroundOff}
+      className={`relative flex h-9 items-center gap-1.5 rounded-lg border px-2 text-body transition-colors ${
+        backgroundEnabled ? 'border-forest bg-mint text-forest' : 'border-line hover:bg-mint'
+      }`}
+    >
+      {backgroundEnabled ? <Mic className="h-4 w-4" aria-hidden="true" /> : <MicOff className="h-4 w-4" aria-hidden="true" />}
+      <span className="hidden text-[12px] font-semibold sm:inline">
+        {backgroundEnabled ? copy.backgroundActive : copy.buttonLabel}
+      </span>
+      {backgroundEnabled && (
+        <span className="absolute -end-0.5 -top-0.5 h-2 w-2 rounded-full bg-forest shadow-[0_0_6px_rgba(47,94,78,0.6)]" aria-hidden="true" />
+      )}
+    </button>
   );
 };
 
@@ -449,6 +481,9 @@ export const PatientPortalLayout: React.FC = () => {
               <p className="truncate text-[14px] font-semibold text-ink">{activeLabel}</p>
             </div>
 
+            {/* Hands-free voice listening */}
+            <VoiceHandsFreeToggle />
+
             {/* Voice-guidance language */}
             <VoiceLanguageSwitcher />
 
@@ -489,6 +524,9 @@ export const PatientPortalLayout: React.FC = () => {
         >
           <Outlet />
         </main>
+
+        {/* Voice copilot — continuous bilingual commands from any page */}
+        <VoiceCopilot />
 
         {/* Footer */}
         <footer className="border-t border-line bg-white">

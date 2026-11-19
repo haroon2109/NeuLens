@@ -419,19 +419,25 @@ export const ConsentWithdrawnState: React.FC<{
   effectiveNote?: string;
   onRestore?: () => void;
   restoreLabel?: string;
+  eyebrow?: string;
+  title?: string;
+  noteSuffix?: string;
 }> = ({
   withdrawn,
   effectiveNote = 'Data collection for the withdrawn items has stopped. Care already provided is not affected.',
   onRestore,
-  restoreLabel = 'Restore these permissions'
+  restoreLabel = 'Restore these permissions',
+  eyebrow = 'Consent withdrawn',
+  title = 'Some data collection has stopped',
+  noteSuffix = 'is switched off.'
 }) => (
   <StatePanel
     icon={ShieldCheck}
     tone="violet"
-    eyebrow="Consent withdrawn"
-    title="Some data collection has stopped"
+    eyebrow={eyebrow}
+    title={title}
     description={effectiveNote}
-    notes={withdrawn.map((item) => `${item} is switched off.`)}
+    notes={withdrawn.map((item) => `${item} ${noteSuffix}`)}
     actions={
       onRestore ? (
         <button type="button" onClick={onRestore} className={`${stateButton} ${toneStyles.ink.button}`}>

@@ -60,6 +60,7 @@ with the caveat that a group difference is a prompt to investigate, not proof of
 | **Summary (this page)** | `ONE_PAGE_SUMMARY.md` |
 | **Video walkthrough** | *Not yet recorded.* The recording plan and the rehearsed 60-second fallback beat are in [`../../docs/demo-script.md`](../../docs/demo-script.md); the deployed instance is currently unreachable, so record only after the deployment is fixed. |
 | **Architecture** | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) |
+| **Deployed topology and trust boundaries** | [`SYSTEM_DIAGRAM.md`](SYSTEM_DIAGRAM.md) |
 | **Evidence (numbers above)** | [`DEMONSTRABLE_VALUE.md`](DEMONSTRABLE_VALUE.md) |
 | **Limitations and how they are enforced** | [`../../README.md`](../../README.md#limitations-and-how-they-are-enforced) · [`../../NEULENS_LIMITATIONS.md`](../../NEULENS_LIMITATIONS.md) |
 | **Validation roadmap** | [`VALIDATION_STUDY_PLAN.md`](VALIDATION_STUDY_PLAN.md) |
