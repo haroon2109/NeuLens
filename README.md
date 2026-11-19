@@ -523,11 +523,6 @@ npm run start         # Runs compiled production artifact
 
 ---
 
-## 6. License & Attribution
-
-Developed for the **National Bio Entrepreneurship Competition (NBEC 2026)**.  
-Licensed under the **MIT License**. See `LICENSE` for details.
-
 ### Reproducing this document's state
 
 The file [`scripts/neulens-snapshot.sh`](scripts/neulens-snapshot.sh) captures the exact dependency-integrity, build, and test state behind the figures in this README. Run it in a clean checkout to confirm parity.
