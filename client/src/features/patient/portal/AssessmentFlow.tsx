@@ -4,22 +4,24 @@ import { Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Fingerprint, Eye, AudioLines, ScanFace } from 'lucide-react';
 import { PortalPageHeader } from './ui';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { getAssessmentCopy } from '../../../services/language/assessmentCopy';
 
 export type AssessmentStepKey = 'cognitive' | 'ocular' | 'vocal' | 'facial';
 
-export const assessmentSteps: Array<{
-  key: AssessmentStepKey;
-  label: string;
-  path: string;
-  minutes: string;
-  icon: LucideIcon;
-}> = [
-  // Labels stay short: the rail sits in four columns on a phone.
-  { key: 'cognitive', label: 'Thinking', path: '/patient/assessment/cognitive', minutes: '~6 min', icon: Fingerprint },
-  { key: 'ocular', label: 'Eyes', path: '/patient/assessment/ocular', minutes: '~2 min', icon: Eye },
-  { key: 'vocal', label: 'Voice', path: '/patient/assessment/vocal', minutes: '~3 min', icon: AudioLines },
-  { key: 'facial', label: 'Face', path: '/patient/assessment/facial', minutes: '~2 min', icon: ScanFace }
-];
+const STEP_PATHS: Record<AssessmentStepKey, string> = {
+  cognitive: '/patient/assessment/cognitive',
+  ocular: '/patient/assessment/ocular',
+  vocal: '/patient/assessment/vocal',
+  facial: '/patient/assessment/facial'
+};
+
+const STEP_ICONS: Record<AssessmentStepKey, LucideIcon> = {
+  cognitive: Fingerprint,
+  ocular: Eye,
+  vocal: AudioLines,
+  facial: ScanFace
+};
 
 type StepState = 'done' | 'current' | 'upcoming';
 
@@ -40,6 +42,12 @@ export const AssessmentProgress: React.FC<{
   complete?: boolean;
   className?: string;
 }> = ({ current, complete = false, className = '' }) => {
+  const copy = getAssessmentCopy(useLanguageStore((state) => state.currentLanguage));
+  const assessmentSteps = copy.flow.steps.map((step) => ({
+    ...step,
+    path: STEP_PATHS[step.key],
+    icon: STEP_ICONS[step.key]
+  }));
   const currentIndex = current ? assessmentSteps.findIndex((step) => step.key === current) : -1;
   const total = assessmentSteps.length;
   const active = assessmentSteps[currentIndex];
@@ -62,16 +70,20 @@ export const AssessmentProgress: React.FC<{
     upcoming: 'text-muted'
   };
   const spokenFor: Record<StepState, string> = {
-    done: 'completed',
-    current: 'current step',
-    upcoming: 'not started'
+    done: copy.flow.states.done,
+    current: copy.flow.states.current,
+    upcoming: copy.flow.states.upcoming
   };
 
   return (
-    <nav aria-label="Assessment progress" className={className}>
+    <nav aria-label={copy.flow.ariaLabel} className={className}>
       <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[12px]">
         <span className="font-bold uppercase tracking-[0.12em] text-sage-deep">
-          {complete ? 'Assessment complete' : active ? `Step ${currentIndex + 1} of ${total}` : `Not started · ${total} stages`}
+          {complete
+            ? copy.flow.complete
+            : active
+              ? copy.flow.stepOf(currentIndex + 1, total)
+              : copy.flow.notStarted(total)}
         </span>
         {active && !complete && <span className="text-muted">{active.minutes}</span>}
       </p>
@@ -129,17 +141,21 @@ export const QuietDetails: React.FC<{
   summary: string;
   children: React.ReactNode;
   className?: string;
-}> = ({ summary, children, className = '' }) => (
+}> = ({ summary, children, className = '' }) => {
+  const copy = getAssessmentCopy(useLanguageStore((state) => state.currentLanguage));
+
+  return (
   <details className={`group rounded-xl border border-line/70 bg-warm/40 px-3.5 py-3 ${className}`}>
     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-semibold text-ink marker:content-none [&::-webkit-details-marker]:hidden">
       {summary}
       <span className="text-[13px] font-bold text-sage-deep group-open:hidden" aria-hidden="true">
-        Show
+        {copy.flow.show}
       </span>
       <span className="hidden text-[13px] font-bold text-sage-deep group-open:inline" aria-hidden="true">
-        Hide
+        {copy.flow.hide}
       </span>
     </summary>
     <div className="pp-swap-enter mt-3 text-[13px] leading-5 text-muted">{children}</div>
   </details>
-);
+  );
+};

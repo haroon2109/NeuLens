@@ -2,43 +2,10 @@ import { Response, NextFunction } from 'express';
 import { prisma } from '../config/db';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { screeningSubmitSchema } from '../validation/schemas';
-import { HospitalDataStore } from '../models/dataStore';
+import { HospitalDataStore, inMemoryAssessments } from '../models/dataStore';
 import { reviewStateForAssessment } from '../services/reviewState';
 import { scoreBatterySession } from '../services/sessionScoring';
-
-// In-memory assessments fallback store for the demo posture.
-// This record is illustrative demo data; it is not a clinical interpretation.
-const inMemoryAssessments: any[] = [
-  {
-    id: 'demo-assess-1',
-    userId: 'demo-patient-123',
-    date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    overallScore: 84.0,
-    reviewState: 'NOT_REVIEWED',
-    status: 'COMPLETED',
-    reviewStatus: 'PENDING_REVIEW',
-    eyeMetrics: {
-      reactionTime: 240.0,
-      blinkRate: 12.0,
-      fixationScore: 88.0
-    },
-    voiceMetrics: {
-      speechRate: 140.0,
-      pauseScore: 90.0,
-      jitter: 0.12,
-      shimmer: 1.2
-    },
-    faceMetrics: {
-      symmetry: 94.0,
-      tremorScore: 12.0
-    },
-    report: {
-      recommendation: 'Demo record. Not a clinical interpretation; clinician review required.',
-      doctorNotes: 'Demo data only.',
-      pdfUrl: null
-    }
-  }
-];
+import { DEMO_PATIENT_USER_ID } from '../services/demoRecords';
 
 export const submitScreening = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {

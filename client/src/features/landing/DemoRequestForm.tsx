@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle, EnvelopeSimple, PaperPlaneRight, ShieldCheck } from '@phosphor-icons/react';
+import { useLanguageStore } from '../../services/language/LanguageManager';
+import { getLandingCopy } from '../../services/language/landingCopy';
 
 type Field = {
   value: string;
@@ -22,13 +24,6 @@ const emptyForm: FormState = {
   message: { value: '', error: '' },
 };
 
-const roles = [
-  { value: 'Neurologist', label: 'Neurologist / geriatric specialist' },
-  { value: 'Hospital', label: 'Hospital or clinic professional' },
-  { value: 'Research', label: 'Clinical research institution' },
-  { value: 'Other', label: 'Other healthcare or research role' },
-];
-
 const DEMO_EMAIL = 'neulens.ai@gmail.com';
 
 type Props = {
@@ -36,6 +31,8 @@ type Props = {
 };
 
 export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
+  const copy = getLandingCopy(useLanguageStore((state) => state.currentLanguage));
+  const roles = copy.demoForm.roles;
   const [form, setForm] = useState<FormState>(emptyForm);
   const [mailtoUrl, setMailtoUrl] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -49,27 +46,27 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
     let valid = true;
 
     if (form.name.value.trim().length < 2) {
-      next.name = { ...next.name, error: 'Please enter your full name.' };
+      next.name = { ...next.name, error: copy.demoForm.nameError };
       valid = false;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.value.trim())) {
-      next.email = { ...next.email, error: 'Please enter a valid professional email address.' };
+      next.email = { ...next.email, error: copy.demoForm.emailError };
       valid = false;
     }
 
     if (form.organization.value.trim().length < 2) {
-      next.organization = { ...next.organization, error: 'Please enter your organization or hospital.' };
+      next.organization = { ...next.organization, error: copy.demoForm.organizationError };
       valid = false;
     }
 
     if (!roles.some((role) => role.value === form.role.value)) {
-      next.role = { ...next.role, error: 'Please select your professional role.' };
+      next.role = { ...next.role, error: copy.demoForm.roleError };
       valid = false;
     }
 
     if (form.message.value.trim().length < 10) {
-      next.message = { ...next.message, error: 'Please add a short note about your interest.' };
+      next.message = { ...next.message, error: copy.demoForm.messageError };
       valid = false;
     }
 
@@ -82,17 +79,17 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
     if (!validate()) return;
 
     const roleLabel = roles.find((role) => role.value === form.role.value)?.label ?? form.role.value;
-    const subject = `Clinical demo enquiry — ${form.organization.value.trim()}`;
+    const subject = copy.demoForm.emailSubject(form.organization.value.trim());
     const body = [
-      `Name: ${form.name.value.trim()}`,
-      `Professional email: ${form.email.value.trim()}`,
-      `Organization: ${form.organization.value.trim()}`,
-      `Role: ${roleLabel}`,
+      `${copy.demoForm.emailLabels.name}: ${form.name.value.trim()}`,
+      `${copy.demoForm.emailLabels.email}: ${form.email.value.trim()}`,
+      `${copy.demoForm.emailLabels.organization}: ${form.organization.value.trim()}`,
+      `${copy.demoForm.emailLabels.role}: ${roleLabel}`,
       '',
-      'Context:',
+      `${copy.demoForm.emailLabels.context}:`,
       form.message.value.trim(),
       '',
-      'Sent from the NeuLens landing page.',
+      copy.demoForm.emailLabels.sentFrom,
     ].join('\n');
 
     const url = `mailto:${DEMO_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -116,26 +113,23 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-nl-mint text-nl-forest">
           <CheckCircle className="h-6 w-6" aria-hidden="true" />
         </span>
-        <h3 className="lp-h3 mt-5">Your email draft is ready.</h3>
-        <p className="lp-small mt-3">
-          Your email app should open with the enquiry prepared. Nothing is sent until you choose to send
-          it. If your email app did not open, use the button below.
-        </p>
+        <h3 className="lp-h3 mt-5">{copy.demoForm.submittedTitle}</h3>
+        <p className="lp-small mt-3">{copy.demoForm.submittedBody}</p>
 
         <a href={mailtoUrl} className="lp-btn lp-btn-primary mt-6 w-full">
           <EnvelopeSimple className="h-4 w-4" aria-hidden="true" />
-          Open the email draft
+          {copy.demoForm.openDraft}
         </a>
         <button
           type="button"
           onClick={reset}
           className="mt-3 min-h-[2.75rem] w-full rounded-xl px-4 text-sm font-semibold text-nl-forest transition-colors hover:bg-nl-mint-soft"
         >
-          Start a new request
+          {copy.demoForm.newRequest}
         </button>
 
         <p className="mt-5 border-t border-nl-line pt-4 text-xs leading-5 text-nl-muted">
-          You can also write to{' '}
+          {copy.demoForm.writeTo}{' '}
           <a
             href={`mailto:${DEMO_EMAIL}`}
             className="font-semibold text-nl-forest underline decoration-nl-sage-dark/40 underline-offset-2"
@@ -150,16 +144,13 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
 
   return (
     <form className={className} onSubmit={handleSubmit} noValidate>
-      <h3 className="lp-h3">Request a clinical demo</h3>
-      <p className="lp-small mt-2 text-[0.9rem]">
-        Tell us a little about your setting. This prepares an email in your mail app so you can review it
-        before sending.
-      </p>
+      <h3 className="lp-h3">{copy.demoForm.title}</h3>
+      <p className="lp-small mt-2 text-[0.9rem]">{copy.demoForm.intro}</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="demo-name" className="lp-field-label">
-            Full name
+            {copy.demoForm.fullName}
           </label>
           <input
             id="demo-name"
@@ -168,7 +159,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             autoComplete="name"
             value={form.name.value}
             onChange={(event) => update('name', event.target.value)}
-            placeholder="Dr. Mohamed"
+            placeholder={copy.demoForm.namePlaceholder}
             className="lp-input"
             aria-describedby={form.name.error ? 'demo-name-error' : undefined}
             aria-invalid={form.name.error ? true : undefined}
@@ -182,7 +173,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
 
         <div>
           <label htmlFor="demo-email" className="lp-field-label">
-            Professional email
+            {copy.demoForm.email}
           </label>
           <input
             id="demo-email"
@@ -205,7 +196,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
 
         <div>
           <label htmlFor="demo-organization" className="lp-field-label">
-            Organization / hospital
+            {copy.demoForm.organization}
           </label>
           <input
             id="demo-organization"
@@ -214,7 +205,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             autoComplete="organization"
             value={form.organization.value}
             onChange={(event) => update('organization', event.target.value)}
-            placeholder="City General Hospital"
+            placeholder={copy.demoForm.organizationPlaceholder}
             className="lp-input"
             aria-describedby={form.organization.error ? 'demo-organization-error' : undefined}
             aria-invalid={form.organization.error ? true : undefined}
@@ -228,7 +219,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
 
         <div>
           <label htmlFor="demo-role" className="lp-field-label">
-            Professional role
+            {copy.demoForm.role}
           </label>
           <select
             id="demo-role"
@@ -240,7 +231,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
             aria-invalid={form.role.error ? true : undefined}
           >
             <option value="" disabled>
-              Select your role
+              {copy.demoForm.rolePlaceholder}
             </option>
             {roles.map((role) => (
               <option key={role.value} value={role.value}>
@@ -258,7 +249,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
 
       <div className="mt-4">
         <label htmlFor="demo-message" className="lp-field-label">
-          What would you like to explore?
+          {copy.demoForm.message}
         </label>
         <textarea
           id="demo-message"
@@ -266,7 +257,7 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
           rows={4}
           value={form.message.value}
           onChange={(event) => update('message', event.target.value)}
-          placeholder="I’d like to understand how NeuLens could fit into our cognitive screening workflow."
+          placeholder={copy.demoForm.messagePlaceholder}
           className="lp-input resize-y"
           aria-describedby={form.message.error ? 'demo-message-error' : undefined}
           aria-invalid={form.message.error ? true : undefined}
@@ -280,15 +271,12 @@ export const DemoRequestForm: React.FC<Props> = ({ className = '' }) => {
 
       <div className="mt-5 flex items-start gap-2">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-nl-forest" aria-hidden="true" />
-        <p className="text-xs leading-5 text-nl-muted">
-          NeuLens is a developing prototype. A demo is an overview of the current workflow, not access to a
-          clinically validated test.
-        </p>
+        <p className="text-xs leading-5 text-nl-muted">{copy.demoForm.privacy}</p>
       </div>
 
       <button type="submit" className="lp-btn lp-btn-primary mt-6 w-full">
         <PaperPlaneRight className="h-4 w-4" aria-hidden="true" />
-        Request a Clinical Demo
+        {copy.demoForm.submit}
       </button>
     </form>
   );

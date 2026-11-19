@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { treatmentTeam, usePatientPortalStore, type PortalNotification } from '../../../store/patientPortalStore';
 import { patientPortalApi } from '../../../services/patientPortalApi';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { getPortalPagesCopy } from '../../../services/language/portalPagesCopy';
 import { HealthcareScene } from '../../../components/illustrations/HealthcareScene';
 import { MotionReveal } from '../../../components/motion/Reveal';
 import {
@@ -50,6 +52,7 @@ export const AppointmentsPage: React.FC = () => {
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('10:30');
   const [error, setError] = useState('');
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).carePages.appointments;
 
   // Appointment changes are written to the server first, then reflected locally.
   const cancelOnServer = async (id: string) => {
@@ -58,7 +61,7 @@ export const AppointmentsPage: React.FC = () => {
       await patientPortalApi.updateAppointment(id, { status: 'CANCELLED' });
       cancelAppointment(id);
     } catch (err: any) {
-      setError(err.message || 'The appointment could not be cancelled. Please contact the clinic.');
+      setError(err.message || copy.cancelError);
     }
   };
 
@@ -70,7 +73,7 @@ export const AppointmentsPage: React.FC = () => {
       rescheduleAppointment(id, newDate, newTime);
       setRescheduling(null);
     } catch (err: any) {
-      setError(err.message || 'The new time could not be saved. Please contact the clinic.');
+      setError(err.message || copy.rescheduleError);
     }
   };
 
@@ -86,17 +89,17 @@ export const AppointmentsPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 38 · Appointments"
-        title="Appointments and clinic visits"
-        description="Upcoming reviews, past visits, and your clinician's contact details in one place."
-        actions={<Pill tone="green" dot>{upcoming.length} upcoming</Pill>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Pill tone="green" dot>{copy.upcoming(upcoming.length)}</Pill>}
       />
 
       <MotionReveal className="mx-auto w-full max-w-2xl">
         <HealthcareScene
           kind="followup"
           className="w-full"
-          title="Haroon meeting Dr. Mohamed for a follow-up consultation"
+          title={copy.sceneTitle}
         />
       </MotionReveal>
 
@@ -109,9 +112,9 @@ export const AppointmentsPage: React.FC = () => {
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-4">
           <Card>
-            <SectionTitle title="Upcoming appointments" detail="Arrive a few minutes early for in-person visits." />
+            <SectionTitle title={copy.upcomingTitle} detail={copy.upcomingDetail} />
             {upcoming.length === 0 ? (
-              <EmptyState scene="emptyAppointments" icon={CalendarDays} title="No upcoming appointments" detail="Your care team will add follow-up visits here." />
+              <EmptyState scene="emptyAppointments" icon={CalendarDays} title={copy.emptyTitle} detail={copy.emptyDetail} />
             ) : (
               <div className="space-y-3">
                 {upcoming.map((appointment) => (
@@ -131,11 +134,11 @@ export const AppointmentsPage: React.FC = () => {
 
                     {rescheduling === appointment.id ? (
                       <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50/60 p-3">
-                        <p className="text-xs font-bold uppercase tracking-[0.07em] text-blue-800">Choose a new time</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.07em] text-blue-800">{copy.chooseNewTime}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           <input
                             type="date"
-                            aria-label="New appointment date"
+                            aria-label={copy.newDate}
                             value={newDate}
                             min={new Date().toISOString().slice(0, 10)}
                             onChange={(event) => setNewDate(event.target.value)}
@@ -143,7 +146,7 @@ export const AppointmentsPage: React.FC = () => {
                           />
                           <input
                             type="time"
-                            aria-label="New appointment time"
+                            aria-label={copy.newTime}
                             value={newTime}
                             onChange={(event) => setNewTime(event.target.value)}
                             className="rounded-lg border border-line bg-white px-2.5 py-2 text-xs"
@@ -153,20 +156,20 @@ export const AppointmentsPage: React.FC = () => {
                             className={primaryButton}
                             onClick={() => void rescheduleOnServer(appointment.id)}
                           >
-                            Confirm
+                            {copy.confirm}
                           </button>
-                          <button type="button" className={secondaryButton} onClick={() => setRescheduling(null)}>Cancel</button>
+                          <button type="button" className={secondaryButton} onClick={() => setRescheduling(null)}>{copy.cancel}</button>
                         </div>
-                        <p className="mt-1.5 text-xs text-blue-900/70">Your care team will see the new time. Contact the clinic if you need to change it again.</p>
+                        <p className="mt-1.5 text-xs text-blue-900/70">{copy.careTeamNote}</p>
                       </div>
                     ) : (
                       <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-2.5">
                         <button type="button" className="text-xs font-bold text-blue-700 hover:underline" onClick={() => beginReschedule(appointment.id, appointment.date, appointment.time)}>
-                          Reschedule
+                          {copy.reschedule}
                         </button>
                         <span className="text-slate-300">·</span>
                         <button type="button" className="text-xs font-semibold text-rose-700 hover:underline" onClick={() => void cancelOnServer(appointment.id)}>
-                          Cancel appointment
+                          {copy.cancelAppointment}
                         </button>
                       </div>
                     )}
@@ -177,7 +180,7 @@ export const AppointmentsPage: React.FC = () => {
           </Card>
 
           <Card>
-            <SectionTitle title="Previous appointments" />
+            <SectionTitle title={copy.previousTitle} />
             <ul className="divide-y divide-slate-100">
               {past.map((appointment) => (
                 <li key={appointment.id} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
@@ -194,7 +197,7 @@ export const AppointmentsPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <SectionTitle title="Your clinic" />
+            <SectionTitle title={copy.clinicTitle} />
             <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
             <p className="mt-0.5 text-xs text-muted">{treatmentTeam.role}</p>
             <dl className="mt-3 space-y-2 text-xs">
@@ -217,17 +220,17 @@ export const AppointmentsPage: React.FC = () => {
               )}
             </dl>
             <div className="mt-3 flex flex-wrap gap-2">
-              <a href={`mailto:${treatmentTeam.email}`} className={secondaryButton}>Email clinic</a>
-              <Link to="/patient/help" className={secondaryButton}>Get help</Link>
+              <a href={`mailto:${treatmentTeam.email}`} className={secondaryButton}>{copy.emailClinic}</a>
+              <Link to="/patient/help" className={secondaryButton}>{copy.getHelp}</Link>
             </div>
           </Card>
 
           <div className="rounded-xl border border-blue-100 bg-blue-50 p-3.5">
             <p className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-              <Video className="h-3.5 w-3.5" /> Telehealth visits
+              <Video className="h-3.5 w-3.5" /> {copy.telehealthTitle}
             </p>
             <p className="mt-1 text-xs leading-5 text-blue-900/80">
-              A secure video link appears 15 minutes before a telehealth appointment. No link is shared by email.
+              {copy.telehealthBody}
             </p>
           </div>
         </div>
@@ -241,27 +244,34 @@ export const AppointmentsPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const CarePlanPage: React.FC = () => {
   const { carePlan, toggleCareStep } = usePatientPortalStore();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).carePages.carePlan;
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 39 · My care plan"
-        title="Your clinician-approved plan"
-        description="Next steps agreed with your care team. Ticking a step is a personal reminder — it does not change your clinical plan."
-        actions={<Pill tone="green" dot>Approved by {carePlan.approvedBy}</Pill>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Pill tone="green" dot>{copy.approvedBy(carePlan.approvedBy)}</Pill>}
       />
 
       <MotionReveal className="mx-auto w-full max-w-2xl">
         <HealthcareScene
           kind="walkingOutdoors"
           className="w-full"
-          title="Haroon taking a gentle walk outdoors with a caregiver"
+          title={copy.sceneTitle}
         />
       </MotionReveal>
 
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Card>
-          <SectionTitle title="Plan progress" detail={`Approved ${formatDate(carePlan.approvedAt)} · next review ${formatDate(carePlan.nextReview)}`} />
+          <SectionTitle
+            title={copy.progressTitle}
+            detail={copy.progressDetail(
+              carePlan.approvedAt ? formatDate(carePlan.approvedAt) : copy.notScheduled,
+              carePlan.nextReview ? formatDate(carePlan.nextReview) : copy.notScheduled
+            )}
+          />
           <div className="flex items-center gap-4">
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
               <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${carePlan.progress}%` }} />
@@ -296,34 +306,34 @@ export const CarePlanPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <SectionTitle title="Monitoring schedule" />
+            <SectionTitle title={copy.monitoringTitle} />
             <dl className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Next assessment</dt><dd className="font-semibold text-slate-800">{formatDate(carePlan.nextReview)}</dd></div>
-              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Recommended follow-up</dt><dd className="font-semibold text-slate-800">{treatmentTeam.nextReview}</dd></div>
-              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Repeat interval</dt><dd className="font-semibold text-slate-800">About 4 weeks</dd></div>
-              <div className="flex items-center justify-between gap-3"><dt className="text-muted">Clinician</dt><dd className="font-semibold text-slate-800">{treatmentTeam.doctor}</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">{copy.nextAssessment}</dt><dd className="font-semibold text-slate-800">{formatDate(carePlan.nextReview)}</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">{copy.followUp}</dt><dd className="font-semibold text-slate-800">{treatmentTeam.nextReview}</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">{copy.repeatInterval}</dt><dd className="font-semibold text-slate-800">{copy.repeatValue}</dd></div>
+              <div className="flex items-center justify-between gap-3"><dt className="text-muted">{copy.clinician}</dt><dd className="font-semibold text-slate-800">{treatmentTeam.doctor}</dd></div>
             </dl>
-            <Link to="/patient/assessment/intro" className={`${primaryButton} mt-3`}>Start scheduled assessment</Link>
+            <Link to="/patient/assessment/intro" className={`${primaryButton} mt-3`}>{copy.startScheduled}</Link>
           </Card>
 
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5">
             <p className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-              <Info className="h-3.5 w-3.5" /> Clinician-led
+              <Info className="h-3.5 w-3.5" /> {copy.clinicianLedTitle}
             </p>
             <p className="mt-1 text-xs leading-5 text-amber-900/80">
-              Only your qualified clinician confirms next steps. This plan is a summary of that discussion, not a new recommendation.
+              {copy.clinicianLedBody}
             </p>
           </div>
         </div>
       </div>
 
       <Card>
-        <SectionTitle title="Brain-health education" detail="Short, practical reading chosen by your care team." />
+        <SectionTitle title={copy.educationTitle} detail={copy.educationDetail} />
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { icon: HeartPulse, title: 'Sleep and memory', detail: 'A regular sleep routine can support attention and memory. Small changes are worth discussing with your clinician.' },
-            { icon: Sparkles, title: 'Staying active', detail: 'Gentle, regular movement supports general brain health. Choose what feels safe and enjoyable.' },
-            { icon: BookOpen, title: 'Tracking changes', detail: 'A consistent screening routine helps separate day-to-day variation from patterns worth reviewing.' }
+            { icon: HeartPulse, ...copy.education[0] },
+            { icon: Sparkles, ...copy.education[1] },
+            { icon: BookOpen, ...copy.education[2] }
           ].map(({ icon: Icon, title, detail }) => (
             <div key={title} className="rounded-xl border border-line p-3.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><Icon className="h-4 w-4" /></span>
@@ -351,18 +361,19 @@ const categoryIcon = (category: PortalNotification['category']) => {
 export const NotificationsPage: React.FC = () => {
   const { notifications, markNotificationRead, markAllNotificationsRead } = usePatientPortalStore();
   const [filter, setFilter] = useState<'ALL' | 'UNREAD'>('ALL');
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).carePages.notifications;
   const shown = filter === 'UNREAD' ? notifications.filter((item) => !item.read) : notifications;
   const unread = notifications.filter((item) => !item.read).length;
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 40 · Notifications"
-        title="Updates from your care team"
-        description="Assessment reminders, appointment changes, clinician review updates, and account notices."
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
         actions={
           <button type="button" className={secondaryButton} onClick={markAllNotificationsRead} disabled={unread === 0}>
-            <CheckCircle2 className="h-4 w-4" /> Mark all as read
+            <CheckCircle2 className="h-4 w-4" /> {copy.markAllRead}
           </button>
         }
       />
@@ -377,13 +388,13 @@ export const NotificationsPage: React.FC = () => {
               filter === value ? 'bg-blue-700 text-white' : 'border border-line bg-white text-body hover:bg-warm'
             }`}
           >
-            {value === 'ALL' ? 'All' : `Unread (${unread})`}
+            {value === 'ALL' ? copy.all : copy.unread(unread)}
           </button>
         ))}
       </div>
 
       {shown.length === 0 ? (
-        <EmptyState scene="emptyNotifications" icon={Bell} title="No notifications" detail="You are all caught up." />
+        <EmptyState scene="emptyNotifications" icon={Bell} title={copy.emptyTitle} detail={copy.emptyDetail} />
       ) : (
         <Card className="p-0">
           <ul className="divide-y divide-slate-100">
@@ -396,15 +407,14 @@ export const NotificationsPage: React.FC = () => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-[14px] font-semibold text-ink">{item.title}</p>
-                      {!item.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label="Unread" />}
+                      <p className="text-[14px] font-semibold text-ink">{item.title}</p>                      {!item.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label={copy.unreadLabel} />}
                     </div>
                     <p className="mt-0.5 text-xs leading-5 text-muted">{item.detail}</p>
                     <div className="mt-1.5 flex items-center gap-3">
                       <span className="text-xs font-medium uppercase tracking-[0.06em] text-muted">{formatDateTime(item.date)}</span>
                       {!item.read && (
                         <button type="button" onClick={() => markNotificationRead(item.id)} className="text-xs font-bold text-blue-700 hover:underline">
-                          Mark as read
+                          {copy.markRead}
                         </button>
                       )}
                     </div>
@@ -424,9 +434,10 @@ export const NotificationsPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const DocumentsPage: React.FC = () => {
   const { documents, logDocumentAccess, documentAccess } = usePatientPortalStore();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).carePages.documents;
 
   const download = (title: string, summary: string, date: string) => {
-    const text = `NEULENS PATIENT PORTAL\n${title}\n${date}\n\n${summary}\n\nThis document is screening support, not a diagnosis. Please discuss with your qualified clinician.\n`;
+    const text = `${copy.exportHeader}\n${title}\n${date}\n\n${summary}\n\n${copy.exportFooter}\n`;
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -441,10 +452,10 @@ export const DocumentsPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 41 · My reports & documents"
-        title="Reports and documents"
-        description="Session summaries, clinician-shared reports, and care-plan documents. Access is logged for your transparency."
-        actions={<Pill tone="slate">{documents.length} documents</Pill>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Pill tone="slate">{copy.count(documents.length)}</Pill>}
       />
 
       <Card className="p-0">
@@ -482,7 +493,7 @@ export const DocumentsPage: React.FC = () => {
                   }}
                   className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-xs font-bold text-body hover:bg-warm"
                 >
-                  <Download className="h-3.5 w-3.5" /> Download
+                  <Download className="h-3.5 w-3.5" /> {copy.download}
                 </button>
               </div>
             </li>
@@ -492,7 +503,7 @@ export const DocumentsPage: React.FC = () => {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <SectionTitle title="Document access history" detail="Records of when you opened a document." />
+          <SectionTitle title={copy.accessTitle} detail={copy.accessDetail} />
           {documentAccess.length ? (
             <ul className="space-y-2">
               {documentAccess.map((entry, index) => (
@@ -503,18 +514,18 @@ export const DocumentsPage: React.FC = () => {
               ))}
             </ul>
           ) : (
-            <p className="text-xs leading-5 text-muted">No document access has been recorded yet.</p>
+            <p className="text-xs leading-5 text-muted">{copy.noAccess}</p>
           )}
         </Card>
 
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-3.5">
           <p className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-            <Clock3 className="h-3.5 w-3.5" /> Pending review
+            <Clock3 className="h-3.5 w-3.5" /> {copy.pendingTitle}
           </p>
           <p className="mt-1 text-xs leading-5 text-blue-900/80">
-            A session summary becomes final after clinician review. You can still view the current observations and quality report.
+            {copy.pendingBody}
           </p>
-          <Link to="/patient/assessment/report" className={`${primaryButton} mt-3`}>View latest summary</Link>
+          <Link to="/patient/assessment/report" className={`${primaryButton} mt-3`}>{copy.viewLatest}</Link>
         </div>
       </div>
     </div>

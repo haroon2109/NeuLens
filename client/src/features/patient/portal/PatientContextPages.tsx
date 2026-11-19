@@ -23,6 +23,7 @@ import { usePatientPortalStore } from '../../../store/patientPortalStore';
 import { usePatientOverview } from './usePatientOverview';
 import { useLanguageStore } from '../../../services/language/LanguageManager';
 import { getPortalTranslation } from '../../../services/language/portalTranslations';
+import { getPortalPagesCopy } from '../../../services/language/portalPagesCopy';
 import { Card, InfoRow, Pill, PortalPageHeader, SectionTitle, formatDate, primaryButton, secondaryButton } from './ui';
 
 const fieldClass =
@@ -71,6 +72,7 @@ export const HealthContextOverviewPage: React.FC = () => {
   const { sleep, wellbeing, health } = usePatientPortalStore();
   const { context } = usePatientOverview();
   const pt = getPortalTranslation(useLanguageStore().currentLanguage);
+  const copy = getPortalPagesCopy(useLanguageStore().currentLanguage).contextPages.overview;
   const clinical = context.find((item) => item.source === 'clinical_metabolic');
 
   return (
@@ -79,13 +81,13 @@ export const HealthContextOverviewPage: React.FC = () => {
         eyebrow={pt.context.overview.eyebrow}
         title={pt.context.overview.title}
         description={pt.context.overview.description}
-        actions={<Link to="/patient/context/sleep" className={primaryButton}>Update context</Link>}
+        actions={<Link to="/patient/context/sleep" className={primaryButton}>{copy.update}</Link>}
       />          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { icon: Moon, label: 'Sleep', value: `${sleep.durationHours} hrs`, detail: `Quality ${sleep.quality}/5 · ${sleep.awakenings} awakenings`, chip: 'mint', href: '/patient/context/sleep' },
-          { icon: Activity, label: 'Physical activity', value: `${sleep.steps.toLocaleString()} steps`, detail: `${sleep.activeMinutes} active minutes`, chip: 'mint', href: '/patient/context/sleep' },
-          { icon: Users, label: 'Mental wellbeing', value: `Mood ${wellbeing.mood}/5`, detail: `Stress ${wellbeing.stress}/5`, chip: 'amber', href: '/patient/context/wellbeing' },
-          { icon: Stethoscope, label: 'Clinical measures', value: clinical ? `${clinical.values.systolic}/${clinical.values.diastolic}` : 'Not available', detail: clinical ? 'Blood pressure · last import' : 'No clinical import linked', chip: 'sage', href: '/patient/context/clinical' }
+          { icon: Moon, label: copy.sleep, value: copy.sleepValue(sleep.durationHours), detail: copy.sleepDetail(sleep.quality, sleep.awakenings), chip: 'mint', href: '/patient/context/sleep' },
+          { icon: Activity, label: copy.activity, value: copy.activityValue(sleep.steps.toLocaleString()), detail: copy.activityDetail(sleep.activeMinutes), chip: 'mint', href: '/patient/context/sleep' },
+          { icon: Users, label: copy.wellbeing, value: copy.wellbeingValue(wellbeing.mood), detail: copy.wellbeingDetail(wellbeing.stress), chip: 'amber', href: '/patient/context/wellbeing' },
+          { icon: Stethoscope, label: copy.clinical, value: clinical?.values?.systolic && clinical?.values?.diastolic ? `${clinical.values.systolic}/${clinical.values.diastolic}` : copy.notAvailable, detail: clinical ? copy.clinicalDetail : copy.noImport, chip: 'sage', href: '/patient/context/clinical' }
         ].map(({ icon: Icon, label, value, detail, chip, href }) => (
           <Link key={label} to={href} className="pp-card p-4">
             <span className={`flex h-8 w-8 items-center justify-center rounded-lg pp-icon-chip ${chip}`}>
@@ -95,7 +97,7 @@ export const HealthContextOverviewPage: React.FC = () => {
             <p className="mt-1 text-[17px] font-semibold text-ink">{value}</p>
             <p className="mt-0.5 text-xs text-muted">{detail}</p>
             <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-forest">
-              Review <ArrowRight className="h-3 w-3" />
+              {copy.review} <ArrowRight className="h-3 w-3" />
             </span>
           </Link>
         ))}
@@ -103,23 +105,23 @@ export const HealthContextOverviewPage: React.FC = () => {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
         <Card>
-          <SectionTitle title="Context sources" detail="What is connected and when it last updated." />
+          <SectionTitle title={copy.sourcesTitle} detail={copy.sourcesDetail} />
           <ul className="space-y-2.5">
             {[
-              { label: 'Self-reported sleep & lifestyle', source: 'Patient check-in', date: formatDate(new Date()), state: 'Current' },
-              { label: 'Mental wellbeing check-in', source: 'Patient check-in', date: formatDate(new Date()), state: 'Current' },
+              { label: copy.selfSleep, source: copy.patientCheckIn, date: formatDate(new Date()), state: copy.current },
+              { label: copy.selfWellbeing, source: copy.patientCheckIn, date: formatDate(new Date()), state: copy.current },
               ...context.map((item) => ({
                 label:
                   item.source === 'clinical_metabolic'
-                    ? 'Clinical measurements'
+                    ? copy.clinicalMeasurements
                     : item.source === 'sleep'
-                    ? 'Sleep record'
+                    ? copy.sleepRecord
                     : item.source === 'wearable'
-                    ? 'Wearable summary'
-                    : 'Activity record',
-                source: 'Patient-recorded / imported',
+                    ? copy.wearableSummary
+                    : copy.activityRecord,
+                source: copy.patientRecorded,
                 date: formatDate(item.recordedAt),
-                state: item.consentGranted ? 'Consent recorded' : 'Consent missing'
+                state: item.consentGranted ? copy.consentRecorded : copy.consentMissing
               }))
             ].map((item, index) => (
               <li key={`${item.label}-${index}`} className="flex flex-col gap-2 rounded-xl border border-line p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -132,7 +134,7 @@ export const HealthContextOverviewPage: React.FC = () => {
                     <p className="text-xs text-muted">{item.source} · {item.date}</p>
                   </div>
                 </div>
-                <Pill tone={item.state === 'Consent missing' ? 'amber' : 'green'} dot>{item.state}</Pill>
+                <Pill tone={item.state === copy.consentMissing ? 'amber' : 'green'} dot>{item.state}</Pill>
               </li>
             ))}
           </ul>
@@ -140,29 +142,29 @@ export const HealthContextOverviewPage: React.FC = () => {
 
         <div className="space-y-4">
           <Card>
-            <SectionTitle title="Wearables & devices" detail="Optional connected data." />
+            <SectionTitle title={copy.wearablesTitle} detail={copy.wearablesDetail} />
             <p className="text-xs leading-5 text-muted">
-              Wearable summaries (activity, sleep, heart rate) can be linked as context with your consent. They are used for discussion only and never change your screening score.
+              {copy.wearablesBody}
             </p>
             <Link to="/patient/privacy" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline">
-              Manage connected devices <ArrowRight className="h-3.5 w-3.5" />
+              {copy.manageDevices} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </Card>
           <Card>
-          <SectionTitle title="Family & medical history" detail="Shared during onboarding." />
+          <SectionTitle title={copy.familyTitle} detail={copy.familyDetail} />
             <div className="flex flex-wrap gap-1.5">
-              {health.conditions.length ? health.conditions.map((item) => <Pill key={item} tone="sage">{item}</Pill>) : <Pill tone="sage">No conditions shared</Pill>}
+              {health.conditions.length ? health.conditions.map((item) => <Pill key={item} tone="sage">{item}</Pill>) : <Pill tone="sage">{copy.noConditions}</Pill>}
             </div>
             <p className="mt-3 text-xs leading-5 text-muted">
-              {health.familyHistory || 'No family history was shared during onboarding.'}
+              {health.familyHistory || copy.noFamily}
             </p>
             <Link to="/patient/context/clinical" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline">
-              Review clinical & family history <ArrowRight className="h-3.5 w-3.5" />
+              {copy.reviewHistory} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </Card>
           <div className="pp-notice">
             <Info className="h-3.5 w-3.5" />
-            <span>Context is not causation. A poor night's sleep may affect a session, but context alone does not explain or diagnose a change. Clinicians consider all information together.</span>
+            <span>{copy.notice}</span>
           </div>
         </div>
       </div>
@@ -176,6 +178,7 @@ export const HealthContextOverviewPage: React.FC = () => {
 export const SleepLifestylePage: React.FC = () => {
   const { sleep, setSleep } = usePatientPortalStore();
   const pt = getPortalTranslation(useLanguageStore().currentLanguage);
+  const copy = getPortalPagesCopy(useLanguageStore().currentLanguage).contextPages.sleep;
   const [saved, setSaved] = useState(false);
   const [wearableConsent, setWearableConsent] = useState(false);
   const [wearable, setWearable] = useState({ restingHr: '', steps: 0, sleepHours: 0 });
@@ -215,30 +218,30 @@ export const SleepLifestylePage: React.FC = () => {
         eyebrow={pt.context.sleep.eyebrow}
         title={pt.context.sleep.title}
         description={pt.context.sleep.description}
-        actions={<Pill tone="blue" dot>Last updated today</Pill>}
+        actions={<Pill tone="blue" dot>{copy.lastUpdated}</Pill>}
       />
 
       <MotionReveal className="mx-auto w-full max-w-2xl">
         <HealthcareScene
           kind="sleeping"
           className="w-full"
-          title="Haroon resting comfortably at home"
+          title={copy.sceneTitle}
         />
       </MotionReveal>
 
       {saved && (
         <div className="pp-success">
           <CheckCircle2 className="h-4 w-4" />
-          <span>Context saved for your care team.</span>
+          <span>{copy.savedNote}</span>
         </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <SectionTitle title="Sleep" detail="Think about the past seven days." />
+          <SectionTitle title={copy.sleepTitle} detail={copy.sleepDetail} />
           <div className="space-y-5">
             <div>
-              <label className={labelClass} htmlFor="sleep-duration">Average sleep duration</label>
+              <label className={labelClass} htmlFor="sleep-duration">{copy.avgDuration}</label>
               <div className="flex items-center gap-3">
                 <input
                   id="sleep-duration"
@@ -250,19 +253,19 @@ export const SleepLifestylePage: React.FC = () => {
                   onChange={(event) => setSleep({ durationHours: Number(event.target.value) })}
                   className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-line accent-forest"
                 />
-                <span className="w-16 text-[14px] font-bold text-forest">{sleep.durationHours} hrs</span>
+                <span className="w-16 text-[14px] font-bold text-forest">{copy.hours(sleep.durationHours)}</span>
               </div>
             </div>
-            <RangeField id="sleep-quality" label="Sleep quality" value={sleep.quality} onChange={(value) => setSleep({ quality: value })} low="Poor" high="Excellent" />
-            <RangeField id="sleep-awakenings" label="Night-time awakenings" value={sleep.awakenings} onChange={(value) => setSleep({ awakenings: value })} min={0} max={6} low="None" high="Frequent" suffix="" />
+            <RangeField id="sleep-quality" label={copy.qualityLabel} value={sleep.quality} onChange={(value) => setSleep({ quality: value })} low={copy.qualityLow} high={copy.qualityHigh} />
+            <RangeField id="sleep-awakenings" label={copy.awakeningsLabel} value={sleep.awakenings} onChange={(value) => setSleep({ awakenings: value })} min={0} max={6} low={copy.awakeningLow} high={copy.awakeningHigh} suffix="" />
           </div>
         </Card>
 
         <Card>
-          <SectionTitle title="Lifestyle & activity" detail="A typical day rather than a best day." />
+          <SectionTitle title={copy.lifestyleTitle} detail={copy.lifestyleDetail} />
           <div className="space-y-5">
             <div>
-              <label className={labelClass} htmlFor="sleep-steps">Average daily steps</label>
+              <label className={labelClass} htmlFor="sleep-steps">{copy.avgSteps}</label>
               <input
                 id="sleep-steps"
                 type="number"
@@ -275,7 +278,7 @@ export const SleepLifestylePage: React.FC = () => {
               />
             </div>
             <div>
-              <label className={labelClass} htmlFor="sleep-active">Active minutes per day</label>
+              <label className={labelClass} htmlFor="sleep-active">{copy.activeMinutes}</label>
               <input
                 id="sleep-active"
                 type="number"
@@ -286,7 +289,7 @@ export const SleepLifestylePage: React.FC = () => {
                 className={fieldClass}
               />
             </div>
-            <RangeField id="sleep-social" label="Social engagement" value={sleep.socialEngagement} onChange={(value) => setSleep({ socialEngagement: value })} low="Limited" high="Frequent" />
+            <RangeField id="sleep-social" label={copy.socialLabel} value={sleep.socialEngagement} onChange={(value) => setSleep({ socialEngagement: value })} low={copy.socialLow} high={copy.socialHigh} />
           </div>
         </Card>
       </div>
@@ -294,12 +297,12 @@ export const SleepLifestylePage: React.FC = () => {
       {wearableSaved && (
         <div className="pp-success">
           <CheckCircle2 className="h-4 w-4" />
-          <span>Wearable summary saved for your care team.</span>
+          <span>{copy.wearableSaved}</span>
         </div>
       )}
 
       <Card>
-        <SectionTitle title="Wearable summary (optional)" detail="Shared only with your consent." />
+        <SectionTitle title={copy.wearableTitle} detail={copy.wearableDetail} />
         <label className="flex items-start gap-2 text-xs leading-5 text-body" htmlFor="wearable-consent">
           <input
             id="wearable-consent"
@@ -308,11 +311,11 @@ export const SleepLifestylePage: React.FC = () => {
             checked={wearableConsent}
             onChange={(event) => setWearableConsent(event.target.checked)}
           />
-          <span>I consent to share a summary from my wearable device. NeuLens does not diagnose from wearable data.</span>
+          <span>{copy.consent}</span>
         </label>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <div>
-            <label className={labelClass} htmlFor="wearable-hr">Resting heart rate (bpm)</label>
+            <label className={labelClass} htmlFor="wearable-hr">{copy.restingHr}</label>
             <input
               id="wearable-hr"
               type="number"
@@ -325,7 +328,7 @@ export const SleepLifestylePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className={labelClass} htmlFor="wearable-steps">Avg daily steps</label>
+            <label className={labelClass} htmlFor="wearable-steps">{copy.avgStepsShort}</label>
             <input
               id="wearable-steps"
               type="number"
@@ -339,7 +342,7 @@ export const SleepLifestylePage: React.FC = () => {
             />
           </div>
           <div>
-            <label className={labelClass} htmlFor="wearable-sleep">Avg sleep (hrs)</label>
+            <label className={labelClass} htmlFor="wearable-sleep">{copy.avgSleep}</label>
             <input
               id="wearable-sleep"
               type="number"
@@ -355,32 +358,32 @@ export const SleepLifestylePage: React.FC = () => {
         </div>
         <div className="mt-3 flex justify-end">
           <button type="button" className={primaryButton} onClick={() => void saveWearable()} disabled={!wearableConsent}>
-            <Save className="h-4 w-4" /> Save wearable summary
+            <Save className="h-4 w-4" /> {copy.saveWearable}
           </button>
         </div>
-        <p className="mt-2 text-xs leading-5 text-muted">Wearable data is context only and does not change your screening observations.</p>
+        <p className="mt-2 text-xs leading-5 text-muted">{copy.wearableNote}</p>
       </Card>
 
       <Card>
-        <SectionTitle title="Anything else you would like to note?" detail="Optional. For example, a disrupted routine or a busy week." />
+        <SectionTitle title={copy.notesTitle} detail={copy.notesDetail} />
         <textarea
           rows={3}
           value={sleep.notes}
           onChange={(event) => setSleep({ notes: event.target.value })}
           className={fieldClass}
-          placeholder="A short note for your clinician"
+          placeholder={copy.notesPlaceholder}
         />
         <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs leading-5 text-muted">Shared with your care team. Optional research sharing follows your privacy settings.</p>
+          <p className="text-xs leading-5 text-muted">{copy.notesHint}</p>
           <button type="button" className={primaryButton} onClick={save}>
-            <Save className="h-4 w-4" /> Save context
+            <Save className="h-4 w-4" /> {copy.saveContext}
           </button>
         </div>
       </Card>
 
       <div className="flex flex-wrap gap-2">
-        <Link to="/patient/context/wellbeing" className={secondaryButton}>Mental wellbeing <ArrowRight className="h-3.5 w-3.5" /></Link>
-        <Link to="/patient/context/clinical" className={secondaryButton}>Clinical & family history</Link>
+        <Link to="/patient/context/wellbeing" className={secondaryButton}>{copy.wellbeingLink} <ArrowRight className="h-3.5 w-3.5" /></Link>
+        <Link to="/patient/context/clinical" className={secondaryButton}>{copy.clinicalLink}</Link>
       </div>
     </div>
   );
@@ -392,6 +395,7 @@ export const SleepLifestylePage: React.FC = () => {
 export const MentalWellbeingPage: React.FC = () => {
   const { wellbeing, setWellbeing } = usePatientPortalStore();
   const pt = getPortalTranslation(useLanguageStore().currentLanguage);
+  const copy = getPortalPagesCopy(useLanguageStore().currentLanguage).contextPages.wellbeing;
   const [saved, setSaved] = useState(false);
 
   const save = async () => {
@@ -410,77 +414,77 @@ export const MentalWellbeingPage: React.FC = () => {
         eyebrow={pt.context.wellbeing.eyebrow}
         title={pt.context.wellbeing.title}
         description={pt.context.wellbeing.description}
-        actions={<Pill tone="sage">Optional</Pill>}
+        actions={<Pill tone="sage">{copy.optional}</Pill>}
       />
 
       <MotionReveal className="mx-auto w-full max-w-2xl">
         <HealthcareScene
           kind="social"
           className="w-full"
-          title="Haroon sharing time with a caregiver"
+          title={copy.sceneTitle}
         />
       </MotionReveal>
 
       {saved && (
         <div className="pp-success">
           <CheckCircle2 className="h-4 w-4" />
-          <span>Wellbeing check-in saved.</span>
+          <span>{copy.savedNote}</span>
         </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card>
-          <SectionTitle title="This week" detail="There are no right or wrong answers." />
+          <SectionTitle title={copy.weekTitle} detail={copy.weekDetail} />
           <div className="space-y-6">
-            <RangeField id="wellbeing-mood" label="Overall mood" value={wellbeing.mood} onChange={(value) => setWellbeing({ mood: value })} low="Very low" high="Very good" />
-            <RangeField id="wellbeing-stress" label="Stress level" value={wellbeing.stress} onChange={(value) => setWellbeing({ stress: value })} low="Calm" high="Very stressed" />
-            <RangeField id="wellbeing-motivation" label="Motivation for daily activities" value={wellbeing.motivation} onChange={(value) => setWellbeing({ motivation: value })} low="Very low" high="Very good" />
+            <RangeField id="wellbeing-mood" label={copy.mood} value={wellbeing.mood} onChange={(value) => setWellbeing({ mood: value })} low={copy.moodLow} high={copy.moodHigh} />
+            <RangeField id="wellbeing-stress" label={copy.stress} value={wellbeing.stress} onChange={(value) => setWellbeing({ stress: value })} low={copy.stressLow} high={copy.stressHigh} />
+            <RangeField id="wellbeing-motivation" label={copy.motivation} value={wellbeing.motivation} onChange={(value) => setWellbeing({ motivation: value })} low={copy.motivationLow} high={copy.motivationHigh} />
           </div>
           <div className="mt-6">
-            <label className={labelClass} htmlFor="wellbeing-notes">Anything you would like to add?</label>
+            <label className={labelClass} htmlFor="wellbeing-notes">{copy.addNote}</label>
             <textarea
               id="wellbeing-notes"
               rows={3}
               value={wellbeing.notes}
               onChange={(event) => setWellbeing({ notes: event.target.value })}
               className={fieldClass}
-              placeholder="Optional note for your care team"
+              placeholder={copy.notePlaceholder}
             />
           </div>
           <button type="button" className={`${primaryButton} mt-4`} onClick={save}>
-            <Save className="h-4 w-4" /> Save check-in
+            <Save className="h-4 w-4" /> {copy.save}
           </button>
         </Card>
 
         <div className="space-y-4">
           <Card>
             <p className="flex items-center gap-1.5 text-xs font-bold text-sage-deep">
-              <Brain className="h-3.5 w-3.5" /> A gentle reminder
+              <Brain className="h-3.5 w-3.5" /> {copy.reminderTitle}
             </p>
             <p className="mt-2 text-[14px] leading-6 text-body">
-              Memory complaints and mood can influence each other. Your clinician will consider this alongside your screening observations and history.
+              {copy.reminderBody}
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {rangeLabels.slice(0, 4).map((label) => <Pill key={label} tone="sage">{label}</Pill>)}
+              {copy.ranges.slice(0, 4).map((label) => <Pill key={label} tone="sage">{label}</Pill>)}
             </div>
           </Card>
 
           <div className="rounded-xl border border-amber/60 bg-amber/10 p-3.5">
             <p className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-              <Info className="h-3.5 w-3.5" /> About validated instruments
+              <Info className="h-3.5 w-3.5" /> {copy.instrumentsTitle}
             </p>
             <p className="mt-1 text-xs leading-5 text-amber-900/80">
-              Formal mood and anxiety questionnaires are administered and interpreted by qualified clinicians. This portal does not replace them.
+              {copy.instrumentsBody}
             </p>
           </div>
 
           <Card>
-            <SectionTitle title="If you need support now" />
+            <SectionTitle title={copy.supportTitle} />
             <p className="text-xs leading-5 text-muted">
-              If you feel unsafe or in crisis, contact local emergency services or your hospital support line immediately.
+              {copy.supportBody}
             </p>
             <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-forest">
-              <HeartPulse className="h-3.5 w-3.5" /> Clinical support: Contact your clinic helpline or emergency care
+              <HeartPulse className="h-3.5 w-3.5" /> {copy.supportLine}
             </span>
           </Card>
         </div>
@@ -496,6 +500,7 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
   const { health, setHealth } = usePatientPortalStore();
   const { context } = usePatientOverview();
   const pt = getPortalTranslation(useLanguageStore().currentLanguage);
+  const copy = getPortalPagesCopy(useLanguageStore().currentLanguage).contextPages.clinical;
   const clinical = context.find((item) => item.source === 'clinical_metabolic');
   const genomicRecord = context.find((item) => item.source === 'genomic');
   const [saved, setSaved] = useState(false);
@@ -524,7 +529,7 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2600);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'History could not be saved to the clinical record.');
+      setError(err instanceof Error ? err.message : copy.saveError);
     } finally {
       setSaving(false);
     }
@@ -536,13 +541,13 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
         eyebrow={pt.context.clinical.eyebrow}
         title={pt.context.clinical.title}
         description={pt.context.clinical.description}
-        actions={<Pill tone="blue" dot>Patient-maintained</Pill>}
+        actions={<Pill tone="blue" dot>{copy.patientMaintained}</Pill>}
       />
 
       {saved && (
         <div className="pp-success">
           <CheckCircle2 className="h-4 w-4" />
-          <span>History updated and shared with your care team.</span>
+          <span>{copy.savedNote}</span>
         </div>
       )}
       {error && (
@@ -554,30 +559,30 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <SectionTitle title="Relevant medical conditions" detail="Shared during onboarding and editable here." />
+          <SectionTitle title={copy.conditionsTitle} detail={copy.conditionsDetail} />
           <div className="flex flex-wrap gap-1.5">
-            {health.conditions.length ? health.conditions.map((item) => <Pill key={item} tone="slate">{item}</Pill>) : <Pill tone="slate">None shared</Pill>}
+            {health.conditions.length ? health.conditions.map((item) => <Pill key={item} tone="slate">{item}</Pill>) : <Pill tone="slate">{copy.noneShared}</Pill>}
           </div>
           <div className="mt-4">
-            <label className={labelClass} htmlFor="clinical-medications">Current medications</label>
+            <label className={labelClass} htmlFor="clinical-medications">{copy.medications}</label>
             <textarea
               id="clinical-medications"
               rows={3}
               value={health.medications}
               onChange={(event) => setHealth({ medications: event.target.value })}
               className={fieldClass}
-              placeholder="Medication name, dose, and frequency"
+              placeholder={copy.medicationsPlaceholder}
             />
           </div>
           <div className="mt-4">
-            <label className={labelClass} htmlFor="clinical-family">Family history</label>
+            <label className={labelClass} htmlFor="clinical-family">{copy.familyHistory}</label>
             <textarea
               id="clinical-family"
               rows={3}
               value={health.familyHistory}
               onChange={(event) => setHealth({ familyHistory: event.target.value })}
               className={fieldClass}
-              placeholder="Relevant family neurological or memory history"
+              placeholder={copy.familyPlaceholder}
             />
           </div>
           <button
@@ -586,43 +591,43 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
             onClick={saveContext}
             disabled={saving}
           >
-            <Save className="h-4 w-4" /> {saving ? 'Saving…' : 'Save history'}
+            <Save className="h-4 w-4" /> {saving ? copy.saving : copy.saveHistory}
           </button>
         </Card>
 
         <div className="space-y-4">
           <Card>
-            <SectionTitle title="Imported clinical information" detail="Read-only in the portal." />
+            <SectionTitle title={copy.importedTitle} detail={copy.importedDetail} />
             {clinical ? (
               <>
                 <dl>
-                  <InfoRow label="Blood pressure" value={`${clinical.values.systolic ?? '—'}/${clinical.values.diastolic ?? '—'} mmHg`} />
-                  <InfoRow label="Glucose" value={clinical.values.glucose ? `${clinical.values.glucose} mg/dL` : 'Not available'} />
-                  <InfoRow label="Medication on record" value={clinical.values.medication || 'Not listed'} />
-                  <InfoRow label="Source" value="Clinical record import" />
-                  <InfoRow label="Last updated" value={formatDate(clinical.recordedAt)} />
+                  <InfoRow label={copy.bloodPressure} value={`${clinical.values.systolic ?? '—'}/${clinical.values.diastolic ?? '—'} mmHg`} />
+                  <InfoRow label={copy.glucose} value={clinical.values.glucose ? `${clinical.values.glucose} mg/dL` : copy.notAvailable} />
+                  <InfoRow label={copy.medicationOnRecord} value={clinical.values.medication || copy.notListed} />
+                  <InfoRow label={copy.source} value={copy.sourceValue} />
+                  <InfoRow label={copy.lastUpdated} value={formatDate(clinical.recordedAt)} />
                 </dl>
                 <p className="mt-3 flex items-start gap-1.5 text-xs leading-5 text-muted">
                   <Database className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  Imported information is read-only and used for context only. It does not alter your screening observations.
+                  {copy.importedNote}
                 </p>
               </>
             ) : (
               <p className="text-xs leading-5 text-muted">
-                No clinical measurements are linked. Ask your care team about sharing recent measurements if relevant.
+                {copy.noClinical}
               </p>
             )}
           </Card>
 
           <Card>
-            <SectionTitle title="Genomic context (optional)" detail="Shared only with your consent." />
+            <SectionTitle title={copy.genomicTitle} detail={copy.genomicDetail} />
             {genomicRecord ? (
               <p className="mb-3 text-xs leading-5 text-muted">
-                Last shared {formatDate(genomicRecord.recordedAt)}. You can withdraw sharing at any time from Privacy & sharing.
+                {copy.genomicLast(formatDate(genomicRecord.recordedAt))}
               </p>
             ) : (
               <p className="mb-3 text-xs leading-5 text-muted">
-                No genomic information has been shared. This is optional and not needed to use NeuLens.
+                {copy.genomicNone}
               </p>
             )}
             <label className="flex items-start gap-2 text-xs leading-5 text-body" htmlFor="genomic-consent">
@@ -634,11 +639,11 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
                 onChange={(event) => setHealth({ genomicConsent: event.target.checked })}
               />
               <span>
-                I agree to share a genomic result with my care team as context. NeuLens does not interpret variants, calculate genetic risk, or change my screening observations.
+                {copy.genomicConsent}
               </span>
             </label>
             <div className="mt-3">
-              <label className={labelClass} htmlFor="genomic-summary">What was reported</label>
+              <label className={labelClass} htmlFor="genomic-summary">{copy.genomicLabel}</label>
               <textarea
                 id="genomic-summary"
                 rows={3}
@@ -646,36 +651,40 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
                 value={health.genomicSummary}
                 onChange={(event) => setHealth({ genomicSummary: event.target.value })}
                 className={`${fieldClass} disabled:cursor-not-allowed disabled:opacity-60`}
-                placeholder="For example: gene and result exactly as reported by the testing laboratory"
+                placeholder={copy.genomicPlaceholder}
               />
             </div>
             <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-muted">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              Genomic context is shown to a qualified clinician for discussion only. It is never used to score this screening or to infer a diagnosis.
+              {copy.genomicNote}
             </p>
           </Card>
 
           <Card>
-            <SectionTitle title="Previous cognitive assessments" />
+            <SectionTitle title={copy.previousTitle} />
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-muted">{health.previousAssessments}</span>
-              <Pill tone="slate">Self-reported</Pill>
+              <span className="text-xs text-muted">
+                {!health.previousAssessments || health.previousAssessments === 'No previous assessments'
+                  ? copy.noPrevious
+                  : health.previousAssessments}
+              </span>
+              <Pill tone="slate">{copy.selfReported}</Pill>
             </div>
             <p className="mt-2 text-xs leading-5 text-slate-500">
-              Previous assessment details should be confirmed with the clinician or service that performed them.
+              {copy.previousNote}
             </p>
           </Card>
 
           <div className="pp-notice">
             <ClipboardList className="h-3.5 w-3.5" />
-            <span>Data-source labels: patient-reported, patient-recorded, and imported clinical values are shown separately so clinicians know where each value came from.</span>
+            <span>{copy.dataLabels}</span>
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Link to="/patient/context" className={secondaryButton}><Sun className="h-3.5 w-3.5" /> Context overview</Link>
-        <Link to="/patient/privacy" className={secondaryButton}><BedDouble className="h-3.5 w-3.5" /> Privacy & sharing</Link>
+        <Link to="/patient/context" className={secondaryButton}><Sun className="h-3.5 w-3.5" /> {copy.contextOverview}</Link>
+        <Link to="/patient/privacy" className={secondaryButton}><BedDouble className="h-3.5 w-3.5" /> {copy.privacySharing}</Link>
       </div>
     </div>
   );

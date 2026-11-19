@@ -16,6 +16,10 @@ import {
   Users
 } from 'lucide-react';
 import { useAuthStore } from '../../../store/authStore';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { getPortalPagesCopy } from '../../../services/language/portalPagesCopy';
+import { getPathwayCopy } from '../../../services/language/pathwayCopy';
+import { getPortalTranslation } from '../../../services/language/portalTranslations';
 import { treatmentTeam, usePatientPortalStore } from '../../../store/patientPortalStore';
 import { usePatientOverview } from './usePatientOverview';
 import { BrainHealthPathway, derivePathwayFromOverview } from '../../../components/BrainHealthPathway';
@@ -36,23 +40,14 @@ import {
 
 const labelClass = 'mb-1 block text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep';
 
-const activityLabels: Record<string, string> = {
-  appointments: 'Remembering appointments',
-  medication: 'Managing medicines',
-  finances: 'Handling money or bills',
-  household: 'Household tasks',
-  shopping: 'Shopping or errands',
-  transport: 'Getting around / transport',
-  cooking: 'Preparing meals',
-  communication: 'Communication / phone use'
-};
+type PortalCopy = ReturnType<typeof getPortalPagesCopy>;
 
-const responseLabel = (value: any) => {
-  if (value == null || value === '') return 'Not recorded';
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+const responseLabel = (value: any, copy: PortalCopy['common']) => {
+  if (value == null || value === '') return copy.notRecorded;
+  if (typeof value === 'boolean') return value ? copy.yes : copy.no;
   if (typeof value === 'string') return value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase());
   if (typeof value === 'number') return String(value);
-  return 'Recorded';
+  return copy.recorded;
 };
 
 export const PatientHealthProfilePage: React.FC = () => {
@@ -61,71 +56,76 @@ export const PatientHealthProfilePage: React.FC = () => {
   const { health = {}, sleep = {}, wellbeing = {} } = store;
   const contextLog = store.contextLog || store.contextEntries || [];
   const { context } = usePatientOverview();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).healthProfile;
+  const common = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).common;
+  const fieldLabels = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).fieldLabels;
+  const fieldLabel = (key: string) =>
+    fieldLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ');
   const hasContext = (Array.isArray(contextLog) && contextLog.length > 0) || Object.values(sleep || {}).some(Boolean) || Object.values(wellbeing || {}).some(Boolean) || Boolean(health?.conditions || health?.medications || health?.familyHistory);
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Patient portal · Health profile & context"
-        title="Health Profile & Context"
-        description="Physical health, sleep, lifestyle, mood, clinical/family history, and caregiver/support information recorded for clinical context. Missing information stays missing."
-        actions={<Link to="/patient/context/clinical" className={secondaryButton}><Stethoscope className="h-4 w-4" /> Edit history</Link>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Link to="/patient/context/clinical" className={secondaryButton}><Stethoscope className="h-4 w-4" /> {copy.editHistory}</Link>}
       />
 
       <MotionReveal><HealthcareScene kind="profile" className="w-full max-w-3xl" /></MotionReveal>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <SectionTitle title="Personal & care profile" detail="Recorded identity and support details." />
+          <SectionTitle title={copy.profileTitle} detail={copy.profileDetail} />
           <dl>
-            <InfoRow label="Name" value={user?.name || 'Not recorded'} />
-            <InfoRow label="Patient ID" value={user?.patientId || 'Not recorded'} />
-            <InfoRow label="Primary clinician" value={treatmentTeam.doctor} />
-            <InfoRow label="Care team role" value={treatmentTeam.role} />
-            <InfoRow label="Caregiver / support" value={health?.caregiverName || health?.caregiver || health?.supportContact || 'Not recorded'} />
+            <InfoRow label={copy.name} value={user?.name || common.notRecorded} />
+            <InfoRow label={copy.patientId} value={user?.patientId || common.notRecorded} />
+            <InfoRow label={copy.clinician} value={treatmentTeam.doctor} />
+            <InfoRow label={copy.careTeamRole} value={treatmentTeam.role} />
+            <InfoRow label={copy.caregiver} value={health?.caregiverName || health?.caregiver || health?.supportContact || common.notRecorded} />
           </dl>
-          <p className="mt-3 text-[13px] leading-5 text-muted">Caregiver/support details are context for discussion and are not diagnostic.</p>
+          <p className="mt-3 text-[13px] leading-5 text-muted">{copy.caregiverNote}</p>
         </Card>
 
         <Card>
-          <SectionTitle title="Physical health & history" />
+          <SectionTitle title={copy.physicalTitle} />
           <dl>
-            <InfoRow label="Conditions" value={health?.conditions || 'Not recorded'} />
-            <InfoRow label="Medications" value={health?.medications || 'Not recorded'} />
-            <InfoRow label="Family history" value={health?.familyHistory || 'Not recorded'} />
-            <InfoRow label="Previous assessments" value={health?.previousAssessments || 'Not recorded'} />
-            <InfoRow label="Context entries (recorded)" value={String(context?.entries?.length ?? contextLog.length ?? 0)} />
+            <InfoRow label={copy.conditions} value={health?.conditions || common.notRecorded} />
+            <InfoRow label={copy.medications} value={health?.medications || common.notRecorded} />
+            <InfoRow label={copy.familyHistory} value={health?.familyHistory || common.notRecorded} />
+            <InfoRow label={copy.previousAssessments} value={health?.previousAssessments || common.notRecorded} />
+            <InfoRow label={copy.contextEntries} value={String(context?.entries?.length ?? contextLog.length ?? 0)} />
           </dl>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link to="/patient/context/clinical" className={secondaryButton}>Clinical & family</Link>
-            <Link to="/patient/profile" className={secondaryButton}>My profile</Link>
+            <Link to="/patient/context/clinical" className={secondaryButton}>{copy.clinicalLink}</Link>
+            <Link to="/patient/profile" className={secondaryButton}>{copy.profileLink}</Link>
           </div>
         </Card>
 
         <Card>
-          <SectionTitle title="Sleep & lifestyle (recorded)" />
+          <SectionTitle title={copy.sleepTitle} />
           <dl>
             {Object.keys(sleep || {}).length ? Object.entries(sleep).slice(0, 8).map(([k, v]) => (
-              <InfoRow key={k} label={k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')} value={v == null || v === '' ? 'Not recorded' : String(v)} />
-            )) : <InfoRow label="Status" value="Not recorded" />}
+              <InfoRow key={k} label={fieldLabel(k)} value={v == null || v === '' ? common.notRecorded : String(v)} />
+            )) : <InfoRow label={common.status} value={common.notRecorded} />}
           </dl>
-          <Link to="/patient/context/sleep" className={`${secondaryButton} mt-3`}>View / update sleep & lifestyle</Link>
+          <Link to="/patient/context/sleep" className={`${secondaryButton} mt-3`}>{copy.sleepLink}</Link>
         </Card>
 
         <Card>
-          <SectionTitle title="Mood & wellbeing (recorded)" />
+          <SectionTitle title={copy.wellbeingTitle} />
           <dl>
             {Object.keys(wellbeing || {}).length ? Object.entries(wellbeing).slice(0, 8).map(([k, v]) => (
-              <InfoRow key={k} label={k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')} value={v == null || v === '' ? 'Not recorded' : String(v)} />
-            )) : <InfoRow label="Status" value="Not recorded" />}
+              <InfoRow key={k} label={fieldLabel(k)} value={v == null || v === '' ? common.notRecorded : String(v)} />
+            )) : <InfoRow label={common.status} value={common.notRecorded} />}
           </dl>
-          <Link to="/patient/context/wellbeing" className={`${secondaryButton} mt-3`}>View / update wellbeing</Link>
+          <Link to="/patient/context/wellbeing" className={`${secondaryButton} mt-3`}>{copy.wellbeingLink}</Link>
         </Card>
       </div>
 
       {!hasContext && (
         <div className="rounded-xl border border-amber/60 bg-amber\/10 p-3.5 text-[13px] leading-5 text-amber-900 flex gap-2">
           <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
-          <span>Limited context recorded so far. Adding sleep, lifestyle, mood, or health history can help your clinician interpret observations; it does not change screening scores.</span>
+          <span>{copy.limitedContext}</span>
         </div>
       )}
     </div>
@@ -134,6 +134,9 @@ export const PatientHealthProfilePage: React.FC = () => {
 
 export const DailyFunctionQuestionnairePage: React.FC = () => {
   const { assessments, latestAssessment } = usePatientOverview();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).dailyFunction;
+  const common = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).common;
+  const activityLabels = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).activities;
   const latestFunctional = (latestAssessment?.taskResponses as any)?.functionalCheckIn || (latestAssessment?.taskResponses as any)?.functionalAssessment || (latestAssessment?.taskResponses as any)?.dailyFunction;
 
   const entries = latestFunctional?.activities && typeof latestFunctional.activities === 'object'
@@ -145,28 +148,28 @@ export const DailyFunctionQuestionnairePage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Patient portal · Daily function questionnaire"
-        title="Daily Function Questionnaire"
-        description="Everyday activities and independence, as recorded in check-ins. These responses support clinical discussion and are not independently diagnostic."
-        actions={<Link to="/patient/assessment/intro" className={primaryButton}><Sparkles className="h-4 w-4" /> Complete check-in in assessment</Link>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Link to="/patient/assessment/intro" className={primaryButton}><Sparkles className="h-4 w-4" /> {copy.completeInAssessment}</Link>}
       />
 
       <MotionReveal><HealthcareScene kind="functional" className="w-full max-w-3xl" /></MotionReveal>
       <div className="rounded-xl border border-forest/40 bg-mint/50 p-3.5 text-[13px] leading-5 text-forest/90 flex gap-2">
         <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
-        <span>Do not treat these responses as independently diagnostic. A clinician interprets them together with history, context, and observations over time.</span>
+        <span>{copy.disclaimer}</span>
       </div>
 
       <Card>
-        <SectionTitle title="Most recent recorded check-in" detail={latestAssessment ? `From assessment ${formatDate(latestAssessment.date)}` : 'No recorded assessment yet'} />
+        <SectionTitle title={copy.latestTitle} detail={latestAssessment ? copy.fromAssessment(formatDate(latestAssessment.date)) : copy.noAssessment} />
         {latestFunctional?.skipped ? (
-          <p className="text-[14px] text-muted">The daily function check-in was skipped in the latest recorded session.</p>
+          <p className="text-[14px] text-muted">{copy.skipped}</p>
         ) : entries.length ? (
           <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
             {entries.map(([key, value]) => (
               <div key={key} className="flex items-start justify-between border-b border-line py-2 gap-3">
                 <dt className="text-[14px] text-muted">{activityLabels[key] || key.replace(/_/g, ' ')}</dt>
-                <dd className="text-[14px] font-semibold text-ink text-right">{responseLabel(value)}</dd>
+                <dd className="text-[14px] font-semibold text-ink text-right">{responseLabel(value, common)}</dd>
               </div>
             ))}
           </dl>
@@ -174,15 +177,15 @@ export const DailyFunctionQuestionnairePage: React.FC = () => {
           <EmptyState
             scene="emptyAssessment"
             icon={ClipboardList}
-            title="No daily function responses recorded yet"
-            detail="Complete the functional check-in during a screening session to record everyday activities and independence here."
-            action={<Link to="/patient/assessment/intro" className={primaryButton}>Start assessment</Link>}
+            title={copy.emptyTitle}
+            detail={copy.emptyDetail}
+            action={<Link to="/patient/assessment/intro" className={primaryButton}>{copy.start}</Link>}
           />
         )}
       </Card>
 
       <Card>
-        <SectionTitle title="Recorded sessions with functional data" detail={`${assessments.length} assessment(s) in history (recorded only).`} />
+        <SectionTitle title={copy.sessionsTitle} detail={copy.sessionsDetail(assessments.length)} />
         {assessments.length ? (
           <ul className="divide-y divide-line">
             {assessments.slice(0, 8).map((a: any) => {
@@ -192,15 +195,15 @@ export const DailyFunctionQuestionnairePage: React.FC = () => {
                 <li key={a.id} className="flex items-center justify-between gap-3 py-2.5">
                   <div>
                     <p className="text-[14px] font-semibold text-ink">{formatDate(a.date)}</p>
-                    <p className="text-[13px] text-muted">{has ? 'Daily function responses recorded' : 'Not recorded / skipped in this session'}</p>
+                    <p className="text-[13px] text-muted">{has ? copy.recordedResponses : copy.notRecordedSession}</p>
                   </div>
-                  <Pill tone={has ? 'forestSoft' : 'sage'}>{has ? 'Recorded' : 'Missing'}</Pill>
+                  <Pill tone={has ? 'forestSoft' : 'sage'}>{has ? common.recorded : common.notRecorded}</Pill>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <p className="text-[13px] text-muted">No assessment history yet.</p>
+          <p className="text-[13px] text-muted">{copy.noHistory}</p>
         )}
       </Card>
     </div>
@@ -209,65 +212,83 @@ export const DailyFunctionQuestionnairePage: React.FC = () => {
 
 export const BrainHealthTimelinePage: React.FC = () => {
   const { assessments, baseline, changes, brainHealth } = usePatientOverview();
-  const pathway = derivePathwayFromOverview({ baseline, changes, brainHealth, assessments } as any);
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).timeline;
+  const statusText = getPortalTranslation(useLanguageStore((state) => state.currentLanguage)).shell.status;
+  const monitoringStatus = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.status;
+  const reviewLabel = (status?: string) =>
+    status === 'REVIEWED'
+      ? statusText.reviewed
+      : status === 'FOLLOWUP_REQUIRED'
+      ? statusText.followUpSuggested
+      : statusText.awaitingReview;
+  const pathway = derivePathwayFromOverview(
+    { baseline, changes, brainHealth, assessments } as any,
+    getPathwayCopy(useLanguageStore((state) => state.currentLanguage))
+  );
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Patient portal · Brain health timeline"
-        title="Brain Health Timeline"
-        description="Previous assessments and recorded changes over time, compared within your own history when quality/comparability allows. Not a diagnosis."
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
         actions={
           <div className="flex gap-2">
-            <Link to="/patient/history" className={secondaryButton}><ClipboardList className="h-4 w-4" /> History</Link>
-            <Link to="/patient/trends" className={secondaryButton}><LineChart className="h-4 w-4" /> Trends</Link>
+            <Link to="/patient/history" className={secondaryButton}><ClipboardList className="h-4 w-4" /> {copy.history}</Link>
+            <Link to="/patient/trends" className={secondaryButton}><LineChart className="h-4 w-4" /> {copy.trends}</Link>
           </div>
         }
       />
 
       <MotionReveal><HealthcareScene kind="timeline" className="w-full max-w-3xl" /></MotionReveal>
       <Card>
-        <SectionTitle title="Monitoring pathway" detail="Recorded pathway status (deterministic, clinician-in-the-loop)." />
+        <SectionTitle title={copy.pathwayTitle} detail={copy.pathwayDetail} />
         <BrainHealthPathway pathway={pathway} personalizedPrevention={null} />
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <Card>
-          <SectionTitle title="Timeline of assessments" detail="Most recent first. Only recorded sessions are shown." />
+          <SectionTitle title={copy.assessmentsTitle} detail={copy.assessmentsDetail} />
           {assessments.length ? (
             <ol className="relative border-s border-line/80 ms-2 space-y-4 ps-4">
               {assessments.slice(0, 12).map((a: any, idx: number) => (
                 <li key={a.id} className="relative">
                   <span className={`absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white ${idx === 0 ? 'bg-forest' : 'bg-line-strong'}`} />
-                  <p className="text-[14px] font-semibold text-ink">{formatDate(a.date)} <span className="font-normal text-muted">· {a.assessmentType || 'Screening'}</span></p>
-                  <p className="text-[13px] text-muted">Overall: {a.overallScore != null ? `${Math.round(a.overallScore)} / 100` : '—'} · {a.reviewStatus?.replace(/_/g, ' ').toLowerCase() || 'status not recorded'}</p>
-                  {baseline && idx === assessments.length - 1 && <p className="text-[13px] text-forest mt-0.5">Baseline reference context available</p>}
+                  <p className="text-[14px] font-semibold text-ink">{formatDate(a.date)} <span className="font-normal text-muted">· {a.assessmentType || copy.screening}</span></p>
+                  <p className="text-[13px] text-muted">{copy.overall}: {a.overallScore != null ? `${Math.round(a.overallScore)} / 100` : '—'} · {a.reviewStatus ? reviewLabel(a.reviewStatus) : copy.statusNotRecorded}</p>
+                  {baseline && idx === assessments.length - 1 && <p className="text-[13px] text-forest mt-0.5">{copy.baselineAvailable}</p>}
                 </li>
               ))}
             </ol>
           ) : (
-            <EmptyState scene="emptyAssessment" icon={Activity} title="No assessments yet" detail="Your timeline will appear after your first completed screening." action={<Link to="/patient/assessment/intro" className={primaryButton}>Start assessment</Link>} />
+            <EmptyState scene="emptyAssessment" icon={Activity} title={copy.emptyTitle} detail={copy.emptyDetail} action={<Link to="/patient/assessment/intro" className={primaryButton}>{copy.start}</Link>} />
           )}
         </Card>
 
         <Card>
-          <SectionTitle title="Recorded change summaries" detail="Within-person change cues (not diagnoses). Poor quality does not mean decline." />
+          <SectionTitle title={copy.changesTitle} detail={copy.changesDetail} />
           {changes.length ? (
             <ul className="space-y-2">
               {changes.slice(0, 8).map((c: any, i: number) => (
                 <li key={c.id || i} className="rounded-xl border border-line bg-warm/70 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[14px] font-semibold text-ink">{formatDate(c.detectedAt || c.createdAt || c.date)}</p>
-                    <Pill tone={c.status === 'REVIEW' ? 'amber' : c.status === 'NO_CHANGE' ? 'forestSoft' : 'sage'}>{c.status || 'Recorded'}</Pill>
+                    <Pill tone={c.status === 'REVIEW' ? 'amber' : c.status === 'NO_CHANGE' ? 'forestSoft' : 'sage'}>
+                      {c.status === 'REVIEW'
+                        ? monitoringStatus.review.label
+                        : c.status === 'NO_CHANGE'
+                        ? monitoringStatus.stable.label
+                        : monitoringStatus.monitoring.label}
+                    </Pill>
                   </div>
                   <p className="mt-1 text-[13px] leading-5 text-muted">
-                    {Array.isArray(c.reasons) && c.reasons.length ? c.reasons.map((r: string) => r.replace(/_/g, ' ').toLowerCase()).join(', ') : (c.summary || 'No reason details recorded.')}
+                    {Array.isArray(c.reasons) && c.reasons.length ? c.reasons.map((r: string) => r.replace(/_/g, ' ').toLowerCase()).join(', ') : (c.summary || copy.noReason)}
                   </p>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-[13px] leading-5 text-muted">No change summaries recorded yet. Change is interpreted only across comparable, quality-acceptable sessions.</p>
+            <p className="text-[13px] leading-5 text-muted">{copy.noChanges}</p>
           )}
         </Card>
       </div>
@@ -278,7 +299,11 @@ export const BrainHealthTimelinePage: React.FC = () => {
 export const PersonalizedPreventionPlanPage: React.FC = () => {
   const { baseline, changes, brainHealth, assessments, context } = usePatientOverview();
   const { carePlan } = usePatientPortalStore();
-  const pathway = derivePathwayFromOverview({ baseline, changes, brainHealth, assessments, context } as any);
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).prevention;
+  const pathway = derivePathwayFromOverview(
+    { baseline, changes, brainHealth, assessments, context } as any,
+    getPathwayCopy(useLanguageStore((state) => state.currentLanguage))
+  );
 
   const nextSteps = (brainHealth?.nextSteps || []) as any[];
   const prevention = nextSteps.filter((s) => s?.stage === 4 || s?.type === 'PERSONALIZED_PREVENTION' || s?.type === 'REVIEW_CONTEXT' || s?.type === 'LIFESTYLE_SUPPORT');
@@ -287,48 +312,48 @@ export const PersonalizedPreventionPlanPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Patient portal · Personalized prevention plan"
-        title="Personalized Prevention Plan"
-        description="Clinician-approved, evidence-informed supportive suggestions based on recorded inputs. Not a diagnosis and not autonomous treatment."
-        actions={<Link to="/patient/care-plan" className={secondaryButton}><ShieldCheck className="h-4 w-4" /> Care plan</Link>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Link to="/patient/care-plan" className={secondaryButton}><ShieldCheck className="h-4 w-4" /> {copy.carePlanLink}</Link>}
       />
 
       <MotionReveal><HealthcareScene kind="prevention" className="w-full max-w-3xl" /></MotionReveal>
       <div className="rounded-xl border border-amber/60 bg-amber\/10 p-3.5 text-[13px] leading-5 text-amber-900 flex gap-2">
         <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
-        <span>Suggestions are supportive and for clinician discussion/approval. They are derived only from recorded task/context/functional inputs (no invented data) and never constitute a prescription or inferred disease.</span>
+        <span>{copy.disclaimer}</span>
       </div>
 
       <Card>
-        <SectionTitle title="Recorded prevention/support signals" detail="From available monitoring and context (recorded only)." />
-        <BrainHealthPathway pathway={pathway} personalizedPrevention={prevention.length ? { note: 'See recorded next steps below.' } : null} />
+        <SectionTitle title={copy.signalsTitle} detail={copy.signalsDetail} />
+        <BrainHealthPathway pathway={pathway} personalizedPrevention={prevention.length ? { note: copy.signalsNote } : null} />
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <SectionTitle title="Clinician-guided next steps (recorded)" />
+          <SectionTitle title={copy.stepsTitle} />
           {prevention.length || general.length ? (
             <ul className="space-y-2">
               {[...prevention, ...general].map((step: any, i: number) => (
                 <li key={step.id || i} className="flex gap-2 rounded-xl border border-line bg-warm/70 p-3">
                   <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${step.done ? 'text-forest' : 'text-muted'}`} aria-hidden="true" />
                   <div>
-                    <p className="text-[14px] font-semibold text-ink">{step.action || step.title || step.type || 'Recorded step'}</p>
-                    <p className="text-[13px] text-muted mt-0.5">{step.reason || step.detail || 'Supportive/monitoring step recorded for discussion.'}</p>
+                    <p className="text-[14px] font-semibold text-ink">{step.action || step.title || step.type || copy.stepFallback}</p>
+                    <p className="text-[13px] text-muted mt-0.5">{step.reason || step.detail || copy.stepDetailFallback}</p>
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-[13px] leading-5 text-muted">No personalized prevention/support steps recorded yet. Complete assessments and context, then review with your clinician.</p>
+            <p className="text-[13px] leading-5 text-muted">{copy.noSteps}</p>
           )}
         </Card>
 
         <Card>
-          <SectionTitle title="Care plan & follow-up" detail="Your clinician-approved plan and schedule." />
+          <SectionTitle title={copy.planTitle} detail={copy.planDetail} />
           <dl className="mb-3">
-            <InfoRow label="Next review" value={carePlan?.nextReview ? formatDate(carePlan.nextReview) : 'Not scheduled'} />
-            <InfoRow label="Plan items" value={String(carePlan?.steps?.length ?? 0)} />
+            <InfoRow label={copy.nextReview} value={carePlan?.nextReview ? formatDate(carePlan.nextReview) : copy.notScheduled} />
+            <InfoRow label={copy.planItems} value={String(carePlan?.steps?.length ?? 0)} />
           </dl>
           {carePlan?.steps?.length ? (
             <ul className="space-y-2 mb-3">
@@ -338,13 +363,13 @@ export const PersonalizedPreventionPlanPage: React.FC = () => {
             </ul>
           ) : null}
           <div className="flex flex-wrap gap-2">
-            <Link to="/patient/care-plan" className={secondaryButton}>Open care plan</Link>
-            <Link to="/patient/appointments" className={secondaryButton}><CalendarClock className="h-4 w-4" /> Follow-up & appointments</Link>
+            <Link to="/patient/care-plan" className={secondaryButton}>{copy.openPlan}</Link>
+            <Link to="/patient/appointments" className={secondaryButton}><CalendarClock className="h-4 w-4" /> {copy.appointments}</Link>
           </div>
         </Card>
       </div>
 
-      <p className="text-[13px] text-muted">Sources: recorded assessments, context, and clinician-entered plan data only. No synthetic or invented data.</p>
+      <p className="text-[13px] text-muted">{copy.sources}</p>
     </div>
   );
 };

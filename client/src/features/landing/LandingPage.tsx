@@ -29,19 +29,13 @@ import {
 import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { HealthcareScene, type SceneKind } from '../../components/illustrations/HealthcareScene';
 import { DemoRequestForm } from './DemoRequestForm';
+import { PublicLanguageToggle } from '../../components/PublicLanguageToggle';
+import { useLanguageStore } from '../../services/language/LanguageManager';
+import { getLandingCopy } from '../../services/language/landingCopy';
 
 /* -------------------------------------------------------------------------- */
 /*  Shared building blocks                                                    */
 /* -------------------------------------------------------------------------- */
-
-const navigation = [
-  { label: 'The challenge', href: '#challenge' },
-  { label: 'Our approach', href: '#approach' },
-  { label: 'Measurement', href: '#measurement' },
-  { label: 'How it works', href: '#how-it-works' },
-  { label: 'For clinicians', href: '#for-clinicians' },
-  { label: 'Research', href: '#research' },
-];
 
 const prefersReducedMotion = () => {
   if (typeof window === 'undefined') return false;
@@ -184,6 +178,8 @@ const IconBox: React.FC<{
 
 export const LandingPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { currentLanguage } = useLanguageStore();
+  const copy = getLandingCopy(currentLanguage);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -207,23 +203,23 @@ export const LandingPage: React.FC = () => {
   const benefits = [
     {
       icon: Brain,
-      title: 'Multimodal by design',
-      detail: 'Cognition, gaze, voice and facial behaviour observed in one structured session.',
+      title: copy.approach.benefits[0].title,
+      detail: copy.approach.benefits[0].detail,
     },
     {
       icon: ClockCounterClockwise,
-      title: 'Personal over population',
-      detail: 'Comparisons begin with the person’s own baseline, not only a group average.',
+      title: copy.approach.benefits[1].title,
+      detail: copy.approach.benefits[1].detail,
     },
     {
       icon: Stethoscope,
-      title: 'Clinician in the loop',
-      detail: 'Outputs are review prompts for a qualified professional — never automated diagnoses.',
+      title: copy.approach.benefits[2].title,
+      detail: copy.approach.benefits[2].detail,
     },
     {
       icon: UsersThree,
-      title: 'Accessible by default',
-      detail: 'Clear language, spoken guidance and a calm interface designed for older adults.',
+      title: copy.approach.benefits[3].title,
+      detail: copy.approach.benefits[3].detail,
     },
   ];
 
@@ -238,171 +234,138 @@ export const LandingPage: React.FC = () => {
   }[] = [
     {
       index: '01',
-      title: 'Cognitive assessment',
-      description:
-        'Memory, attention, executive function and language, observed through short guided activities.',
-      tags: ['Memory', 'Attention', 'Executive function', 'Language'],
+      title: copy.measurement.pillars[0].title,
+      description: copy.measurement.pillars[0].description,
+      tags: copy.measurement.pillars[0].tags,
       icon: Brain,
       scene: 'cognitive',
-      sceneTitle: 'An older adult completing a guided cognitive activity',
+      sceneTitle: copy.measurement.pillars[0].sceneTitle,
     },
     {
       index: '02',
-      title: 'Ocular observations',
-      description:
-        'Gaze and eye-movement behaviour captured through the browser camera during structured visual tasks.',
-      tags: ['Gaze', 'Fixation stability', 'Saccadic behaviour'],
+      title: copy.measurement.pillars[1].title,
+      description: copy.measurement.pillars[1].description,
+      tags: copy.measurement.pillars[1].tags,
       icon: Eye,
       scene: 'eyeTracking',
-      sceneTitle: 'Eye-movement observations being captured during a guided task',
+      sceneTitle: copy.measurement.pillars[1].sceneTitle,
     },
     {
       index: '03',
-      title: 'Vocal & speech',
-      description:
-        'Speech timing, acoustic characteristics and task word accuracy from short spoken activities.',
-      tags: ['Speech rate', 'Prosody', 'Articulation'],
+      title: copy.measurement.pillars[2].title,
+      description: copy.measurement.pillars[2].description,
+      tags: copy.measurement.pillars[2].tags,
       icon: Microphone,
       scene: 'voice',
-      sceneTitle: 'An older adult completing a guided spoken activity',
+      sceneTitle: copy.measurement.pillars[2].sceneTitle,
     },
     {
       index: '04',
-      title: 'Facial & behavioural',
-      description:
-        'Facial movement, bilateral symmetry and task-related behaviour observed during guided activities.',
-      tags: ['Facial movement', 'Symmetry', 'Task behaviour'],
+      title: copy.measurement.pillars[3].title,
+      description: copy.measurement.pillars[3].description,
+      tags: copy.measurement.pillars[3].tags,
       icon: Smiley,
       scene: 'facial',
-      sceneTitle: 'Facial and behavioural observations during a guided activity',
+      sceneTitle: copy.measurement.pillars[3].sceneTitle,
     },
   ];
 
   const steps = [
     {
       number: '01',
-      title: 'Set up & consent',
-      detail:
-        'A clinician or researcher starts a session, records relevant context with permission, and confirms the person is comfortable to continue.',
+      title: copy.how.steps[0].title,
+      detail: copy.how.steps[0].detail,
     },
     {
       number: '02',
-      title: 'Complete guided activities',
-      detail:
-        'Short cognitive, ocular, vocal and facial activities are delivered with clear spoken instructions and accessibility options.',
+      title: copy.how.steps[1].title,
+      detail: copy.how.steps[1].detail,
     },
     {
       number: '03',
-      title: 'Review a structured summary',
-      detail:
-        'Observations are organised into one session view, with quality and comparability indicators alongside the measurements.',
+      title: copy.how.steps[2].title,
+      detail: copy.how.steps[2].detail,
     },
     {
       number: '04',
-      title: 'Interpret in context',
-      detail:
-        'The clinician considers the summary with history, medications, sensory access and the wider clinical picture.',
+      title: copy.how.steps[3].title,
+      detail: copy.how.steps[3].detail,
     },
   ];
 
   const contextItems = [
     {
       icon: Heartbeat,
-      title: 'Clinical history & medications',
-      detail: 'Comorbidities, prescriptions and sensory access can all shape what a screening observation means.',
+      title: copy.context.items[0].title,
+      detail: copy.context.items[0].detail,
     },
     {
       icon: ChartLineUp,
-      title: 'Everyday function & lifestyle',
-      detail: 'Sleep, activity, mood and daily-function check-ins add context to measured change.',
+      title: copy.context.items[1].title,
+      detail: copy.context.items[1].detail,
     },
     {
       icon: Database,
-      title: 'Authorised health records',
-      detail:
-        'Optional FHIR R4 import of supported observations, only with explicit patient permission and a configured endpoint.',
+      title: copy.context.items[2].title,
+      detail: copy.context.items[2].detail,
     },
     {
       icon: Stethoscope,
-      title: 'Clinician judgement',
-      detail: 'Context can inform a conversation. It does not establish causation or replace clinical assessment.',
+      title: copy.context.items[3].title,
+      detail: copy.context.items[3].detail,
     },
   ];
 
   const faqs = [
     {
-      question: 'Is NeuLens clinically validated?',
-      answer:
-        'No. NeuLens is a developing prototype and is not clinically validated. It does not diagnose dementia or any neurological disorder, and no clinical accuracy figures are claimed.',
+      question: copy.faq.items[0].question,
+      answer: copy.faq.items[0].answer,
     },
     {
-      question: 'Is NeuLens a diagnostic tool?',
-      answer:
-        'No. NeuLens is a screening and clinical decision-support platform. It produces exploratory observations and review prompts for a qualified healthcare professional, not a diagnosis or treatment recommendation.',
+      question: copy.faq.items[1].question,
+      answer: copy.faq.items[1].answer,
     },
     {
-      question: 'What does a session measure?',
-      answer:
-        'A guided session captures four kinds of observation: cognitive task performance, ocular (gaze and eye-movement) behaviour, vocal and speech characteristics, and facial and task-related behaviour. These are exploratory signals, not validated diagnostic instruments.',
+      question: copy.faq.items[2].question,
+      answer: copy.faq.items[2].answer,
     },
     {
-      question: 'Who is NeuLens designed for?',
-      answer:
-        'NeuLens is designed for neurologists, geriatric specialists, hospitals, clinics and clinical research institutions. Sessions are intended to take place within a clinical or research setting under professional supervision.',
+      question: copy.faq.items[3].question,
+      answer: copy.faq.items[3].answer,
     },
     {
-      question: 'Can patients use NeuLens on their own?',
-      answer:
-        'No. NeuLens does not offer public self-screening or self-diagnosis. The patient portal supports supervised participation in a screening journey, but interpretation and next steps remain with the clinician.',
+      question: copy.faq.items[4].question,
+      answer: copy.faq.items[4].answer,
     },
     {
-      question: 'How does longitudinal monitoring work?',
-      answer:
-        'NeuLens compares results within the same person when task version, language, education and recorded access conditions match. In the current prototype, a change prompt requires three prior comparable screens. A prompt is a cue to review, not a validated change threshold, and the absence of a prompt is not evidence of stability.',
+      question: copy.faq.items[5].question,
+      answer: copy.faq.items[5].answer,
     },
     {
-      question: 'How is data handled?',
-      answer:
-        'Selected video and audio signals are processed locally in the browser and only derived measurements are sent to the backend by default. Raw media is not recorded or uploaded. Optional health-record context is imported read-only, only with explicit permission and server-side configuration for that deployment.',
+      question: copy.faq.items[6].question,
+      answer: copy.faq.items[6].answer,
     },
     {
-      question: 'How can my institution get involved?',
-      answer:
-        'We welcome clinical demonstration and research collaboration enquiries from care teams and research institutions. Request a demo or write to us to discuss your setting, workflow and evaluation questions.',
+      question: copy.faq.items[7].question,
+      answer: copy.faq.items[7].answer,
     },
   ];
 
   const researchStatus = [
     {
-      label: 'Available in the prototype',
+      label: copy.research.groups[0].label,
       tone: 'bg-nl-mint text-nl-forest border-nl-sage/60',
-      items: [
-        'Guided multimodal screening session',
-        'Structured session summary for clinician review',
-        'Personal baseline and within-person change prompts',
-        'Optional authorised FHIR context import',
-        'On-device processing of selected signals',
-      ],
+      items: copy.research.groups[0].items,
     },
     {
-      label: 'In development',
+      label: copy.research.groups[1].label,
       tone: 'bg-nl-sage/20 text-nl-forest-deep border-nl-sage/60',
-      items: [
-        'Broader language and accessibility coverage',
-        'Tighter clinician workflow integration',
-        'Quality and fairness reporting',
-        'Deployment hardening and site configuration',
-      ],
+      items: copy.research.groups[1].items,
     },
     {
-      label: 'Research direction',
+      label: copy.research.groups[2].label,
       tone: 'bg-nl-warm text-nl-body border-nl-line',
-      items: [
-        'Clinical validation studies',
-        'Meaningful-change thresholds',
-        'Performance across languages, education and sensory access',
-        'Regulatory and evaluation pathway',
-      ],
+      items: copy.research.groups[2].items,
     },
   ];
 
@@ -412,16 +375,21 @@ export const LandingPage: React.FC = () => {
         href="#main-content"
         className="sr-only z-50 rounded-xl bg-nl-forest px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
       >
-        Skip to content
+        {copy.header.skipToContent}
       </a>
 
       {/* 1. Navigation ------------------------------------------------------- */}
       <header className="sticky top-0 z-40 border-b border-nl-line/80 bg-nl-warm/90 backdrop-blur-xl">
-        <div className="lp-container flex h-[72px] items-center justify-between gap-4">
-          <Brand />
+        <div className="mx-auto flex h-[72px] w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:grid xl:grid-cols-[1fr_auto_1fr] gap-4">
+          <div className="flex items-center justify-start shrink-0">
+            <Brand />
+          </div>
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-5 xl:gap-7 xl:flex">
-            {navigation.map((item) => (
+          <nav
+            aria-label={copy.header.mainNav}
+            className="hidden items-center justify-center gap-5 xl:gap-7 xl:flex justify-self-center"
+          >
+            {copy.nav.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
@@ -432,24 +400,25 @@ export const LandingPage: React.FC = () => {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center justify-end gap-2 sm:gap-3 shrink-0 justify-self-end">
+            <PublicLanguageToggle />
             <Link
               to="/doctor/login"
               className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm font-medium text-nl-body transition-colors hover:text-nl-forest whitespace-nowrap lg:inline-flex"
             >
-              <span>Clinician portal</span>
+              <span>{copy.header.clinicianPortal}</span>
               <ArrowUpRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             </Link>
             <span className="hidden sm:inline-block">
               <Link to="/patient" className="lp-btn lp-btn-primary lp-btn-sm whitespace-nowrap">
-                <span>Patient portal</span>
+                <span>{copy.header.patientPortal}</span>
                 <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               </Link>
             </span>
             <button
               type="button"
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-nl-line bg-white text-nl-ink transition-colors hover:border-nl-sage-dark xl:hidden"
-              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-label={mobileOpen ? copy.header.closeMenu : copy.header.openMenu}
               aria-expanded={mobileOpen}
               aria-controls="mobile-navigation"
               onClick={() => setMobileOpen((open) => !open)}
@@ -465,9 +434,9 @@ export const LandingPage: React.FC = () => {
             mobileOpen ? 'block' : 'hidden'
           } absolute inset-x-0 top-full max-h-[calc(100vh-72px)] overflow-y-auto border-b border-nl-line bg-nl-warm shadow-[0_24px_48px_-32px_rgba(27,51,43,0.45)] xl:hidden`}
         >
-          <nav aria-label="Mobile navigation" className="lp-container py-5">
+          <nav aria-label={copy.header.mobileNav} className="lp-container py-5">
             <div className="grid gap-1">
-              {navigation.map((item) => (
+              {copy.nav.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
@@ -480,19 +449,23 @@ export const LandingPage: React.FC = () => {
               ))}
             </div>
             <div className="mt-4 grid gap-3 border-t border-nl-line pt-5">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-medium text-nl-muted">{copy.header.language}</span>
+                <PublicLanguageToggle />
+              </div>
               <Link to="/patient" onClick={closeMenu} className="lp-btn lp-btn-primary w-full">
-                <span>Patient portal</span>
+                <span>{copy.header.patientPortal}</span>
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <a href="#how-it-works" onClick={closeMenu} className="lp-btn lp-btn-secondary w-full">
-                Explore How It Works
+                {copy.header.explore}
               </a>
               <div className="mt-1 flex items-center justify-between gap-3 text-sm">
                 <Link to="/doctor/login" className="font-medium text-nl-body hover:text-nl-forest">
-                  Clinician portal
+                  {copy.header.clinicianPortal}
                 </Link>
                 <Link to="/patient" className="font-medium text-nl-body hover:text-nl-forest">
-                  Patient portal
+                  {copy.header.patientPortal}
                 </Link>
               </div>
             </div>
@@ -513,37 +486,28 @@ export const LandingPage: React.FC = () => {
           <div className="lp-container relative pb-20 pt-14 sm:pb-24 sm:pt-20 lg:pb-28 lg:pt-24">
             <div className="grid items-center gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
               <div className="min-w-0">
-                <p className="lp-eyebrow">Brain health | Early screening</p>
+                <p className="lp-eyebrow">{copy.hero.eyebrow}</p>
                 <h1 className="lp-display mt-6">
-                  Understand Brain Health.
-                  <span className="block">Identify Changes Earlier.</span>
+                  {copy.hero.titleLine1}
+                  <span className="block">{copy.hero.titleLine2}</span>
                 </h1>
-                <p className="lp-lead mt-6 max-w-[35rem]">
-                  NeuLens brings cognitive, ocular, vocal and facial observations into one structured
-                  screening session — supporting personal brain-health baselines and earlier conversations
-                  about meaningful change.
-                </p>
-                <p className="lp-small mt-4 max-w-[35rem] text-nl-muted">
-                  Built for neurologists, geriatric specialists, hospitals, clinics and clinical research
-                  institutions.
-                </p>
+                <p className="lp-lead mt-6 max-w-[35rem]">{copy.hero.lead}</p>
+                <p className="lp-small mt-4 max-w-[35rem] text-nl-muted">{copy.hero.audience}</p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Link to="/patient" className="lp-btn lp-btn-primary">
-                    Patient portal
+                    {copy.hero.patientPortal}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                   <a href="#how-it-works" className="lp-btn lp-btn-secondary">
-                    Explore How It Works
+                    {copy.hero.explore}
                     <ArrowDown className="h-4 w-4" aria-hidden="true" />
                   </a>
                 </div>
 
                 <div className="mt-9 flex items-start gap-2.5 border-t border-nl-line pt-5">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-nl-forest" aria-hidden="true" />
-                  <p className="text-xs leading-5 text-nl-muted">
-                    Developing prototype · Not clinically validated · Clinician-supervised use only
-                  </p>
+                  <p className="text-xs leading-5 text-nl-muted">{copy.hero.disclaimer}</p>
                 </div>
               </div>
 
@@ -560,18 +524,18 @@ export const LandingPage: React.FC = () => {
                       <HealthcareScene
                         kind="heroCare"
                         className="rounded-[1.45rem]"
-                        title="An elderly couple reviewing brain-health observations with their clinician"
+                        title={copy.hero.sceneTitle}
                         animated={false}
                       />
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-3 px-1.5 pb-1 pt-4">
                     <p className="max-w-[17rem] text-xs leading-5 text-nl-muted">
-                      Illustrative: an elderly couple consulting their clinician.
+                      {copy.hero.illustrationNote}
                     </p>
                     <span className="lp-tag">
                       <ShieldCheck className="h-3.5 w-3.5 text-nl-forest" aria-hidden="true" />
-                      Clinician-supervised
+                      {copy.hero.clinicianSupervised}
                     </span>
                   </div>
                 </div>
@@ -581,8 +545,8 @@ export const LandingPage: React.FC = () => {
                     <Brain className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="text-xs font-semibold leading-4 text-nl-ink">
-                    Four observation types
-                    <span className="block text-[12px] font-normal text-nl-muted">One guided session</span>
+                    {copy.hero.fourTypes}
+                    <span className="block text-[12px] font-normal text-nl-muted">{copy.hero.oneSession}</span>
                   </span>
                 </div>
               </div>
@@ -599,14 +563,11 @@ export const LandingPage: React.FC = () => {
           </div>
           <div className="lp-container relative py-20 sm:py-24 lg:py-28">
             <div className="mx-auto max-w-4xl text-center">
-              <p className="lp-eyebrow justify-center">Our point of view</p>
+              <p className="lp-eyebrow justify-center">{copy.tagline.eyebrow}</p>
               <div className="mt-8">
-                <TaglineReveal text="Earlier awareness starts with knowing what change looks like for each person." />
+                <TaglineReveal text={copy.tagline.statement} />
               </div>
-              <p className="lp-small mx-auto mt-8 max-w-2xl">
-                Population averages can describe a group. Personal baselines help a clinician understand
-                what a change means for the individual in front of them.
-              </p>
+              <p className="lp-small mx-auto mt-8 max-w-2xl">{copy.tagline.body}</p>
             </div>
           </div>
         </section>
@@ -617,32 +578,15 @@ export const LandingPage: React.FC = () => {
             <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
               <Reveal>
                 <SectionIntro
-                  eyebrow="The challenge"
-                  title="Change is often gradual. Care is often later."
-                  lead="Cognitive and functional shifts can emerge long before they become obvious in a routine conversation. The challenge is not only noticing them — it is knowing which changes matter for this person."
+                  eyebrow={copy.challenge.eyebrow}
+                  title={copy.challenge.title}
+                  lead={copy.challenge.lead}
                 />
               </Reveal>
 
               <div className="grid gap-0 border-t border-nl-line">
                 {[
-                  {
-                    number: '01',
-                    title: 'Signals arrive in fragments',
-                    detail:
-                      'Cognition, eye movement, voice and behaviour are usually observed at different times, in different formats, by different people.',
-                  },
-                  {
-                    number: '02',
-                    title: 'A single score says very little',
-                    detail:
-                      'Population averages cannot tell a clinician what is meaningful for an individual whose abilities, language, education and context vary.',
-                  },
-                  {
-                    number: '03',
-                    title: 'The window narrows quietly',
-                    detail:
-                      'When change is recognised late, opportunities for prevention, planning and support are already reduced.',
-                  },
+                  ...copy.challenge.items
                 ].map((item, index) => (
                   <Reveal key={item.number} delay={index * 70}>
                     <article className="grid gap-3 border-b border-nl-line py-7 sm:grid-cols-[3.5rem_1fr] sm:gap-5 sm:py-8">
@@ -659,11 +603,8 @@ export const LandingPage: React.FC = () => {
 
             <Reveal className="mt-12 lg:mt-16">
               <div className="lp-panel flex flex-col gap-5 p-7 sm:p-9 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
-                <p className="lp-h3 max-w-3xl">
-                  The useful question is not only how someone compares with a population average — it is
-                  what has changed for this person.
-                </p>
-                <p className="lp-caption shrink-0">A NeuLens design principle</p>
+                <p className="lp-h3 max-w-3xl">{copy.challenge.principleBody}</p>
+                <p className="lp-caption shrink-0">{copy.challenge.principle}</p>
               </div>
             </Reveal>
           </div>
@@ -683,11 +624,11 @@ export const LandingPage: React.FC = () => {
                     <HealthcareScene
                       kind="manWithDoctor"
                       className="rounded-[1.1rem]"
-                      title="A clinician discussing brain-health observations with an older adult"
+                      title={copy.approach.sceneTitle}
                       animated={false}
                     />
                     <p className="px-2 pb-1 pt-3 text-xs leading-5 text-nl-muted">
-                      Illustrative: a clinician discussing observations in context.
+                      {copy.approach.illustrationNote}
                     </p>
                   </div>
                 </div>
@@ -695,9 +636,9 @@ export const LandingPage: React.FC = () => {
 
               <Reveal className="order-1 lg:order-2">
                 <SectionIntro
-                  eyebrow="The NeuLens approach"
-                  title="A structured, multimodal view — built around the individual."
-                  lead="NeuLens combines four kinds of observation in one calm, clinician-supervised session. The aim is not to replace clinical judgement, but to give it clearer, more consistent information to work with."
+                  eyebrow={copy.approach.eyebrow}
+                  title={copy.approach.title}
+                  lead={copy.approach.lead}
                 />
                 <div className="mt-9 grid gap-x-8 gap-y-7 sm:grid-cols-2">
                   {benefits.map((benefit) => (
@@ -712,8 +653,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <p className="mt-8 flex items-start gap-2 text-xs leading-5 text-nl-muted">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-nl-forest" aria-hidden="true" />
-                  Screening support, not diagnosis. NeuLens is a developing prototype and is not
-                  clinically validated.
+                  {copy.approach.footnote}
                 </p>
               </Reveal>
             </div>
@@ -726,18 +666,15 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
               <Reveal>
                 <SectionIntro
-                  eyebrow="Four measurement pillars"
-                  title="More than one signal. A more complete conversation."
-                  lead="Each pillar contributes a different kind of observation. Together they form a structured session summary for a qualified clinician to interpret."
+                  eyebrow={copy.measurement.eyebrow}
+                  title={copy.measurement.title}
+                  lead={copy.measurement.lead}
                 />
               </Reveal>
               <Reveal delay={80}>
                 <div className="flex max-w-sm items-start gap-3 rounded-2xl bg-nl-mint-soft p-4">
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-nl-forest" aria-hidden="true" />
-                  <p className="text-xs leading-5 text-nl-body">
-                    All four pillars currently produce exploratory observations. Their diagnostic or
-                    predictive validity has not been established.
-                  </p>
+                  <p className="text-xs leading-5 text-nl-body">{copy.measurement.note}</p>
                 </div>
               </Reveal>
             </div>
@@ -762,7 +699,7 @@ export const LandingPage: React.FC = () => {
                             <Icon className="h-5 w-5" aria-hidden="true" />
                           </span>
                           <div>
-                            <p className="lp-caption">Pillar {pillar.index}</p>
+                            <p className="lp-caption">{copy.measurement.pillarLabel} {pillar.index}</p>
                             <h3 className="lp-h3 mt-0.5">{pillar.title}</h3>
                           </div>
                         </div>
@@ -775,7 +712,7 @@ export const LandingPage: React.FC = () => {
                           ))}
                         </div>
                         <p className="mt-5 border-t border-nl-line pt-4 text-xs font-medium text-nl-muted">
-                          Prototype observation · Not a diagnostic measure
+                          {copy.measurement.footerNote}
                         </p>
                       </div>
                     </article>
@@ -791,9 +728,9 @@ export const LandingPage: React.FC = () => {
           <div className="lp-container">
             <Reveal>
               <SectionIntro
-                eyebrow="How NeuLens works"
-                title="From a guided session to a more informed review."
-                lead="The workflow is intentionally simple for the person taking part, and deliberately transparent for the clinician reviewing it."
+                eyebrow={copy.how.eyebrow}
+                title={copy.how.title}
+                lead={copy.how.lead}
               />
             </Reveal>
 
@@ -819,10 +756,7 @@ export const LandingPage: React.FC = () => {
             <Reveal className="mt-12">
               <div className="flex flex-col gap-3 rounded-2xl border border-nl-sage/50 bg-white/70 p-5 sm:flex-row sm:items-center sm:gap-4">
                 <ShieldCheck className="h-5 w-5 shrink-0 text-nl-forest" aria-hidden="true" />
-                <p className="text-sm leading-6 text-nl-body">
-                  A session does not produce a diagnosis or a standalone risk score. It produces
-                  structured observations for professional review.
-                </p>
+                <p className="text-sm leading-6 text-nl-body">{copy.how.note}</p>
               </div>
             </Reveal>
           </div>
@@ -834,36 +768,20 @@ export const LandingPage: React.FC = () => {
             <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-20">
               <Reveal>
                 <SectionIntro
-                  eyebrow="Personal baseline & longitudinal monitoring"
-                  title="The right comparison is the person in front of you."
-                  lead="A single screening is a snapshot. NeuLens is designed to compare results over time — within the same person, under comparable conditions — so that change can be described rather than guessed."
+                  eyebrow={copy.baseline.eyebrow}
+                  title={copy.baseline.title}
+                  lead={copy.baseline.lead}
                 />
 
                 <ul className="lp-check-list mt-8">
-                  <li>
-                    <CheckCircle className="h-5 w-5" aria-hidden="true" />
-                    <span>
-                      <strong className="font-semibold text-nl-ink">A personal reference point.</strong>{' '}
-                      Results are viewed against the person’s own earlier sessions, not only a population
-                      norm.
-                    </span>
-                  </li>
-                  <li>
-                    <CheckCircle className="h-5 w-5" aria-hidden="true" />
-                    <span>
-                      <strong className="font-semibold text-nl-ink">Comparable conditions.</strong> Task
-                      version, language, education and access conditions are recorded so comparisons are
-                      not made across unlike sessions.
-                    </span>
-                  </li>
-                  <li>
-                    <CheckCircle className="h-5 w-5" aria-hidden="true" />
-                    <span>
-                      <strong className="font-semibold text-nl-ink">Review, not diagnosis.</strong> A change
-                      prompt means “look closer”, not “this is a diagnosis”. The clinician decides what it
-                      means.
-                    </span>
-                  </li>
+                  {copy.baseline.points.map((point) => (
+                    <li key={point.title}>
+                      <CheckCircle className="h-5 w-5" aria-hidden="true" />
+                      <span>
+                        <strong className="font-semibold text-nl-ink">{point.title}</strong> {point.body}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </Reveal>
 
@@ -872,15 +790,15 @@ export const LandingPage: React.FC = () => {
                   <HealthcareScene
                     kind="longitudinal"
                     className="rounded-[1.1rem]"
-                    title="An older adult and clinician reviewing a longitudinal brain-health view together"
+                    title={copy.baseline.sceneTitle}
                     animated={false}
                   />
                   <div className="mt-3 rounded-[1.1rem] bg-nl-warm p-5 sm:p-6">
                     <div className="grid gap-4 sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:items-center">
                       {[
-                        { icon: CheckCircle, label: 'Personal baseline', note: 'Own prior sessions' },
-                        { icon: ClockCounterClockwise, label: 'Comparable follow-up', note: 'Like-for-like conditions' },
-                        { icon: Eye, label: 'Change to review', note: 'A clinical prompt' },
+                        { icon: CheckCircle, ...copy.baseline.flow[0] },
+                        { icon: ClockCounterClockwise, ...copy.baseline.flow[1] },
+                        { icon: Eye, ...copy.baseline.flow[2] },
                       ].map((node, index) => {
                         const Icon = node.icon;
                         return (
@@ -905,14 +823,13 @@ export const LandingPage: React.FC = () => {
                       })}
                     </div>
                     <p className="mt-5 border-t border-nl-line pt-4 text-[12px] leading-4 text-nl-muted">
-                      Illustrative workflow only. No clinical thresholds or accuracy figures are shown.
+                      {copy.baseline.flowNote}
                     </p>
                   </div>
                 </div>
                 <p className="mt-4 flex items-start gap-2 px-1 text-xs leading-5 text-nl-muted">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-nl-forest" aria-hidden="true" />
-                  Within-person change prompts require three prior comparable screens in the current
-                  prototype. The absence of a prompt is not evidence of stability.
+                  {copy.baseline.note}
                 </p>
               </Reveal>
             </div>
@@ -933,11 +850,11 @@ export const LandingPage: React.FC = () => {
                     <HealthcareScene
                       kind="contextReview"
                       className="rounded-[1.1rem]"
-                      title="A clinician reviewing health context alongside screening observations"
+                      title={copy.context.sceneTitle}
                       animated={false}
                     />
                     <p className="px-2 pb-1 pt-3 text-xs leading-5 text-nl-muted">
-                      Illustrative: screening observations considered with broader health context.
+                      {copy.context.illustrationNote}
                     </p>
                   </div>
                 </div>
@@ -945,9 +862,9 @@ export const LandingPage: React.FC = () => {
 
               <Reveal className="order-1 lg:order-2">
                 <SectionIntro
-                  eyebrow="Health-context integration"
-                  title="A screening result does not stand alone."
-                  lead="NeuLens is designed to keep observations connected to the context that gives them meaning — while leaving interpretation with the clinician."
+                  eyebrow={copy.context.eyebrow}
+                  title={copy.context.title}
+                  lead={copy.context.lead}
                 />
                 <div className="mt-8 grid gap-0 border-t border-nl-line">
                   {contextItems.map((item) => {
@@ -968,10 +885,7 @@ export const LandingPage: React.FC = () => {
                     );
                   })}
                 </div>
-                <p className="mt-5 text-xs leading-5 text-nl-muted">
-                  FHIR context import is an optional prototype capability. Live connectivity must be
-                  configured and tested for each deployment.
-                </p>
+                <p className="mt-5 text-xs leading-5 text-nl-muted">{copy.context.footnote}</p>
               </Reveal>
             </div>
           </div>
@@ -982,9 +896,9 @@ export const LandingPage: React.FC = () => {
           <div className="lp-container">
             <Reveal>
               <SectionIntro
-                eyebrow="Clinical oversight & safety"
-                title="Designed for professional review. Not self-diagnosis."
-                lead="NeuLens is intended for use by qualified healthcare professionals within a clinical or research setting. It does not diagnose dementia or any neurological disorder."
+                eyebrow={copy.oversight.eyebrow}
+                title={copy.oversight.title}
+                lead={copy.oversight.lead}
               />
             </Reveal>
 
@@ -995,11 +909,8 @@ export const LandingPage: React.FC = () => {
                     <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-nl-mint text-nl-forest">
                       <CheckCircle className="h-5 w-5" aria-hidden="true" />
                     </span>
-                    <h3 className="lp-h3 mt-5">What NeuLens is</h3>
-                    <p className="lp-small mt-2.5">
-                      A digital brain-health screening and clinical decision-support platform, combining
-                      multimodal observations, personal baselines and structured clinician review.
-                    </p>
+                    <h3 className="lp-h3 mt-5">{copy.oversight.isTitle}</h3>
+                    <p className="lp-small mt-2.5">{copy.oversight.isBody}</p>
                   </div>
                 </Reveal>
                 <Reveal delay={70}>
@@ -1007,34 +918,15 @@ export const LandingPage: React.FC = () => {
                     <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-nl-warm text-nl-forest ring-1 ring-nl-line">
                       <X className="h-5 w-5" aria-hidden="true" />
                     </span>
-                    <h3 className="lp-h3 mt-5">What NeuLens is not</h3>
-                    <p className="lp-small mt-2.5">
-                      A diagnostic device, a validated cognitive test, a standalone risk score, or a
-                      substitute for professional medical evaluation, diagnosis or treatment.
-                    </p>
+                    <h3 className="lp-h3 mt-5">{copy.oversight.isNotTitle}</h3>
+                    <p className="lp-small mt-2.5">{copy.oversight.isNotBody}</p>
                   </div>
                 </Reveal>
 
                 <div className="sm:col-span-2">
                   <div className="grid gap-x-8 gap-y-6 border-t border-nl-line pt-7 sm:grid-cols-2">
                     {[
-                      {
-                        title: 'Clinician-owned decisions',
-                        detail: 'The platform surfaces observations. The clinician makes the call.',
-                      },
-                      {
-                        title: 'No public self-screening',
-                        detail: 'Sessions are conducted in a supervised clinical or research context.',
-                      },
-                      {
-                        title: 'Privacy by design',
-                        detail:
-                          'Selected signals are processed on the device; raw media is not recorded or uploaded by default.',
-                      },
-                      {
-                        title: 'Transparent about limits',
-                        detail: 'Prototype status and comparability conditions are shown alongside results.',
-                      },
+                      ...copy.oversight.principles,
                     ].map((item) => (
                       <div key={item.title} className="flex gap-3">
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-nl-forest" aria-hidden="true" />
@@ -1053,16 +945,15 @@ export const LandingPage: React.FC = () => {
                   <HealthcareScene
                     kind="clinicalReview"
                     className="rounded-[1.1rem]"
-                    title="A clinician reviewing a structured screening summary with a patient"
+                    title={copy.oversight.sceneTitle}
                     animated={false}
                   />
                   <div className="flex items-start gap-3 p-4">
                     <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-nl-forest" aria-hidden="true" />
                     <div>
-                      <p className="text-sm font-semibold text-nl-ink">Clinician in the loop</p>
+                      <p className="text-sm font-semibold text-nl-ink">{copy.oversight.clinicianInLoop}</p>
                       <p className="mt-1 text-xs leading-5 text-nl-muted">
-                        NeuLens is a developing prototype and is not clinically validated. All outputs
-                        require professional interpretation.
+                        {copy.oversight.clinicianInLoopBody}
                       </p>
                     </div>
                   </div>
@@ -1083,27 +974,24 @@ export const LandingPage: React.FC = () => {
             <div className="grid gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-16">
               <Reveal>
                 <SectionIntro
-                  eyebrow="For healthcare professionals"
-                  title="A clearer starting point for earlier conversations."
-                  lead="We are working with neurologists, geriatric specialists, hospitals, clinics and clinical research institutions to put multimodal screening into practice carefully — and to test it honestly."
+                  eyebrow={copy.clinicians.eyebrow}
+                  title={copy.clinicians.title}
+                  lead={copy.clinicians.lead}
                 />
 
                 <div className="mt-8 grid gap-0 border-t border-white/15">
                   {[
                     {
                       icon: Stethoscope,
-                      title: 'Neurologists & geriatric specialists',
-                      detail: 'Add structured, longitudinal observations to cognitive and functional review.',
+                      ...copy.clinicians.audiences[0],
                     },
                     {
                       icon: Buildings,
-                      title: 'Hospitals & clinics',
-                      detail: 'Explore a browser-based screening workflow that fits existing clinical oversight.',
+                      ...copy.clinicians.audiences[1],
                     },
                     {
                       icon: Flask,
-                      title: 'Clinical research institutions',
-                      detail: 'Collaborate on measurement quality, fairness and validation research.',
+                      ...copy.clinicians.audiences[2],
                     },
                   ].map((item) => {
                     const Icon = item.icon;
@@ -1126,16 +1014,14 @@ export const LandingPage: React.FC = () => {
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <a href="#contact" className="lp-btn lp-btn-light">
-                    Request a Clinical Demo
+                    {copy.clinicians.demoCta}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </a>
                   <a href="#contact" className="lp-btn lp-btn-outline-light">
-                    Discuss research collaboration
+                    {copy.clinicians.researchCta}
                   </a>
                 </div>
-                <p className="mt-4 text-xs leading-5 text-white/75">
-                  Current prototype. No clinical accuracy, adoption or outcome claims are made.
-                </p>
+                <p className="mt-4 text-xs leading-5 text-white/75">{copy.clinicians.note}</p>
               </Reveal>
 
               <Reveal delay={90}>
@@ -1148,12 +1034,12 @@ export const LandingPage: React.FC = () => {
                     <HealthcareScene
                       kind="aboutTeam"
                       className="rounded-[1.2rem]"
-                      title="A clinical team working together with older adults"
+                      title={copy.clinicians.sceneTitle}
                       animated={false}
                     />
                     <div className="flex items-center justify-between gap-4 px-2 pb-1 pt-3">
-                      <p className="text-xs leading-5 text-nl-muted">Illustrative: a clinician-led care team.</p>
-                      <span className="lp-tag shrink-0 text-[12px]">Clinical review</span>
+                      <p className="text-xs leading-5 text-nl-muted">{copy.clinicians.illustrationNote}</p>
+                      <span className="lp-tag shrink-0 text-[12px]">{copy.clinicians.reviewTag}</span>
                     </div>
                   </div>
                 </div>
@@ -1167,9 +1053,9 @@ export const LandingPage: React.FC = () => {
           <div className="lp-container">
             <Reveal>
               <SectionIntro
-                eyebrow="Technology & research approach"
-                title="Clear about what exists today — and what comes next."
-                lead="We separate prototype capabilities from planned development and research-stage questions. No clinical accuracy figures, hospital adoption numbers or research outcomes are claimed."
+                eyebrow={copy.research.eyebrow}
+                title={copy.research.title}
+                lead={copy.research.lead}
               />
             </Reveal>
 
@@ -1200,18 +1086,15 @@ export const LandingPage: React.FC = () => {
                 {[
                   {
                     icon: LockKey,
-                    title: 'Privacy by design',
-                    detail: 'Derived measurements, not raw media, by default.',
+                    ...copy.research.principles[0],
                   },
                   {
                     icon: Cpu,
-                    title: 'Measurement transparency',
-                    detail: 'Quality and comparability are shown, not hidden.',
+                    ...copy.research.principles[1],
                   },
                   {
                     icon: Flask,
-                    title: 'Validation before claims',
-                    detail: 'No performance claim without evidence.',
+                    ...copy.research.principles[2],
                   },
                 ].map((item) => {
                   const Icon = item.icon;
@@ -1227,12 +1110,8 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <div className="rounded-2xl border border-nl-sage/50 bg-white p-5 sm:p-6">
-                <p className="lp-caption">What we do not claim</p>
-                <p className="lp-small mt-3">
-                  Diagnostic accuracy, clinical validation, hospital partnerships, clinical testimonials
-                  or completed research outcomes. NeuLens is a developing prototype; its current value is
-                  in demonstrating a careful, multimodal screening workflow.
-                </p>
+                <p className="lp-caption">{copy.research.noClaimTitle}</p>
+                <p className="lp-small mt-3">{copy.research.noClaimBody}</p>
               </div>
             </div>
           </div>
@@ -1245,12 +1124,12 @@ export const LandingPage: React.FC = () => {
               <Reveal>
                 <div className="lg:sticky lg:top-28">
                   <SectionIntro
-                    eyebrow="Frequently asked questions"
-                    title="Common questions, answered plainly."
-                    lead="If your question is not covered here, we would be glad to discuss your clinical or research setting directly."
+                    eyebrow={copy.faq.eyebrow}
+                    title={copy.faq.title}
+                    lead={copy.faq.lead}
                   />
                   <a href="#contact" className="lp-btn lp-btn-secondary mt-7">
-                    Ask us directly
+                    {copy.faq.askCta}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </a>
                 </div>
@@ -1286,32 +1165,22 @@ export const LandingPage: React.FC = () => {
                     <div className="absolute -bottom-24 -left-16 h-56 w-56 rounded-full border border-white/10" />
                   </div>
                   <div className="relative lp-on-dark">
-                    <p className="lp-eyebrow">Clinical demonstration & research</p>
-                    <h2 className="lp-h2 mt-4">Let’s explore the right next step for your team.</h2>
-                    <p className="lp-lead mt-5 max-w-lg">
-                      Request a walkthrough of the current prototype, discuss your workflow, and review
-                      its limitations with our team. We are particularly interested in collaborations
-                      with clinical and research groups.
-                    </p>
+                    <p className="lp-eyebrow">{copy.contact.eyebrow}</p>
+                    <h2 className="lp-h2 mt-4">{copy.contact.title}</h2>
+                    <p className="lp-lead mt-5 max-w-lg">{copy.contact.lead}</p>
 
                     <ul className="lp-check-list mt-7">
-                      <li>
-                        <Check className="h-4 w-4" aria-hidden="true" />
-                        <span>A guided walkthrough of the prototype</span>
-                      </li>
-                      <li>
-                        <Check className="h-4 w-4" aria-hidden="true" />
-                        <span>A discussion of your screening and review workflow</span>
-                      </li>
-                      <li>
-                        <Check className="h-4 w-4" aria-hidden="true" />
-                        <span>An honest review of current evidence and limitations</span>
-                      </li>
+                      {copy.contact.bullets.map((bullet) => (
+                        <li key={bullet}>
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
                     </ul>
 
                     <div className="mt-8 border-t border-white/15 pt-6">
                       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/75">
-                        Prefer email?
+                        {copy.contact.preferEmail}
                       </p>
                       <a
                         href="mailto:neulens.ai@gmail.com"
@@ -1339,26 +1208,14 @@ export const LandingPage: React.FC = () => {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.35fr_0.8fr_0.8fr_0.9fr] lg:gap-12">
             <div className="sm:col-span-2 lg:col-span-1">
               <Brand tone="light" />
-              <p className="mt-4 max-w-xs text-sm leading-6 text-white/65">
-                Earlier awareness of meaningful change, built for clinical review and follow-up.
-              </p>
-              <p className="mt-5 max-w-sm text-xs leading-5 text-white/65">
-                NeuLens is a developing prototype and is not clinically validated. It does not diagnose
-                dementia or any neurological disorder.
-              </p>
+              <p className="mt-4 max-w-xs text-sm leading-6 text-white/65">{copy.footer.tagline}</p>
+              <p className="mt-5 max-w-sm text-xs leading-5 text-white/65">{copy.footer.disclaimer}</p>
             </div>
 
-            <nav aria-label="Platform links">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/65">Platform</h2>
+            <nav aria-label={copy.footer.platformNavLabel}>
+              <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/65">{copy.footer.platformHeading}</h2>
               <ul className="mt-4 grid gap-2.5 text-sm">
-                {[
-                  { label: 'The challenge', href: '#challenge' },
-                  { label: 'Our approach', href: '#approach' },
-                  { label: 'Measurement pillars', href: '#measurement' },
-                  { label: 'How it works', href: '#how-it-works' },
-                  { label: 'Research approach', href: '#research' },
-                  { label: 'FAQ', href: '#faq' },
-                ].map((item) => (
+                {copy.footer.platformLinks.map((item) => (
                   <li key={item.label}>
                     <a
                       href={item.href}
@@ -1371,42 +1228,21 @@ export const LandingPage: React.FC = () => {
               </ul>
             </nav>
 
-            <nav aria-label="Clinical links">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/65">For clinicians</h2>
+            <nav aria-label={copy.footer.clinicalNavLabel}>
+              <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/65">{copy.footer.clinicianHeading}</h2>
               <ul className="mt-4 grid gap-2.5 text-sm">
-                <li>
-                  <a href="#contact" className="text-white/70 transition-colors hover:text-white">
-                    Request a clinical demo
-                  </a>
-                </li>
-                <li>
-                  <a href="#for-clinicians" className="text-white/70 transition-colors hover:text-white">
-                    Healthcare professionals
-                  </a>
-                </li>
-                <li>
-                  <a href="#clinical-oversight" className="text-white/70 transition-colors hover:text-white">
-                    Clinical oversight & safety
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/doctor/login"
-                    className="text-white/70 transition-colors hover:text-white"
-                  >
-                    Clinician portal
-                  </a>
-                </li>
-                <li>
-                  <a href="/patient" className="text-white/70 transition-colors hover:text-white">
-                    Patient portal
-                  </a>
-                </li>
+                {copy.footer.clinicianLinks.map((item) => (
+                  <li key={item.label}>
+                    <a href={item.href} className="text-white/70 transition-colors hover:text-white">
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </nav>
 
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/65">Contact</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-white/65">{copy.footer.contactHeading}</h2>
               <ul className="mt-4 grid gap-2.5 text-sm">
                 <li>
                   <a
@@ -1419,20 +1255,18 @@ export const LandingPage: React.FC = () => {
                 </li>
                 <li>
                   <a href="#contact" className="inline-flex items-center gap-2 text-white/70 transition-colors hover:text-white">
-                    Clinical demonstration
+                    {copy.footer.contactLink}
                     <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </a>
                 </li>
               </ul>
-              <p className="mt-5 text-xs leading-5 text-white/65">
-                For healthcare professionals and research institutions. Not for public self-screening.
-              </p>
+              <p className="mt-5 text-xs leading-5 text-white/65">{copy.footer.contactNote}</p>
             </div>
           </div>
 
           <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between">
-            <p>© 2026 NeuLens. All rights reserved.</p>
-            <p>Developing prototype · Not clinically validated · Not a diagnostic tool</p>
+            <p>{copy.footer.rights}</p>
+            <p>{copy.footer.bottomNote}</p>
           </div>
         </div>
       </footer>

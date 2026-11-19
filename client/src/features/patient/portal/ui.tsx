@@ -1,6 +1,8 @@
 import type { FC, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { HealthcareScene, type SceneKind } from '../../../components/illustrations/HealthcareScene';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { getPortalTranslation } from '../../../services/language/portalTranslations';
 
 /**
  * Portal button classes.
@@ -378,8 +380,9 @@ export const AssessmentStatusPill: FC<{ reviewStatus: string; status?: string }>
   reviewStatus,
   status = 'COMPLETED'
 }) => {
-  if (status !== 'COMPLETED') return <Pill tone="mint" dot>In progress</Pill>;
-  if (reviewStatus === 'REVIEWED') return <Pill tone="forest" dot>Reviewed</Pill>;
-  if (reviewStatus === 'FOLLOWUP_REQUIRED') return <Pill tone="amber" dot>Follow-up suggested</Pill>;
-  return <Pill tone="forestSoft" dot>Awaiting review</Pill>;
+  const status_copy = getPortalTranslation(useLanguageStore((state) => state.currentLanguage)).shell.status;
+  if (status !== 'COMPLETED') return <Pill tone="mint" dot>{status_copy.inProgress}</Pill>;
+  if (reviewStatus === 'REVIEWED') return <Pill tone="forest" dot>{status_copy.reviewed}</Pill>;
+  if (reviewStatus === 'FOLLOWUP_REQUIRED') return <Pill tone="amber" dot>{status_copy.followUpSuggested}</Pill>;
+  return <Pill tone="forestSoft" dot>{status_copy.awaitingReview}</Pill>;
 };

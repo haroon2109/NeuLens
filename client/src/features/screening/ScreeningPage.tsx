@@ -2475,14 +2475,23 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
                 </div>
               </div>
               {submissionError && (
-                <button
-                  type="button"
-                  onClick={() => void submitAssessment()}
-                  disabled={isSavingAssessment}
-                  className="px-5 py-3 rounded-xl bg-medical-600 hover:bg-medical-700 disabled:opacity-50 text-white text-sm font-bold"
-                >
-                  {copy.saving.retry}
-                </button>
+                <div className="flex flex-col items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void submitAssessment()}
+                    disabled={isSavingAssessment}
+                    className="px-5 py-3 rounded-xl bg-medical-600 hover:bg-medical-700 disabled:opacity-50 text-white text-sm font-bold"
+                  >
+                    {copy.saving.retry}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/patient/dashboard')}
+                    className="px-5 py-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition"
+                  >
+                    ← Return to Dashboard
+                  </button>
+                </div>
               )}
               <div className="pt-2 flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
                 <span className={`w-2 h-2 rounded-full ${submissionError ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />

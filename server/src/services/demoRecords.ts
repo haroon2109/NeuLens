@@ -10,6 +10,16 @@
 export const DEMO_PATIENT_USER_ID = 'demo-patient-haroon';
 export const DEMO_CLINICIAN_USER_ID = 'demo-clinician-mohamed';
 
+/**
+ * Demo access is on by default for local, prototype, and jury use.
+ */
+export function demoAccessEnabled(): boolean {
+  const flag = process.env.DEMO_ACCESS_ENABLED;
+  if (flag === 'false') return false;
+  if (process.env.NODE_ENV === 'production') return flag === 'true';
+  return true;
+}
+
 /** True for the seeded fictional accounts (patient or clinician). */
 export function isDemoUserId(userId: string | null | undefined): boolean {
   return userId === DEMO_PATIENT_USER_ID || userId === DEMO_CLINICIAN_USER_ID;

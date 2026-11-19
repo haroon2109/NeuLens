@@ -30,27 +30,29 @@ import { cognitiveApi, type AssessmentPlan, type CognitiveSessionRecord, type Se
 import { CognitiveSessionRunner } from './CognitiveSessionRunner';
 import { CognitiveSummary } from './CognitiveSummary';
 import { HealthcareScene } from '../../components/illustrations/HealthcareScene';
+import { useLanguageStore } from '../../services/language/LanguageManager';
+import { getCognitiveCopy } from '../../services/language/cognitiveCopy';
 
 type Stage = 'setup' | 'plan' | 'session' | 'summary';
 
 const PROGRESS_KEY = 'nl_cognitive_paused_session';
 
-const scaleOptions = [
-  { value: '', label: 'Not reported' },
-  { value: '1', label: '1 — very low' },
-  { value: '2', label: '2 — low' },
-  { value: '3', label: '3 — moderate' },
-  { value: '4', label: '4 — high' },
-  { value: '5', label: '5 — very high' }
+const scoreLabels = ['1', '2', '3', '4', '5'];
+
+const buildScaleOptions = (copy: ReturnType<typeof getCognitiveCopy>) => [
+  { value: '', label: copy.scale.notReported },
+  ...scoreLabels.map((value) => ({
+    value,
+    label: ['1', '2'].includes(value) ? copy.scale.low(value) : copy.scale.high(value)
+  }))
 ];
 
-const sleepOptions = [
-  { value: '', label: 'Not reported' },
-  { value: '1', label: '1 — very poor' },
-  { value: '2', label: '2 — poor' },
-  { value: '3', label: '3 — fair' },
-  { value: '4', label: '4 — good' },
-  { value: '5', label: '5 — very good' }
+const buildSleepOptions = (copy: ReturnType<typeof getCognitiveCopy>) => [
+  { value: '', label: copy.sleep.notReported },
+  ...scoreLabels.map((value) => ({
+    value,
+    label: ['1', '2', '3'].includes(value) ? copy.sleep.poor(value) : copy.sleep.good(value)
+  }))
 ];
 
 const fieldClass =
@@ -61,6 +63,9 @@ const numberOrNull = (value: string) => (value === '' ? null : Number(value));
 export const CognitiveHubPage: React.FC = () => {
   const { user } = useAuthStore();
   const { accessibility } = usePatientPortalStore();
+  const copy = getCognitiveCopy(useLanguageStore((state) => state.currentLanguage));
+  const scaleOptions = buildScaleOptions(copy);
+  const sleepOptions = buildSleepOptions(copy);
   const [stage, setStage] = useState<Stage>('setup');
   const [mode, setMode] = useState<AssessmentMode>('STANDARDIZED');
   const [minutes, setMinutes] = useState(15);
@@ -147,7 +152,7 @@ export const CognitiveHubPage: React.FC = () => {
       setPlan(result.plan);
       setStage('plan');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'The assessment plan could not be created.');
+      setError(err instanceof Error ? err.message : copy.hub.planError);
     } finally {
       setLoading(false);
     }
@@ -186,19 +191,19 @@ export const CognitiveHubPage: React.FC = () => {
     return (
       <div className="space-y-5">
         <PortalPageHeader
-          eyebrow="Cognitive assessment · Plan review"
-          title="Your assessment plan"
-          description="This plan was selected from your recorded context and previous sessions. You can review it before starting, and pause at any time."
-          actions={<Pill tone={plan.mode === 'STANDARDIZED' ? 'forest' : 'amber'} dot>{plan.mode === 'STANDARDIZED' ? 'Standardized' : 'Exploratory'}</Pill>}
+          eyebrow={copy.plan.eyebrow}
+          title={copy.plan.title}
+          description={copy.plan.description}
+          actions={<Pill tone={plan.mode === 'STANDARDIZED' ? 'forest' : 'amber'} dot>{plan.mode === 'STANDARDIZED' ? copy.plan.standardized : copy.plan.exploratory}</Pill>}
         />
 
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <Card>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-ink">
-                {plan.tasks.length} activities · about {plan.sessionMinutes} minutes
+                {copy.plan.activitiesSummary(plan.tasks.length, plan.sessionMinutes)}
               </h2>
-              <span className="text-xs font-semibold text-muted">Plan {plan.planId.slice(-8)}</span>
+              <span className="text-xs font-semibold text-muted">{copy.plan.planId(plan.planId.slice(-8))}</span>
             </div>
             <p className="mt-1 text-sm leading-6 text-muted">{plan.standardizationNotice}</p>
 
@@ -210,15 +215,15 @@ export const CognitiveHubPage: React.FC = () => {
                       {task.order}
                     </span>
                     <span className="text-base font-semibold text-ink">{task.name}</span>
-                    <Pill tone="sage">{DOMAIN_LABEL[task.domain]}</Pill>
+                    <Pill tone="sage">{copy.domains[task.domain] || DOMAIN_LABEL[task.domain]}</Pill>
                     <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-muted">
-                      <Clock3 className="h-3.5 w-3.5" /> {task.durationMinutes} min
+                      <Clock3 className="h-3.5 w-3.5" /> {copy.plan.minutesShort(task.durationMinutes)}
                     </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5 text-[13px]">
-                    <Pill tone="mint">Form {task.form}</Pill>
+                    <Pill tone="mint">{copy.plan.form(task.form)}</Pill>
                     <Pill tone={plan.mode === 'STANDARDIZED' ? 'sage' : 'amber'}>
-                      {plan.mode === 'STANDARDIZED' ? 'Fixed difficulty' : `Adaptive level ${task.difficultyLevel}`}
+                      {plan.mode === 'STANDARDIZED' ? copy.plan.fixedDifficulty : copy.plan.adaptiveLevel(task.difficultyLevel)}
                     </Pill>
                     <Pill tone="sage">{task.subdomain}</Pill>
                   </div>
@@ -228,7 +233,7 @@ export const CognitiveHubPage: React.FC = () => {
                     aria-expanded={expandedTask === task.taskId}
                     className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-forest hover:underline"
                   >
-                    Why this activity <ChevronDown className={`h-3.5 w-3.5 transition ${expandedTask === task.taskId ? 'rotate-180' : ''}`} />
+                    {copy.plan.whyActivity} <ChevronDown className={`h-3.5 w-3.5 transition ${expandedTask === task.taskId ? 'rotate-180' : ''}`} />
                   </button>
                   {expandedTask === task.taskId && (
                     <ul className="mt-2 space-y-1.5 rounded-xl border border-line bg-white p-3 text-xs leading-5 text-muted">
@@ -249,7 +254,7 @@ export const CognitiveHubPage: React.FC = () => {
             {plan.warnings.length > 0 && (
               <Card className="border-amber/60 bg-amber/5">
                 <h2 className="flex items-center gap-2 text-base font-semibold text-amber-900">
-                  <AlertTriangle className="h-4 w-4" /> Before you start
+                  <AlertTriangle className="h-4 w-4" /> {copy.plan.beforeStart}
                 </h2>
                 <ul className="mt-2 space-y-2">
                   {plan.warnings.map((warning) => (
@@ -263,7 +268,7 @@ export const CognitiveHubPage: React.FC = () => {
 
             {plan.confounders.length > 0 && (
               <Card>
-                <h2 className="text-base font-semibold text-ink">Recorded context for your clinician</h2>
+                <h2 className="text-base font-semibold text-ink">{copy.plan.recordedContext}</h2>
                 <ul className="mt-2 space-y-2">
                   {plan.confounders.map((item) => (
                     <li key={item.code} className="rounded-xl border border-line bg-warm/60 p-2.5 text-xs leading-5 text-muted">
@@ -272,17 +277,17 @@ export const CognitiveHubPage: React.FC = () => {
                   ))}
                 </ul>
                 <p className="mt-2 text-[13px] leading-5 text-muted">
-                  These factors are not used to lower the difficulty or change your score.
+                  {copy.plan.confoundersNote}
                 </p>
               </Card>
             )}
 
             <Card>
               <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
-                <Accessibility className="h-4 w-4 text-sage-deep" /> Accommodations applied
+                <Accessibility className="h-4 w-4 text-sage-deep" /> {copy.plan.accommodations}
               </h2>
               <ul className="mt-2 space-y-1.5 text-xs leading-5 text-muted">
-                {(plan.accommodations.length ? plan.accommodations : ['Standard large-button tablet layout']).map((item) => (
+                {(plan.accommodations.length ? plan.accommodations : [copy.plan.defaultAccommodation]).map((item) => (
                   <li key={item} className="flex gap-2">
                     <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" /> {item}
                   </li>
@@ -290,19 +295,19 @@ export const CognitiveHubPage: React.FC = () => {
               </ul>
               <p className="mt-3 rounded-xl border border-mint bg-mint/50 p-2.5 text-[13px] leading-5 text-forest">
                 <ShieldCheck className="me-1 inline h-3.5 w-3.5" />
-                A clinician reviews these observations. This is a screening support tool, not a diagnosis.
+                {copy.plan.clinicianReviewNote}
               </p>
             </Card>
 
             <Card>
-              <h2 className="text-base font-semibold text-ink">Administration details</h2>
+              <h2 className="text-base font-semibold text-ink">{copy.plan.adminTitle}</h2>
               <dl className="mt-2 space-y-1.5 text-xs">
                 {[
-                  ['Mode', plan.mode === 'STANDARDIZED' ? 'Standardized clinical assessment' : 'Adaptive cognitive exploration'],
-                  ['Protocol', `${plan.protocolId} v${plan.protocolVersion}`],
-                  ['Algorithm', plan.algorithmVersion],
-                  ['Language', context.language === 'en' ? 'English' : context.language.toUpperCase()],
-                  ['Clinician approval', plan.clinicianApproval ? plan.clinicianApproval.decision.replace('_', ' ') : 'Not yet reviewed']
+                  [copy.plan.mode, plan.mode === 'STANDARDIZED' ? copy.hub.standardizedTitle : copy.hub.exploratoryTitle],
+                  [copy.plan.protocol, `${plan.protocolId} v${plan.protocolVersion}`],
+                  [copy.plan.algorithm, plan.algorithmVersion],
+                  [copy.plan.language, context.language === 'en' ? copy.plan.english : context.language.toUpperCase()],
+                  [copy.plan.clinicianApproval, plan.clinicianApproval ? plan.clinicianApproval.decision.replace('_', ' ') : copy.plan.notReviewed]
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between gap-3">
                     <dt className="text-muted">{label}</dt>
@@ -322,17 +327,17 @@ export const CognitiveHubPage: React.FC = () => {
             onClick={() => setStage('session')}
             className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-forest px-6 text-lg font-semibold text-white shadow-elevated hover:bg-forest/90"
           >
-            <Play className="h-5 w-5" aria-hidden="true" /> Start assessment
+            <Play className="h-5 w-5" aria-hidden="true" /> {copy.plan.startAssessment}
           </button>
           <button
             type="button"
             onClick={() => setStage('setup')}
             className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-line bg-white px-5 text-base font-semibold text-ink hover:bg-warm"
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Change settings
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> {copy.plan.changeSettings}
           </button>
           <Link to="/patient/cognitive/library" className="inline-flex min-h-14 items-center gap-1 px-3 text-sm font-semibold text-forest hover:underline">
-            Browse the task library
+            {copy.plan.browseLibrary}
           </Link>
         </div>
       </div>
@@ -342,15 +347,15 @@ export const CognitiveHubPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Cognitive assessment"
-        title="A short, guided thinking assessment"
-        description="Memory, attention, executive function, language, visuospatial and everyday thinking activities. Choose a mode, check how you are feeling today, and review your plan before starting."
+        eyebrow={copy.hub.eyebrow}
+        title={copy.hub.title}
+        description={copy.hub.description}
         actions={
           <Link
             to="/patient/cognitive/library"
             className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-forest hover:bg-mint"
           >
-            <ClipboardList className="h-4 w-4" aria-hidden="true" /> 32 activities
+            <ClipboardList className="h-4 w-4" aria-hidden="true" /> {copy.hub.libraryLink(32)}
           </Link>
         }
       />
@@ -359,7 +364,7 @@ export const CognitiveHubPage: React.FC = () => {
         <HealthcareScene
           kind="assessmentIntro"
           className="w-full"
-          title="An older patient sitting comfortably with a tablet before a cognitive assessment"
+          title={copy.hub.sceneTitle}
           animated={false}
         />
       </div>
@@ -368,9 +373,9 @@ export const CognitiveHubPage: React.FC = () => {
         <div className="rounded-2xl border border-forest/40 bg-mint/50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-base font-semibold text-ink">You have a paused assessment</p>
+              <p className="text-base font-semibold text-ink">{copy.hub.pausedTitle}</p>
               <p className="mt-0.5 text-xs text-muted">
-                {pausedSnapshot.results?.length || 0} of {pausedSnapshot.plan?.tasks?.length || 0} activities saved on this device.
+                {copy.hub.pausedDetail(pausedSnapshot.results?.length || 0, pausedSnapshot.plan?.tasks?.length || 0)}
               </p>
             </div>
             <div className="flex gap-2">
@@ -383,7 +388,7 @@ export const CognitiveHubPage: React.FC = () => {
                 }}
                 className="min-h-11 rounded-xl bg-forest px-4 text-sm font-semibold text-white"
               >
-                Resume
+                {copy.hub.resume}
               </button>
               <button
                 type="button"
@@ -393,7 +398,7 @@ export const CognitiveHubPage: React.FC = () => {
                 }}
                 className="min-h-11 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-body"
               >
-                Discard
+                {copy.hub.discard}
               </button>
             </div>
           </div>
@@ -405,16 +410,16 @@ export const CognitiveHubPage: React.FC = () => {
           {
             id: 'STANDARDIZED' as AssessmentMode,
             icon: Stethoscope,
-            title: 'Standardized clinical assessment',
-            detail: 'A fixed set of six activities with consistent instructions, controlled difficulty and alternate forms. Best for comparing results across visits.',
-            points: ['Same constructs at every visit', 'No adaptive difficulty changes', 'Comparable within-person measurements']
+            title: copy.hub.standardizedTitle,
+            detail: copy.hub.standardizedDetail,
+            points: copy.hub.standardizedPoints
           },
           {
             id: 'EXPLORATORY' as AssessmentMode,
             icon: Sparkles,
-            title: 'Adaptive cognitive exploration',
-            detail: 'Activities and difficulty are selected from your context and previous performance. Results are kept separate from standardized measurements.',
-            points: ['Broader activity choice', 'Difficulty adapts over visits', 'Not comparable with standardized scores']
+            title: copy.hub.exploratoryTitle,
+            detail: copy.hub.exploratoryDetail,
+            points: copy.hub.exploratoryPoints
           }
         ].map(({ id, icon: Icon, title, detail, points }) => {
           const active = mode === id;
@@ -451,14 +456,14 @@ export const CognitiveHubPage: React.FC = () => {
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
-            <Moon className="h-4 w-4 text-sage-deep" /> How are you today?
+            <Moon className="h-4 w-4 text-sage-deep" /> {copy.hub.todayTitle}
           </h2>
           <p className="mt-1 text-xs leading-5 text-muted">
-            This is recorded as context for your clinician. It does not change the difficulty or your score. Missing answers stay missing.
+            {copy.hub.todayDetail}
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block text-sm font-semibold text-ink">
-              Hours slept last night
+              {copy.hub.hoursSlept}
               <input
                 type="number"
                 min={0}
@@ -466,12 +471,12 @@ export const CognitiveHubPage: React.FC = () => {
                 step={0.5}
                 value={context.sleepHours ?? ''}
                 onChange={(event) => update('sleepHours', numberOrNull(event.target.value))}
-                placeholder="Not reported"
+                placeholder={copy.hub.notReported}
                 className={`${fieldClass} mt-1`}
               />
             </label>
             <label className="block text-sm font-semibold text-ink">
-              Sleep quality
+              {copy.hub.sleepQuality}
               <select
                 value={context.sleepQuality ?? ''}
                 onChange={(event) => update('sleepQuality', numberOrNull(event.target.value))}
@@ -481,7 +486,7 @@ export const CognitiveHubPage: React.FC = () => {
               </select>
             </label>
             <label className="block text-sm font-semibold text-ink">
-              Fatigue right now
+              {copy.hub.fatigue}
               <select
                 value={context.fatigue ?? ''}
                 onChange={(event) => update('fatigue', numberOrNull(event.target.value))}
@@ -491,7 +496,7 @@ export const CognitiveHubPage: React.FC = () => {
               </select>
             </label>
             <label className="block text-sm font-semibold text-ink">
-              Stress right now
+              {copy.hub.stress}
               <select
                 value={context.stress ?? ''}
                 onChange={(event) => update('stress', numberOrNull(event.target.value))}
@@ -501,7 +506,7 @@ export const CognitiveHubPage: React.FC = () => {
               </select>
             </label>
             <label className="block text-sm font-semibold text-ink">
-              Mood
+              {copy.hub.mood}
               <select
                 value={context.mood ?? ''}
                 onChange={(event) => update('mood', numberOrNull(event.target.value))}
@@ -511,26 +516,26 @@ export const CognitiveHubPage: React.FC = () => {
               </select>
             </label>
             <label className="block text-sm font-semibold text-ink">
-              Language
+              {copy.hub.language}
               <select
                 value={context.language}
                 onChange={(event) => update('language', event.target.value)}
                 className={`${fieldClass} mt-1`}
               >
-                <option value="en">English</option>
-                <option value="ar">العربية — instructions pending</option>
-                <option value="ta">Tamil — instructions pending</option>
-                <option value="hi">Hindi — instructions pending</option>
-                <option value="te">Telugu — instructions pending</option>
-                <option value="ml">Malayalam — instructions pending</option>
-                <option value="kn">Kannada — instructions pending</option>
+                <option value="en">{copy.plan.english}</option>
+                <option value="ar">{copy.hub.languagePending('العربية')}</option>
+                <option value="ta">{copy.hub.languagePending('தமிழ்')}</option>
+                <option value="hi">{copy.hub.languagePending('हिन्दी')}</option>
+                <option value="te">{copy.hub.languagePending('తెలుగు')}</option>
+                <option value="ml">{copy.hub.languagePending('മലയാളം')}</option>
+                <option value="kn">{copy.hub.languagePending('ಕನ್ನಡ')}</option>
               </select>
             </label>
           </div>
           {missingFields.length > 0 && (
             <p className="mt-3 flex gap-2 rounded-xl border border-line bg-warm/60 p-2.5 text-[13px] leading-5 text-muted">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              Not yet reported: {missingFields.join(', ')}. These remain missing until you or your clinician record them.
+              {copy.hub.missingReported(missingFields.join(', '))}
             </p>
           )}
         </Card>
@@ -538,13 +543,13 @@ export const CognitiveHubPage: React.FC = () => {
         <div className="space-y-4">
           <Card>
             <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
-              <Accessibility className="h-4 w-4 text-sage-deep" /> Accessibility
+              <Accessibility className="h-4 w-4 text-sage-deep" /> {copy.hub.accessibilityTitle}
             </h2>
             <div className="mt-3 space-y-3">
               {[
-                ['Vision', 'vision'],
-                ['Hearing', 'hearing'],
-                ['Movement / motor', 'motor']
+                [copy.hub.vision, 'vision'],
+                [copy.hub.hearing, 'hearing'],
+                [copy.hub.motor, 'motor']
               ].map(([label, key]) => (
                 <label key={key} className="block text-sm font-semibold text-ink">
                   {label}
@@ -558,15 +563,15 @@ export const CognitiveHubPage: React.FC = () => {
                     }
                     className={`${fieldClass} mt-1`}
                   >
-                    <option value="">Not reported</option>
-                    <option value="none">No difficulty</option>
-                    <option value="mild">Mild difficulty</option>
-                    <option value="significant">Significant difficulty</option>
+                    <option value="">{copy.hub.notReported}</option>
+                    <option value="none">{copy.hub.noDifficulty}</option>
+                    <option value="mild">{copy.hub.mildDifficulty}</option>
+                    <option value="significant">{copy.hub.significantDifficulty}</option>
                   </select>
                 </label>
               ))}
               <label className="block text-sm font-semibold text-ink">
-                Familiarity with tablets
+                {copy.hub.familiarity}
                 <select
                   value={context.digitalFamiliarity || ''}
                   onChange={(event) =>
@@ -574,30 +579,30 @@ export const CognitiveHubPage: React.FC = () => {
                   }
                   className={`${fieldClass} mt-1`}
                 >
-                  <option value="">Not reported</option>
-                  <option value="low">Low — extra practice is helpful</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  <option value="">{copy.hub.notReported}</option>
+                  <option value="low">{copy.hub.familiarityLow}</option>
+                  <option value="medium">{copy.hub.familiarityMedium}</option>
+                  <option value="high">{copy.hub.familiarityHigh}</option>
                 </select>
               </label>
               <label className="block text-sm font-semibold text-ink">
-                Device
+                {copy.hub.device}
                 <select
                   value={context.device || 'tablet'}
                   onChange={(event) => update('device', event.target.value as SessionContext['device'])}
                   className={`${fieldClass} mt-1`}
                 >
-                  <option value="tablet">Tablet</option>
-                  <option value="desktop">Desktop / laptop</option>
-                  <option value="phone">Phone</option>
+                  <option value="tablet">{copy.hub.deviceTablet}</option>
+                  <option value="desktop">{copy.hub.deviceDesktop}</option>
+                  <option value="phone">{copy.hub.devicePhone}</option>
                 </select>
               </label>
             </div>
             <div className="mt-4 space-y-2 border-t border-line pt-3">
               {([
-                ['Larger text', largeText, setLargeText],
-                ['High contrast', highContrast, setHighContrast],
-                ['Extra practice trial', extraPractice, setExtraPractice]
+                [copy.hub.largerText, largeText, setLargeText],
+                [copy.hub.highContrast, highContrast, setHighContrast],
+                [copy.hub.extraPractice, extraPractice, setExtraPractice]
               ] as Array<[string, boolean, (value: boolean) => void]>).map(([label, value, setter]) => (
                 <label key={label} className="flex items-center justify-between gap-3 text-sm text-ink">
                   {label}
@@ -615,7 +620,7 @@ export const CognitiveHubPage: React.FC = () => {
           {mode === 'EXPLORATORY' && (
             <Card>
               <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
-                <Clock3 className="h-4 w-4 text-sage-deep" /> Session length
+                <Clock3 className="h-4 w-4 text-sage-deep" /> {copy.hub.sessionLength}
               </h2>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {[10, 15, 20].map((value) => (
@@ -627,12 +632,12 @@ export const CognitiveHubPage: React.FC = () => {
                       minutes === value ? 'border-forest bg-mint text-forest' : 'border-line bg-white text-body'
                     }`}
                   >
-                    {value} min
+                    {copy.hub.minutes(value)}
                   </button>
                 ))}
               </div>
               <p className="mt-2 text-[13px] leading-5 text-muted">
-                Exploratory sessions adjust the number and difficulty of activities. Standardized sessions use the fixed six-activity protocol.
+                {copy.hub.sessionLengthNote}
               </p>
             </Card>
           )}
@@ -643,7 +648,7 @@ export const CognitiveHubPage: React.FC = () => {
 
       <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-xl text-xs leading-5 text-muted">
-          Activities are research-stage and not validated clinical instruments. Your clinician reviews every session; no risk label is generated automatically.
+          {copy.hub.disclaimer}
         </p>
         <button
           type="button"
@@ -652,12 +657,12 @@ export const CognitiveHubPage: React.FC = () => {
           className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-forest px-6 text-lg font-semibold text-white shadow-elevated transition hover:bg-forest/90 disabled:opacity-60"
         >
           {loading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <ArrowRight className="h-5 w-5" aria-hidden="true" />}
-          {loading ? 'Building your plan…' : 'Review my assessment plan'}
+          {loading ? copy.hub.buildingPlan : copy.hub.reviewPlan}
         </button>
       </div>
 
       <p className="flex items-center gap-2 text-[13px] text-muted">
-        <UserRound className="h-3.5 w-3.5" /> Signed in as {user?.name || 'patient'} · Patient ID {user?.patientId || 'not available'}
+        <UserRound className="h-3.5 w-3.5" /> {copy.hub.signedInAs(user?.name || copy.hub.patientFallback, user?.patientId || copy.hub.notAvailable)}
       </p>
     </div>
   );

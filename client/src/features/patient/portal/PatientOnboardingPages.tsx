@@ -28,18 +28,22 @@ import { usePatientPortalStore, type ConsentKey } from '../../../store/patientPo
 import { patientPortalApi } from '../../../services/patientPortalApi';
 import { useLanguageStore } from '../../../services/language/LanguageManager';
 import { getPortalTranslation } from '../../../services/language/portalTranslations';
+import { getOnboardingCopy } from '../../../services/language/onboardingCopy';
 import { getLanguageInfo } from '../../../services/language/translations';
 import type { SupportedLanguage } from '../../../services/language/types';
 import { useVoiceAssistantStore } from '../../../services/voice/VoiceInstructionEngine';
 import { Card, Pill, Toggle, formatDate, primaryButton, secondaryButton } from './ui';
 
-const steps = [
-  { label: 'Welcome', path: '/patient/welcome' },
-  { label: 'About you', path: '/patient/onboarding/personal-info' },
-  { label: 'Health', path: '/patient/onboarding/health-background' },
-  { label: 'Consent', path: '/patient/onboarding/consent' },
-  { label: 'Accessibility', path: '/patient/onboarding/accessibility' }
+const STEP_PATHS = [
+  '/patient/welcome',
+  '/patient/onboarding/personal-info',
+  '/patient/onboarding/health-background',
+  '/patient/onboarding/consent',
+  '/patient/onboarding/accessibility'
 ];
+
+const useOnboardingCopy = () =>
+  getOnboardingCopy(useLanguageStore((state) => state.currentLanguage));
 
 const fieldClass =
   'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[14px] text-ink outline-none transition-colors placeholder:text-muted focus:border-forest focus:ring-4 focus:ring-forest/12';
@@ -56,11 +60,15 @@ const OnboardingShell: React.FC<{
   children: React.ReactNode;
   backTo?: string;
   backLabel?: string;
-}> = ({ step, eyebrow, title, description, children, backTo, backLabel = 'Back' }) => (
+}> = ({ step, eyebrow, title, description, children, backTo, backLabel }) => {
+  const copy = useOnboardingCopy();
+  const steps = copy.steps.map((label, index) => ({ label, path: STEP_PATHS[index] }));
+
+  return (
   <div className="min-h-screen bg-warm text-ink">
     <header className="border-b border-line bg-white">
       <div className="mx-auto flex h-[68px] max-w-5xl items-center justify-between px-4 sm:px-6">
-        <Link to="/patient/welcome" className="flex items-center gap-2.5 text-decoration-none" aria-label="NeuLens patient portal">
+        <Link to="/patient/welcome" className="flex items-center gap-2.5 text-decoration-none" aria-label={copy.homeLabel}>
           <NeuLensLogo height="h-9" />
         </Link>
         {backTo && (
@@ -69,7 +77,7 @@ const OnboardingShell: React.FC<{
             className="pp-btn pp-btn-ghost pp-btn-sm inline-flex items-center gap-1.5 rounded-full"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            {backLabel}
+            {backLabel ?? copy.back}
           </Link>
         )}
       </div>
@@ -77,7 +85,7 @@ const OnboardingShell: React.FC<{
 
     <main className="mx-auto w-full max-w-5xl px-4 py-7 sm:px-6 sm:py-10">
       {/* Progress steps — sage/forest/mint */}
-      <ol className="mb-7 grid grid-cols-5 gap-1.5" aria-label="Onboarding progress">
+      <ol className="mb-7 grid grid-cols-5 gap-1.5" aria-label={copy.progressLabel}>
         {steps.map((item, index) => {
           const state = index < step ? 'done' : index === step ? 'current' : 'upcoming';
           return (
@@ -113,7 +121,8 @@ const OnboardingShell: React.FC<{
       </div>
     </main>
   </div>
-);
+  );
+};
 
 // ---------------------------------------------------------------------------
 // Screen 15 — Patient Welcome
@@ -122,14 +131,15 @@ export const PatientWelcomePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { onboardingComplete } = usePatientPortalStore();
-  const firstName = (user?.name || 'there').split(' ')[0];
+  const copy = useOnboardingCopy();
+  const firstName = (user?.name || '').split(' ')[0];
 
   return (
     <OnboardingShell
       step={0}
-      eyebrow="Screen 15 · Patient welcome"
-      title={`Welcome, ${firstName}.`}
-      description="NeuLens brings short, guided activities together so you and your care team can build a clearer picture of your brain health over time."
+      eyebrow={copy.welcome.eyebrow}
+      title={copy.welcome.title(firstName)}
+      description={copy.welcome.description}
     >
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-2xl border border-line bg-warm/70 p-4 sm:p-5">
@@ -137,18 +147,17 @@ export const PatientWelcomePage: React.FC = () => {
             <HealthcareScene
               kind="registration"
               className="w-full"
-              title="A caregiver helping Haroon begin NeuLens onboarding"
+              title={copy.welcome.sceneTitle}
               animated={false}
             />
           </MotionReveal>
-          <h2 className="text-[14px] font-semibold text-ink">What to expect</h2>
+          <h2 className="text-[14px] font-semibold text-ink">{copy.welcome.whatToExpect}</h2>
           <ul className="mt-3 space-y-3">
-            {[
-              { icon: ClipboardCheck, title: 'A short five-part screening', detail: 'Memory, attention, eye movement, voice, and facial movement activities.' },
-              { icon: Timer, title: 'About 10–15 minutes', detail: 'Take breaks, pause, or stop at any point. There is no time pressure.' },
-              { icon: Languages, title: 'In your preferred language', detail: 'Written and spoken guidance in Arabic and English, with accessible multi-sensory support.' },
-              { icon: Stethoscope, title: 'Reviewed by a clinician', detail: 'Observations are shared with your care team for professional review.' }
-            ].map(({ icon: Icon, title, detail }) => (
+            {[ClipboardCheck, Timer, Languages, Stethoscope].map((Icon, index) => ({
+              Icon,
+              title: copy.welcome.items[index].title,
+              detail: copy.welcome.items[index].detail
+            })).map(({ Icon, title, detail }) => (
               <li key={title} className="flex items-start gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mint text-forest shadow-xs">
                   <Icon className="h-4 w-4" aria-hidden="true" />
@@ -166,26 +175,22 @@ export const PatientWelcomePage: React.FC = () => {
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-forest shadow-xs">
             <Brain className="h-6 w-6" strokeWidth={1.6} aria-hidden="true" />
           </span>
-          <p className="mt-3 text-[14px] font-semibold text-ink">Before you begin</p>
-          <p className="mt-1 text-[13px] leading-5 text-muted">
-            We will ask a few questions about you, your health background, and your consent. Then you can set up the experience to suit your needs.
-          </p>
+          <p className="mt-3 text-[14px] font-semibold text-ink">{copy.welcome.beforeTitle}</p>
+          <p className="mt-1 text-[13px] leading-5 text-muted">{copy.welcome.beforeBody}</p>
           <div className="mt-4 flex flex-wrap gap-1.5">
-            <Pill tone="mint">Optional breaks</Pill>
-            <Pill tone="forestSoft">Accessible</Pill>
-            <Pill tone="sage">Private</Pill>
+            <Pill tone="mint">{copy.welcome.pills[0]}</Pill>
+            <Pill tone="forestSoft">{copy.welcome.pills[1]}</Pill>
+            <Pill tone="sage">{copy.welcome.pills[2]}</Pill>
           </div>
         </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <p className="max-w-xl text-[13px] leading-5 text-muted">
-          NeuLens identifies changes that may warrant further assessment. It does not diagnose disease or replace professional judgement.
-        </p>
+        <p className="max-w-xl text-[13px] leading-5 text-muted">{copy.welcome.disclaimer}</p>
         <div className="flex flex-wrap gap-2">
           {onboardingComplete ? (
             <Link to="/patient/dashboard" className={primaryButton}>
-              Go to dashboard
+              {copy.welcome.goDashboard}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           ) : (
@@ -194,7 +199,7 @@ export const PatientWelcomePage: React.FC = () => {
               className={primaryButton}
               onClick={() => navigate('/patient/onboarding/personal-info')}
             >
-              Start onboarding
+              {copy.welcome.start}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
@@ -212,6 +217,7 @@ export const PersonalInfoPage: React.FC = () => {
   const { user } = useAuthStore();
   const { personal, setPersonal } = usePatientPortalStore();
   const { setLanguage } = useLanguageStore();
+  const copy = useOnboardingCopy();
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -227,8 +233,8 @@ export const PersonalInfoPage: React.FC = () => {
   }, [personal.fullName, personal.dateOfBirth, setPersonal, user]);
 
   const handleContinue = () => {
-    if (!personal.fullName.trim()) return setError('Enter your full name.');
-    if (!personal.dateOfBirth) return setError('Enter your date of birth.');
+    if (!personal.fullName.trim()) return setError(copy.personal.errors.name);
+    if (!personal.dateOfBirth) return setError(copy.personal.errors.dob);
     setError('');
     navigate('/patient/onboarding/health-background');
   };
@@ -236,9 +242,9 @@ export const PersonalInfoPage: React.FC = () => {
   return (
     <OnboardingShell
       step={1}
-      eyebrow="Screen 16 · Personal information"
-      title="Tell us about you"
-      description="These details help personalise your screening and support accurate comparisons between sessions. You can update them later in My Profile."
+      eyebrow={copy.personal.eyebrow}
+      title={copy.personal.title}
+      description={copy.personal.description}
       backTo="/patient/welcome"
     >
       {error && (
@@ -249,19 +255,19 @@ export const PersonalInfoPage: React.FC = () => {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className={labelClass} htmlFor="onboarding-name">Full name</label>
+          <label className={labelClass} htmlFor="onboarding-name">{copy.personal.name}</label>
           <input
             id="onboarding-name"
             className={fieldClass}
             value={personal.fullName}
             onChange={(event) => setPersonal({ fullName: event.target.value })}
-            placeholder="e.g. Eleanor Vance"
+            placeholder={copy.personal.namePlaceholder}
             autoComplete="name"
           />
         </div>
 
         <div>
-          <label className={labelClass} htmlFor="onboarding-dob">Date of birth</label>
+          <label className={labelClass} htmlFor="onboarding-dob">{copy.personal.dob}</label>
           <input
             id="onboarding-dob"
             type="date"
@@ -274,7 +280,7 @@ export const PersonalInfoPage: React.FC = () => {
         </div>
 
         <div>
-          <label className={labelClass} htmlFor="onboarding-language">Preferred language</label>
+          <label className={labelClass} htmlFor="onboarding-language">{copy.personal.language}</label>
           <select
             id="onboarding-language"
             className={fieldClass}
@@ -298,25 +304,24 @@ export const PersonalInfoPage: React.FC = () => {
         </div>
 
         <div>
-          <label className={labelClass} htmlFor="onboarding-education">Education level</label>
+          <label className={labelClass} htmlFor="onboarding-education">{copy.personal.education}</label>
           <select
             id="onboarding-education"
             className={fieldClass}
             value={personal.education}
             onChange={(event) => setPersonal({ education: event.target.value })}
           >
-            <option value="">Select education level</option>
-            <option>No formal schooling</option>
-            <option>Primary school</option>
-            <option>Secondary school</option>
-            <option>Undergraduate</option>
-            <option>Postgraduate or professional</option>
-            <option>Prefer not to say</option>
+            <option value="">{copy.personal.educationPlaceholder}</option>
+            {copy.personal.educationOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
 
         <div>
-          <label className={labelClass} htmlFor="onboarding-email">Email address</label>
+          <label className={labelClass} htmlFor="onboarding-email">{copy.personal.email}</label>
           <input
             id="onboarding-email"
             type="email"
@@ -328,7 +333,7 @@ export const PersonalInfoPage: React.FC = () => {
         </div>
 
         <div>
-          <label className={labelClass} htmlFor="onboarding-phone">Phone number</label>
+          <label className={labelClass} htmlFor="onboarding-phone">{copy.personal.phone}</label>
           <input
             id="onboarding-phone"
             type="tel"
@@ -342,23 +347,23 @@ export const PersonalInfoPage: React.FC = () => {
         <div className="rounded-xl border border-line bg-warm/70 p-3.5 sm:col-span-2">
           <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">
             <HeartPulse className="h-3.5 w-3.5" aria-hidden="true" />
-            Emergency contact <span className="font-medium normal-case tracking-normal text-muted">(optional)</span>
+            {copy.personal.emergencyTitle} <span className="font-medium normal-case tracking-normal text-muted">{copy.personal.optional}</span>
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <input
-              aria-label="Emergency contact name"
+              aria-label={copy.personal.emergencyName}
               className={fieldClass}
               value={personal.emergencyName}
               onChange={(event) => setPersonal({ emergencyName: event.target.value })}
-              placeholder="Contact name"
+              placeholder={copy.personal.emergencyNamePlaceholder}
             />
             <input
-              aria-label="Emergency contact phone"
+              aria-label={copy.personal.emergencyPhone}
               type="tel"
               className={fieldClass}
               value={personal.emergencyPhone}
               onChange={(event) => setPersonal({ emergencyPhone: event.target.value })}
-              placeholder="Contact phone"
+              placeholder={copy.personal.emergencyPhonePlaceholder}
             />
           </div>
         </div>
@@ -367,10 +372,10 @@ export const PersonalInfoPage: React.FC = () => {
       <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
         <Link to="/patient/welcome" className={secondaryButton}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back
+          {copy.back}
         </Link>
         <button type="button" className={primaryButton} onClick={handleContinue}>
-          Continue to health background
+          {copy.personal.continue}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
@@ -381,29 +386,28 @@ export const PersonalInfoPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 // Screen 17 — Health Background
 // ---------------------------------------------------------------------------
-const conditions = ['Hypertension', 'Diabetes', 'Heart disease', 'Thyroid condition', 'Stroke', 'Head injury', 'None of these'];
-const sensoryOptions = ['Vision difficulty', 'Hearing difficulty', 'Mobility difficulty', 'Speech difficulty', 'None of these'];
+const NONE_VALUE = 'None of these';
 
 const ChipSelect: React.FC<{
-  options: string[];
+  options: Array<{ value: string; label: string }>;
   selected: string[];
   onChange: (next: string[]) => void;
 }> = ({ options, selected, onChange }) => (
   <div className="flex flex-wrap gap-2">
     {options.map((option) => {
-      const active = selected.includes(option);
+      const active = selected.includes(option.value);
       return (
         <button
-          key={option}
+          key={option.value}
           type="button"
           aria-pressed={active}
           onClick={() => {
-            if (option === 'None of these') {
-              onChange(active ? [] : [option]);
+            if (option.value === NONE_VALUE) {
+              onChange(active ? [] : [option.value]);
               return;
             }
-            const withoutNone = selected.filter((value) => value !== 'None of these');
-            onChange(active ? withoutNone.filter((value) => value !== option) : [...withoutNone, option]);
+            const withoutNone = selected.filter((value) => value !== NONE_VALUE);
+            onChange(active ? withoutNone.filter((value) => value !== option.value) : [...withoutNone, option.value]);
           }}
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
             active
@@ -412,7 +416,7 @@ const ChipSelect: React.FC<{
           }`}
         >
           {active && <Check className="h-3 w-3" aria-hidden="true" />}
-          {option}
+          {option.label}
         </button>
       );
     })}
@@ -422,20 +426,21 @@ const ChipSelect: React.FC<{
 export const HealthBackgroundPage: React.FC = () => {
   const navigate = useNavigate();
   const { health, setHealth } = usePatientPortalStore();
+  const copy = useOnboardingCopy();
 
   return (
     <OnboardingShell
       step={2}
-      eyebrow="Screen 17 · Health background"
-      title="A little health context"
-      description="This helps your clinician interpret screening observations alongside your history. Share only what you are comfortable with."
+      eyebrow={copy.health.eyebrow}
+      title={copy.health.title}
+      description={copy.health.description}
       backTo="/patient/onboarding/personal-info"
     >
       <div className="space-y-5">
         <div>
-          <label className={labelClass}>Relevant medical history</label>
+          <label className={labelClass}>{copy.health.conditionsLabel}</label>
           <ChipSelect
-            options={conditions}
+            options={copy.health.conditions}
             selected={health.conditions}
             onChange={(next) => setHealth({ conditions: next })}
           />
@@ -443,20 +448,20 @@ export const HealthBackgroundPage: React.FC = () => {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelClass} htmlFor="health-medications">Current medications</label>
+            <label className={labelClass} htmlFor="health-medications">{copy.health.medications}</label>
             <textarea
               id="health-medications"
               rows={3}
               className={fieldClass}
               value={health.medications}
               onChange={(event) => setHealth({ medications: event.target.value })}
-              placeholder="Name, dose, and how often — or write 'None'"
+              placeholder={copy.health.medicationsPlaceholder}
             />
           </div>
           <div>
-            <label className={labelClass}>Existing sensory difficulties</label>
+            <label className={labelClass}>{copy.health.sensoryLabel}</label>
             <ChipSelect
-              options={sensoryOptions}
+              options={copy.health.sensory}
               selected={health.sensory}
               onChange={(next) => setHealth({ sensory: next })}
             />
@@ -465,41 +470,42 @@ export const HealthBackgroundPage: React.FC = () => {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelClass} htmlFor="health-family">Relevant family history</label>
+            <label className={labelClass} htmlFor="health-family">{copy.health.family}</label>
             <textarea
               id="health-family"
               rows={3}
               className={fieldClass}
               value={health.familyHistory}
               onChange={(event) => setHealth({ familyHistory: event.target.value })}
-              placeholder="For example, a close relative with memory or neurological concerns"
+              placeholder={copy.health.familyPlaceholder}
             />
           </div>
           <div>
-            <label className={labelClass} htmlFor="health-previous">Previous cognitive assessments</label>
+            <label className={labelClass} htmlFor="health-previous">{copy.health.previous}</label>
             <select
               id="health-previous"
               className={fieldClass}
               value={health.previousAssessments}
               onChange={(event) => setHealth({ previousAssessments: event.target.value })}
             >
-              <option>No previous assessments</option>
-              <option>Yes — within the last year</option>
-              <option>Yes — more than a year ago</option>
-              <option>Not sure</option>
+              {copy.health.previousOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
         <div>
-          <label className={labelClass} htmlFor="health-lifestyle">Relevant lifestyle information</label>
+          <label className={labelClass} htmlFor="health-lifestyle">{copy.health.lifestyle}</label>
           <textarea
             id="health-lifestyle"
             rows={3}
             className={fieldClass}
             value={health.lifestyleNotes}
             onChange={(event) => setHealth({ lifestyleNotes: event.target.value })}
-            placeholder="Sleep, activity, work, or anything that may affect today's session"
+            placeholder={copy.health.lifestylePlaceholder}
           />
         </div>
       </div>
@@ -507,10 +513,10 @@ export const HealthBackgroundPage: React.FC = () => {
       <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
         <Link to="/patient/onboarding/personal-info" className={secondaryButton}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back
+          {copy.back}
         </Link>
         <button type="button" className={primaryButton} onClick={() => navigate('/patient/onboarding/consent')}>
-          Continue to consent
+          {copy.health.continue}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
@@ -667,6 +673,7 @@ export const AccessibilitySetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { accessibility, setAccessibility, completeOnboarding } = usePatientPortalStore();
   const { currentLanguage, setLanguage } = useLanguageStore();
+  const copy = useOnboardingCopy();
   const { speak, stopSpeaking } = useVoiceAssistantStore();
   const [testing, setTesting] = useState<'camera' | 'mic' | null>(null);
 
@@ -697,9 +704,9 @@ export const AccessibilitySetupPage: React.FC = () => {
   return (
     <OnboardingShell
       step={4}
-      eyebrow="Screen 19 · Accessibility setup"
-      title="Set up your experience"
-      description="Choose how you would like to read, hear, and interact with NeuLens. These choices can be changed at any time."
+      eyebrow={copy.accessibility.eyebrow}
+      title={copy.accessibility.title}
+      description={copy.accessibility.description}
       backTo="/patient/onboarding/consent"
     >
       <div className="grid gap-5 lg:grid-cols-2">
@@ -707,7 +714,7 @@ export const AccessibilitySetupPage: React.FC = () => {
           <div>
             <label className={labelClass} htmlFor="access-language">
               <Languages className="me-1 inline h-3.5 w-3.5" aria-hidden="true" />
-              Language
+              {copy.accessibility.language}
             </label>
             <select
               id="access-language"
@@ -724,14 +731,14 @@ export const AccessibilitySetupPage: React.FC = () => {
               <option value="ml">Malayalam</option>
             </select>
             <div className="mt-2 flex items-center justify-between gap-2">
-              <p className="text-[13px] leading-5 text-muted">Spoken guidance uses this language.</p>
+              <p className="text-[13px] leading-5 text-muted">{copy.accessibility.voiceNote}</p>
               <button
                 type="button"
                 onClick={previewVoice}
                 className="inline-flex items-center gap-1.5 text-[13px] font-bold text-forest hover:underline"
               >
                 <AudioLines className="h-3.5 w-3.5" aria-hidden="true" />
-                Hear a sample
+                {copy.accessibility.hearSample}
               </button>
             </div>
           </div>
@@ -739,13 +746,13 @@ export const AccessibilitySetupPage: React.FC = () => {
           <div>
             <span className={labelClass}>
               <Type className="me-1 inline h-3.5 w-3.5" aria-hidden="true" />
-              Text size
+              {copy.accessibility.textSize}
             </span>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { value: 'normal' as const, label: 'A', detail: 'Standard' },
-                { value: 'large' as const, label: 'A+', detail: 'Larger' },
-                { value: 'xlarge' as const, label: 'A++', detail: 'Largest' }
+                { value: 'normal' as const, ...copy.accessibility.sizes[0] },
+                { value: 'large' as const, ...copy.accessibility.sizes[1] },
+                { value: 'xlarge' as const, ...copy.accessibility.sizes[2] }
               ].map((option) => (
                 <button
                   key={option.value}
@@ -766,81 +773,78 @@ export const AccessibilitySetupPage: React.FC = () => {
           </div>
 
           <Toggle
-            label="High contrast"
-            detail="Stronger borders and darker text for easier reading."
+            label={copy.accessibility.highContrast}
+            detail={copy.accessibility.highContrastDetail}
             checked={accessibility.highContrast}
             onChange={(value) => setAccessibility({ highContrast: value })}
           />
           <Toggle
-            label="Audio instructions"
-            detail="Read activity instructions aloud during the screening."
+            label={copy.accessibility.audio}
+            detail={copy.accessibility.audioDetail}
             checked={accessibility.audioInstructions}
             onChange={(value) => setAccessibility({ audioInstructions: value })}
           />
           <div>
-            <label className={labelClass} htmlFor="access-touch">Touch interaction preference</label>
+            <label className={labelClass} htmlFor="access-touch">{copy.accessibility.touch}</label>
             <select
               id="access-touch"
               className={fieldClass}
               value={accessibility.touchPreference}
               onChange={(event) => setAccessibility({ touchPreference: event.target.value })}
             >
-              <option>Large tap targets</option>
-              <option>Standard tap targets</option>
-              <option>Keyboard or switch access</option>
-              <option>Ask a caregiver to assist</option>
+              {copy.accessibility.touchOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
         <div className="space-y-3">
           <Card className="bg-warm/70">
-            <p className="text-[14px] font-semibold text-ink">Camera and microphone check</p>
-            <p className="mt-1 text-[13px] leading-5 text-muted">
-              A quick check helps avoid technical interruptions. You can skip this and test later.
-            </p>
+            <p className="text-[14px] font-semibold text-ink">{copy.accessibility.checkTitle}</p>
+            <p className="mt-1 text-[13px] leading-5 text-muted">{copy.accessibility.checkBody}</p>
             <div className="mt-3 space-y-2.5">
               <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
                 <span className="flex items-center gap-2 text-[14px] font-semibold text-ink">
                   <Camera className="h-4 w-4 text-sage-deep" aria-hidden="true" />
-                  Camera
+                  {copy.accessibility.camera}
                 </span>
                 {accessibility.cameraTested ? (
-                  <Pill tone="forestSoft" dot>Ready</Pill>
+                  <Pill tone="forestSoft" dot>{copy.accessibility.ready}</Pill>
                 ) : (
                   <button type="button" className="text-[13px] font-bold text-forest" onClick={() => runTest('camera')}>
-                    {testing === 'camera' ? 'Checking…' : 'Test camera'}
+                    {testing === 'camera' ? copy.accessibility.checking : copy.accessibility.testCamera}
                   </button>
                 )}
               </div>
               <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-3">
                 <span className="flex items-center gap-2 text-[14px] font-semibold text-ink">
                   <Mic className="h-4 w-4 text-sage-deep" aria-hidden="true" />
-                  Microphone
+                  {copy.accessibility.microphone}
                 </span>
                 {accessibility.micTested ? (
-                  <Pill tone="forestSoft" dot>Ready</Pill>
+                  <Pill tone="forestSoft" dot>{copy.accessibility.ready}</Pill>
                 ) : (
                   <button type="button" className="text-[13px] font-bold text-forest" onClick={() => runTest('mic')}>
-                    {testing === 'mic' ? 'Checking…' : 'Test microphone'}
+                    {testing === 'mic' ? copy.accessibility.checking : copy.accessibility.testMicrophone}
                   </button>
                 )}
               </div>
             </div>
             <p className="mt-3 flex items-start gap-1.5 text-[13px] leading-5 text-muted">
               <AudioLines className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              Device tests are illustrative in this demonstration environment.
+              {copy.accessibility.demoNote}
             </p>
           </Card>
 
           <div className="rounded-xl border border-forest/40 bg-mint/50 p-3.5">
             <p className="flex items-center gap-1.5 text-[13px] font-bold text-forest">
               <Accessibility className="h-3.5 w-3.5" aria-hidden="true" />
-              Built for different needs
+              {copy.accessibility.builtTitle}
             </p>
-            <p className="mt-1.5 text-[13px] leading-5 text-forest/80">
-              Large controls, spoken guidance, and pause options are available throughout the assessment.
-            </p>
+            <p className="mt-1.5 text-[13px] leading-5 text-forest/80">{copy.accessibility.builtBody}</p>
           </div>
         </div>
       </div>
@@ -848,10 +852,10 @@ export const AccessibilitySetupPage: React.FC = () => {
       <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
         <Link to="/patient/onboarding/consent" className={secondaryButton}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back
+          {copy.back}
         </Link>
         <button type="button" className={primaryButton} onClick={finish}>
-          Finish setup and open portal
+          {copy.accessibility.finish}
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
@@ -859,4 +863,4 @@ export const AccessibilitySetupPage: React.FC = () => {
   );
 };
 
-export const onboardingStepPaths = steps.map((step) => step.path);
+export const onboardingStepPaths = STEP_PATHS;

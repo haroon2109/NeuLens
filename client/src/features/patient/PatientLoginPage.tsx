@@ -20,23 +20,28 @@ import { DemoAccessPanel } from '../auth/DemoAccessPanel';
 import { SupportedLanguage } from '../../services/language/types';
 import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { PortalIllustration } from '../../components/PortalIllustration';
+import { getEntryCopy } from '../../services/language/entryCopy';
+import { PublicLanguageToggle } from '../../components/PublicLanguageToggle';
 
-const patientLoginSchema = z.object({
-  patientId: z.string().trim().min(1, 'Please enter the Patient ID printed on your card.'),
-  verification: z
-    .string()
-    .trim()
-    .regex(/^\d{4,8}$/, 'Please enter the 4 to 8 digit PIN from your Patient ID card.'),
-});
+const buildLoginSchema = (idRequired: string, pinInvalid: string) =>
+  z.object({
+    patientId: z.string().trim().min(1, idRequired),
+    verification: z.string().trim().regex(/^\d{4,8}$/, pinInvalid),
+  });
 
-type PatientLoginFields = z.infer<typeof patientLoginSchema>;
+type PatientLoginFields = { patientId: string; verification: string };
 
 export const PatientLoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const { setLanguage } = useLanguageStore();
+  const { setLanguage, currentLanguage } = useLanguageStore();
+  const copy = getEntryCopy(currentLanguage);
 
   const [errorMsg, setErrorMsg] = useState('');
+  const schema = React.useMemo(
+    () => buildLoginSchema(copy.login.idRequired, copy.login.pinInvalid),
+    [copy]
+  );
 
   const {
     register,
@@ -44,7 +49,7 @@ export const PatientLoginPage: React.FC = () => {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<PatientLoginFields>({
-    resolver: zodResolver(patientLoginSchema),
+    resolver: zodResolver(schema),
     defaultValues: { patientId: '', verification: '' },
   });
 
@@ -68,8 +73,9 @@ export const PatientLoginPage: React.FC = () => {
       navigate('/patient/dashboard', { replace: true });
     } catch (err: any) {
       setErrorMsg(
-        err.message ||
-          'We could not find an account with that Patient ID and PIN. Please check your card or ask clinic staff.',
+        currentLanguage === 'ar'
+          ? copy.login.fallbackError
+          : err.message || copy.login.fallbackError,
       );
     }
   };
@@ -77,13 +83,16 @@ export const PatientLoginPage: React.FC = () => {
   return (
     <div className="portal-login-page">
       <header className="portal-login-header">
-        <Link to="/patient" className="portal-brand" aria-label="NeuLens patient portal home">
+        <Link to="/patient" className="portal-brand" aria-label={copy.login.homeLabel}>
           <NeuLensLogo height="h-9" />
         </Link>
-        <Link to="/patient" className="portal-back-link">
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to welcome</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <PublicLanguageToggle />
+          <Link to="/patient" className="portal-back-link">
+            <ArrowLeft className="h-4 w-4" />
+            <span>{copy.login.backToWelcome}</span>
+          </Link>
+        </div>
       </header>
 
       <main className="portal-login-main">
@@ -94,20 +103,20 @@ export const PatientLoginPage: React.FC = () => {
             <span className="portal-form-step-icon">
               <UserRound className="h-4 w-4" />
             </span>
-            <span>Returning patient</span>
-            <span className="portal-form-step-count">Step 2 of 6</span>
+            <span>{copy.login.stepBadge}</span>
+            <span className="portal-form-step-count">{copy.login.stepCount}</span>
           </div>
 
           <div className="portal-form-heading">
-            <h1 id="patient-login-title">Welcome back</h1>
-            <p>Enter your Patient ID and check-in details to continue.</p>
+            <h1 id="patient-login-title">{copy.login.title}</h1>
+            <p>{copy.login.subtitle}</p>
           </div>
 
           {errorMsg && (
             <div className="portal-error-alert" role="alert">
               <AlertCircle className="h-5 w-5 shrink-0" />
               <div>
-                <strong>Check-in error</strong>
+                <strong>{copy.login.errorHeading}</strong>
                 <span>{errorMsg}</span>
               </div>
             </div>
@@ -117,7 +126,7 @@ export const PatientLoginPage: React.FC = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="portal-login-form" noValidate>
             <div className="portal-field">
-              <label htmlFor="patient-id">Patient ID number</label>
+              <label htmlFor="patient-id">{copy.login.patientIdLabel}</label>
               <div className="portal-input-wrap">
                 <CreditCard className="portal-input-icon" />
                 <input
@@ -143,13 +152,13 @@ export const PatientLoginPage: React.FC = () => {
               ) : (
                 <p className="portal-field-hint">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  Found on your printed hospital appointment card.
+                  {copy.login.patientIdHint}
                 </p>
               )}
             </div>
 
             <div className="portal-field">
-              <label htmlFor="patient-verification">PIN</label>
+              <label htmlFor="patient-verification">{copy.login.pinLabel}</label>
               <div className="portal-input-wrap">
                 <KeyRound className="portal-input-icon" />
                 <input
@@ -157,7 +166,7 @@ export const PatientLoginPage: React.FC = () => {
                   type="password"
                   inputMode="numeric"
                   autoComplete="current-password"
-                  placeholder="Enter your PIN"
+                  placeholder={copy.login.pinPlaceholder}
                   maxLength={8}
                   className="portal-input"
                   aria-invalid={Boolean(errors.verification)}
@@ -170,32 +179,30 @@ export const PatientLoginPage: React.FC = () => {
                   {errors.verification.message}
                 </span>
               ) : (
-                <p className="portal-field-hint">
-                  Use the PIN you chose during registration. Birth year and date of birth are not accepted as sign-in credentials.
-                </p>
+                <p className="portal-field-hint">{copy.login.pinHint}</p>
               )}
             </div>
 
             <button type="submit" disabled={isSubmitting} className="portal-submit-button">
-              <span>{isSubmitting ? 'Checking your record…' : 'Continue to language selection'}</span>
+              <span>{isSubmitting ? copy.login.submitting : copy.login.submit}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
           <p className="portal-login-switch">
-            New to NeuLens? <Link to="/patient/register">Create a patient profile</Link>
+            {copy.login.newHere} <Link to="/patient/register">{copy.login.createProfile}</Link>
           </p>
 
           <div className="portal-secure-note">
             <ShieldCheck className="h-4 w-4 shrink-0" />
-            Your information is only used to support your screening session.
+            {copy.login.secureNote}
           </div>
         </section>
       </main>
 
       <footer className="portal-login-footer">
-        <span>If you have lost your Patient ID, please see the hospital front desk.</span>
-        <Link to="/doctor/login">Healthcare professional? Sign in here</Link>
+        <span>{copy.login.footerLostId}</span>
+        <Link to="/doctor/login">{copy.login.footerClinician}</Link>
       </footer>
     </div>
   );

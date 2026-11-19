@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../config/db';
 import { summarizePatientChanges } from '../services/changeMonitor';
 import { isInterpretableScore, toReviewState, type ReviewState } from '../services/reviewState';
-import { isDemoAssessment, isDemoUserId } from '../services/demoRecords';
+import { isDemoAssessment, isDemoUserId, demoAccessEnabled } from '../services/demoRecords';
 
 export interface UserRecord {
   id: string;
@@ -546,16 +546,17 @@ export class HospitalDataStore {
       }
       return Array.from(merged.values());
     };
-    // Demonstration records are invented. They are shown only inside the demo
-    // workspace; a clinical dashboard must never count them as patients.
-    if (!options.includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
+    // Demonstration records are shown inside demo and jury modes;
+    // they are excluded in clinical production unless demo access is active.
+    const includeDemo = options.includeDemo ?? demoAccessEnabled();
+    if (!includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
     const totalPatients = patients.length;
 
     // Assessments
     const completed = Array.from(new Map(
       patients.flatMap(patient => assessmentsForPatient(patient.id))
         .filter(assessment => assessment.status === 'COMPLETED')
-        .filter(assessment => options.includeDemo || !isDemoAssessment(assessment))
+        .filter(assessment => includeDemo || !isDemoAssessment(assessment))
         .map(assessment => [assessment.id, assessment])
     ).values());
     const assessmentsToday = completed.filter(a => new Date(a.date).getTime() >= todayStart.getTime()).length;
@@ -646,7 +647,8 @@ export class HospitalDataStore {
       console.warn('Prisma DB error fetching patient directory. Falling back to memory:', error);
     }
 
-    if (!options.includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
+    const includeDemo = options.includeDemo ?? demoAccessEnabled();
+    if (!includeDemo) patients = patients.filter(patient => !isDemoUserId(patient.id));
 
     const result = patients.map(patient => {
       const merged = new Map<string, AssessmentRecord>();

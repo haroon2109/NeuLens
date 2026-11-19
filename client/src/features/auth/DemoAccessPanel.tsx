@@ -8,6 +8,7 @@ import { useLanguageStore } from '../../services/language/LanguageManager';
 import { SupportedLanguage } from '../../services/language/types';
 import { portalPathForUser } from './authRouting';
 import { DEMO_ACCOUNTS, type DemoRole } from './demoAccounts';
+import { getEntryCopy } from '../../services/language/entryCopy';
 
 type DemoAccessPanelProps = {
   mode: 'shared' | 'patient-id' | 'doctor';
@@ -26,7 +27,8 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
 }) => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const { setLanguage } = useLanguageStore();
+  const { setLanguage, currentLanguage } = useLanguageStore();
+  const copy = getEntryCopy(currentLanguage);
   const [busy, setBusy] = useState<DemoRole | null>(null);
   const [available, setAvailable] = useState(false);
 
@@ -73,7 +75,7 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
       });
 
       if (!response.user) {
-        onError('The demo account did not return a session. Please try the manual credentials below.');
+        onError(copy.demo.sessionFailed);
         return;
       }
 
@@ -81,8 +83,9 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
       navigate(portalPathForUser(response.user), { replace: true });
     } catch (error: any) {
       onError(
-        error?.message ||
-          'Demo access is unavailable. Check that the API server is running and try the manual credentials below.'
+        currentLanguage === 'ar'
+          ? copy.demo.unavailable
+          : error?.message || copy.demo.unavailable
       );
     } finally {
       setBusy(null);
@@ -98,14 +101,14 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
     <section className="portal-demo-section" aria-labelledby="demo-access-heading">
       <div className="portal-demo-heading">
         <FlaskConical className="h-4 w-4" aria-hidden="true" />
-        <span id="demo-access-heading">Jury demo access</span>
+        <span id="demo-access-heading">{copy.demo.heading}</span>
       </div>
       <p className="portal-demo-description">
         {mode === 'doctor'
-          ? 'One click opens the fictional clinician account. No real patient data is used.'
+          ? copy.demo.doctorDesc
           : mode === 'patient-id'
-            ? 'One click signs in with the fictional patient’s check-in details. No real patient data is used.'
-            : 'One click opens a verified prototype account. Both profiles are fictional; no real patient data is used.'}
+            ? copy.demo.patientIdDesc
+            : copy.demo.sharedDesc}
       </p>
 
       <div className="portal-demo-grid">
@@ -121,8 +124,8 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
               H
             </span>
             <span>
-              <strong>{busy === 'patient' ? 'Opening demo patient…' : 'Demo patient'}</strong>
-              <span>Haroon · demo record</span>
+              <strong>{busy === 'patient' ? copy.demo.openingPatient : copy.demo.patient}</strong>
+              <span>{copy.demo.patientMeta}</span>
             </span>
             <ArrowRight className="portal-demo-arrow" aria-hidden="true" />
           </button>
@@ -140,8 +143,8 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
               <Stethoscope className="h-4 w-4" />
             </span>
             <span>
-              <strong>{busy === 'doctor' ? 'Opening demo clinician…' : 'Demo clinician'}</strong>
-              <span>Dr. Mohamed · demo clinician</span>
+              <strong>{busy === 'doctor' ? copy.demo.openingDoctor : copy.demo.doctor}</strong>
+              <span>{copy.demo.doctorMeta}</span>
             </span>
             <ArrowRight className="portal-demo-arrow" aria-hidden="true" />
           </button>
@@ -149,12 +152,12 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
       </div>
 
       <details className="portal-demo-credentials">
-        <summary>Sign-in details for manual entry</summary>
+        <summary>{copy.demo.credentialsSummary}</summary>
         {mode !== 'patient-id' && (
           <div className="portal-demo-credential-row">
             <Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />
             <span>
-              Clinician: <code>{DEMO_ACCOUNTS.doctor.email}</code> /{' '}
+              {copy.demo.clinicianLabel} <code>{DEMO_ACCOUNTS.doctor.email}</code> /{' '}
               <code>{DEMO_ACCOUNTS.doctor.password}</code>
             </span>
           </div>
@@ -163,7 +166,7 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
           <div className="portal-demo-credential-row">
             <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
             <span>
-              Patient: <code>{DEMO_ACCOUNTS.patient.email}</code> /{' '}
+              {copy.demo.patientLabel} <code>{DEMO_ACCOUNTS.patient.email}</code> /{' '}
               <code>{DEMO_ACCOUNTS.patient.password}</code>
             </span>
           </div>
@@ -172,7 +175,8 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
           <div className="portal-demo-credential-row">
             <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
             <span>
-              Patient portal check-in: <code>{DEMO_ACCOUNTS.patient.patientId}</code> / PIN{' '}
+              {copy.demo.patientCheckinLabel} <code>{DEMO_ACCOUNTS.patient.patientId}</code> /{' '}
+              {copy.demo.pinLabel}{' '}
               <code>{DEMO_ACCOUNTS.patient.pin}</code>
             </span>
           </div>

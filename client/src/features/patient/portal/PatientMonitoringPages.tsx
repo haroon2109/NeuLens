@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { usePatientPortalStore, treatmentTeam } from '../../../store/patientPortalStore';
 import { usePatientOverview } from './usePatientOverview';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { getPortalPagesCopy } from '../../../services/language/portalPagesCopy';
 import { ErrorState, LoadingState, MonitoringResultState } from '../../../components/systemStates';
 import {
   AssessmentStatusPill,
@@ -35,23 +37,27 @@ import {
   secondaryButton
 } from './ui';
 
-const statusCopy = (status?: string) => {
+type MonitoringCopy = ReturnType<typeof getPortalPagesCopy>['monitoring'];
+
+const statusCopy = (status: string | undefined, copy: MonitoringCopy['status']) => {
   switch (status) {
     case 'NO_CHANGE':
-      return { label: 'Stable', tone: 'forestSoft' as const, detail: 'No review prompt was raised at this check.' };
+      return { ...copy.stable, key: 'stable' as const, tone: 'forestSoft' as const };
     case 'REVIEW':
-      return { label: 'Review suggested', tone: 'amber' as const, detail: 'A change was recorded that is worth a clinician looking at.' };
+      return { ...copy.review, key: 'review' as const, tone: 'amber' as const };
     case 'INSUFFICIENT_DATA':
-      return { label: 'Insufficient data', tone: 'sage' as const, detail: 'Not enough comparable sessions to interpret change.' };
+      return { ...copy.insufficient, key: 'insufficient' as const, tone: 'sage' as const };
     default:
-      return { label: 'Monitoring', tone: 'mint' as const, detail: 'Building a comparable monitoring history.' };
+      return { ...copy.monitoring, key: 'monitoring' as const, tone: 'mint' as const };
   }
 };
 
-const reasonLabel = (reason: string) => {
-  if (reason === 'OUTSIDE_RELIABLE_CHANGE') return 'A score declined more than this record can explain by normal variation';
-  if (reason === 'FUNCTIONAL_CHANGE') return 'A daily-function response changed';
-  if (reason === 'CONTEXT_CHANGE') return 'Sleep, activity, or mood context changed';
+const reasonLabel = (reason: string, copy: MonitoringCopy['reasons']) => {
+  if (reason === 'OUTSIDE_RELIABLE_CHANGE') return copy.outsideChange;
+  if (reason === 'FUNCTIONAL_CHANGE') return copy.functional;
+  if (reason === 'CONTEXT_CHANGE') return copy.context;
+  // Reasons that arrive as full sentences are shown as recorded.
+  if (reason.includes(' ')) return reason;
   return reason.replace(/_/g, ' ').toLowerCase();
 };
 
@@ -61,20 +67,22 @@ const reasonLabel = (reason: string) => {
 export const BrainHealthOverviewPage: React.FC = () => {
   const { assessments, latestAssessment, baseline, changes, brainHealth } = usePatientOverview();
   const { carePlan } = usePatientPortalStore();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.overview;
+  const statusText = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.status;
   const latestChange = changes[0];
-  const status = statusCopy(latestChange?.status);
+  const status = statusCopy(latestChange?.status, statusText);
 
   const domainDeltas: Array<{ label: string; value: string; direction: 'up' | 'down' | 'flat' }> = [];
   if (baseline && latestAssessment) {
     const overall = latestAssessment.overallScore - baseline.overallScore;
     domainDeltas.push({
-      label: 'Cognitive',
+      label: copy.domainCognitive,
       value: `${overall >= 0 ? '+' : ''}${overall.toFixed(1)}`,
       direction: Math.abs(overall) < 0.5 ? 'flat' : overall > 0 ? 'up' : 'down'
     });
     if (latestAssessment.eyeMetrics && baseline.eyeScore != null) {
       domainDeltas.push({
-        label: 'Ocular',
+        label: copy.domainOcular,
         value: `${latestAssessment.eyeMetrics.fixationScore - baseline.eyeScore >= 0 ? '+' : ''}${(latestAssessment.eyeMetrics.fixationScore - baseline.eyeScore).toFixed(1)}`,
         direction:
           Math.abs(latestAssessment.eyeMetrics.fixationScore - baseline.eyeScore) < 0.5
@@ -86,7 +94,7 @@ export const BrainHealthOverviewPage: React.FC = () => {
     }
     if (latestAssessment.voiceMetrics && baseline.voiceScore != null) {
       domainDeltas.push({
-        label: 'Vocal',
+        label: copy.domainVocal,
         value: `${latestAssessment.voiceMetrics.pauseScore - baseline.voiceScore >= 0 ? '+' : ''}${(latestAssessment.voiceMetrics.pauseScore - baseline.voiceScore).toFixed(1)}`,
         direction:
           Math.abs(latestAssessment.voiceMetrics.pauseScore - baseline.voiceScore) < 0.5
@@ -98,7 +106,7 @@ export const BrainHealthOverviewPage: React.FC = () => {
     }
     if (latestAssessment.faceMetrics && baseline.faceScore != null) {
       domainDeltas.push({
-        label: 'Facial',
+        label: copy.domainFacial,
         value: `${latestAssessment.faceMetrics.symmetry - baseline.faceScore >= 0 ? '+' : ''}${(latestAssessment.faceMetrics.symmetry - baseline.faceScore).toFixed(1)}`,
         direction:
           Math.abs(latestAssessment.faceMetrics.symmetry - baseline.faceScore) < 0.5
@@ -113,51 +121,50 @@ export const BrainHealthOverviewPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 30 · Brain-health overview"
-        title="Your monitoring picture"
-        description="A single view of your personal baseline, latest observations, and monitoring status. Trends are shown only where enough valid sessions exist."
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
         actions={
           <Link to="/patient/assessment/intro" className={primaryButton}>
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Next assessment
+            {copy.nextAssessment}
           </Link>
         }
       />
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="flex flex-col items-center justify-center text-center">
-          <ScoreDial value={brainHealth?.profileScore ?? baseline?.overallScore ?? null} label="Brain health" tone="#2f5e4e" />
+          <ScoreDial value={brainHealth?.profileScore ?? baseline?.overallScore ?? null} label={copy.dialLabel} tone="#2f5e4e" />
           <div className="mt-3">
             <Pill tone={status.tone} dot>{status.label}</Pill>
           </div>
           <p className="mt-2 max-w-[250px] text-[13px] leading-5 text-muted">
-            {brainHealth?.interpretation ||
-              'A monitoring summary will appear after enough comparable sessions and a clinician context review.'}
+            {brainHealth?.interpretation || copy.fallbackInterpretation}
           </p>
           <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">
-            Prototype summary · not a diagnosis
+            {copy.prototypeNote}
           </p>
         </Card>
 
         <div className="space-y-4">
           <Card>
-            <SectionTitle title="Monitoring status" detail={latestChange ? `Last check ${formatDate(latestChange.detectedAt)}` : 'Not yet assessed'} />
-            <div className={`rounded-xl border p-3 ${status.label === 'Review suggested' ? 'border-amber/60 bg-amber/10' : 'border-forest/40 bg-mint/50'}`}>
+            <SectionTitle title={copy.statusTitle} detail={latestChange ? copy.lastCheck(formatDate(latestChange.detectedAt)) : copy.notAssessed} />
+            <div className={`rounded-xl border p-3 ${status.key === 'review' ? 'border-amber/60 bg-amber/10' : 'border-forest/40 bg-mint/50'}`}>
               <p className="text-[14px] font-semibold text-ink">{status.detail}</p>
               <p className="mt-1 text-[13px] leading-5 text-muted">
-                A review prompt is not a diagnosis. Your clinician considers it with your history, context, and other sessions.
+                {copy.reviewNotDiagnosis}
               </p>
             </div>
             <dl className="mt-3">
-              <InfoRow label="Latest valid assessment" value={latestAssessment ? formatDate(latestAssessment.date) : 'None'} />
-              <InfoRow label="Valid sessions recorded" value={String(assessments.length)} />
-              <InfoRow label="Personal baseline" value={baseline ? 'Active · provisional' : 'Not established'} />
-              <InfoRow label="Next scheduled assessment" value={formatDate(carePlan.nextReview)} />
+              <InfoRow label={copy.latestValid} value={latestAssessment ? formatDate(latestAssessment.date) : copy.none} />
+              <InfoRow label={copy.validSessions} value={String(assessments.length)} />
+              <InfoRow label={copy.baselineLabel} value={baseline ? copy.baselineActive : copy.baselineMissing} />
+              <InfoRow label={copy.nextScheduled} value={formatDate(carePlan.nextReview)} />
             </dl>
           </Card>
 
           <Card>
-            <SectionTitle title="Domain-wise change" detail="Compared with your recorded baseline, when conditions allow." />
+            <SectionTitle title={copy.domainTitle} detail={copy.domainDetail} />
             {domainDeltas.length ? (
               <div className="grid grid-cols-2 gap-2.5">
                 {domainDeltas.map((item) => (
@@ -168,7 +175,7 @@ export const BrainHealthOverviewPage: React.FC = () => {
                     }`}>
                       {item.value}
                     </p>
-                    <p className="mt-0.5 text-[12px] text-sage-dark">points from baseline</p>
+                    <p className="mt-0.5 text-[12px] text-sage-dark">{copy.pointsFromBaseline}</p>
                   </div>
                 ))}
               </div>
@@ -184,13 +191,13 @@ export const BrainHealthOverviewPage: React.FC = () => {
                 }
                 actions={
                   <Link to="/patient/assessment/intro" className={primaryButton}>
-                    {baseline ? 'Complete another session' : 'Complete your first assessment'}
+                    {baseline ? copy.completeAnother : copy.completeFirst}
                   </Link>
                 }
               />
             )}
             <p className="mt-3 text-[13px] leading-5 text-muted">
-              Higher is not always better; some observations are descriptive. Values are exploratory prototype outputs.
+              {copy.higherNote}
             </p>
           </Card>
         </div>
@@ -198,23 +205,23 @@ export const BrainHealthOverviewPage: React.FC = () => {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
-          <SectionTitle title="Latest observations" />
+          <SectionTitle title={copy.observationsTitle} />
           <dl>
-            <InfoRow label="Ocular" value={latestAssessment?.eyeMetrics ? `${Math.round(latestAssessment.eyeMetrics.fixationScore)} fixation` : 'Not available'} />
-            <InfoRow label="Vocal" value={latestAssessment?.voiceMetrics ? `${Math.round(latestAssessment.voiceMetrics.speechRate)} wpm` : 'Not available'} />
-            <InfoRow label="Facial" value={latestAssessment?.faceMetrics ? `${Math.round(latestAssessment.faceMetrics.symmetry)} symmetry` : 'Not available'} />
-            <InfoRow label="Functional" value={latestAssessment?.taskResponses?.task5?.trailBCompletionSec ? `${latestAssessment.taskResponses.task5.trailBCompletionSec}s trail` : 'Not available'} />
+            <InfoRow label={copy.ocular} value={latestAssessment?.eyeMetrics ? copy.fixation(Math.round(latestAssessment.eyeMetrics.fixationScore)) : copy.notAvailable} />
+            <InfoRow label={copy.vocal} value={latestAssessment?.voiceMetrics ? copy.wpm(Math.round(latestAssessment.voiceMetrics.speechRate)) : copy.notAvailable} />
+            <InfoRow label={copy.facial} value={latestAssessment?.faceMetrics ? copy.symmetry(Math.round(latestAssessment.faceMetrics.symmetry)) : copy.notAvailable} />
+            <InfoRow label={copy.functional} value={latestAssessment?.taskResponses?.task5?.trailBCompletionSec ? copy.trail(latestAssessment.taskResponses.task5.trailBCompletionSec) : copy.notAvailable} />
           </dl>
         </Card>
 
         <Card>
-          <SectionTitle title="What comes next" detail="From your clinician-approved monitoring plan." />
+          <SectionTitle title={copy.nextTitle} detail={copy.nextDetail} />
           <div className="flex items-start gap-2.5 rounded-xl border border-mint bg-mint/50 p-3">
             <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-forest" aria-hidden="true" />
             <div>
-              <p className="text-[14px] font-semibold text-ink">Next assessment</p>
+              <p className="text-[14px] font-semibold text-ink">{copy.nextAssessment}</p>
               <p className="mt-0.5 text-[13px] leading-5 text-forest/80">
-                Aim for {formatDate(carePlan.nextReview)}. A similar time of day and environment helps comparison.
+                {copy.aimFor(carePlan.nextReview ? formatDate(carePlan.nextReview) : copy.notScheduled)}
               </p>
             </div>
           </div>
@@ -227,21 +234,21 @@ export const BrainHealthOverviewPage: React.FC = () => {
             ))}
           </ul>
           <Link to="/patient/care-plan" className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline">
-            Open care plan <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            {copy.openPlan} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </Card>
 
         <Card>
-          <SectionTitle title="Clinician context" />
+          <SectionTitle title={copy.clinicianTitle} />
           <p className="text-[14px] font-semibold text-ink">{treatmentTeam.doctor}</p>
           <p className="mt-0.5 text-[13px] text-muted">{treatmentTeam.role}</p>
           <p className="mt-2 text-[13px] leading-5 text-muted">
             {brainHealth?.reviewedAt
-              ? `Reviewed ${formatDate(brainHealth.reviewedAt)}. ${brainHealth.reviewedBy || treatmentTeam.doctor} considers this summary alongside your history and context.`
-              : 'A clinician has not reviewed this monitoring summary yet.'}
+              ? copy.reviewedAt(formatDate(brainHealth.reviewedAt), brainHealth.reviewedBy || treatmentTeam.doctor)
+              : copy.notReviewed}
           </p>
           <Link to="/patient/appointments" className="mt-3 inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline">
-            View follow-up <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            {copy.viewFollowUp} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </Card>
       </div>
@@ -254,47 +261,48 @@ export const BrainHealthOverviewPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const AssessmentHistoryPage: React.FC = () => {
   const { assessments, baseline, isLoading, error, refresh } = usePatientOverview();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.history;
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 31 · Assessment history"
-        title="All previous sessions"
-        description="Every completed screening, with completion status and access to its summary."
-        actions={<Link to="/patient/assessment/intro" className={primaryButton}>New assessment</Link>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Link to="/patient/assessment/intro" className={primaryButton}>{copy.newAssessment}</Link>}
       />
 
       {isLoading ? (
-        <LoadingState label="Loading your sessions" detail="Fetching every completed screening." />
+        <LoadingState label={copy.loadingLabel} detail={copy.loadingDetail} />
       ) : error && assessments.length === 0 ? (
         <ErrorState
-          title="Your assessment history did not load"
-          description="We could not reach your records. Nothing has been deleted — please try again."
+          title={copy.errorTitle}
+          description={copy.errorDetail}
           onRetry={refresh}
         />
       ) : assessments.length === 0 ? (
         <EmptyState
           scene="emptyAssessment"
           icon={ClipboardList}
-          title="No assessment history"
-          detail="Your completed sessions will be listed here."
-          action={<Link to="/patient/assessment/intro" className={primaryButton}>Start your first screening</Link>}
+          title={copy.emptyTitle}
+          detail={copy.emptyDetail}
+          action={<Link to="/patient/assessment/intro" className={primaryButton}>{copy.startFirst}</Link>}
         />
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="pp-card p-4">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Sessions</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{copy.sessions}</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">{assessments.length}</p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Reviewed</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{copy.reviewed}</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">
                 {assessments.filter((item) => item.reviewStatus === 'REVIEWED').length}
               </p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Awaiting review</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{copy.awaitingReview}</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">
                 {assessments.filter((item) => item.reviewStatus === 'PENDING_REVIEW').length}
               </p>
@@ -303,7 +311,7 @@ export const AssessmentHistoryPage: React.FC = () => {
 
           <Card className="overflow-hidden p-0">
             <div className="hidden grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-line bg-warm/70 px-4 py-3 text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep md:grid">
-              <span>Session</span><span>Date</span><span>Status</span><span>Vs baseline</span><span>Report</span>
+              <span>{copy.colSession}</span><span>{copy.colDate}</span><span>{copy.colStatus}</span><span>{copy.colChange}</span><span>{copy.colReport}</span>
             </div>
             <ul className="divide-y divide-line">
               {assessments.map((assessment) => {
@@ -313,21 +321,21 @@ export const AssessmentHistoryPage: React.FC = () => {
                 return (
                   <li key={assessment.id} className="grid gap-2 px-4 py-3 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_auto] md:items-center md:gap-3">
                     <div>
-                      <p className="text-[14px] font-semibold text-ink">{isCognitive ? 'Cognitive assessment' : 'Five-part screening'}</p>
+                      <p className="text-[14px] font-semibold text-ink">{isCognitive ? copy.cognitiveAssessment : copy.fivePart}</p>
                       <p className="mt-0.5 truncate text-[13px] text-muted">
                         {isCognitive
-                          ? `${assessment.taskResponses?.cognitiveSummary?.mode === 'STANDARDIZED' ? 'Standardized' : 'Exploratory'} · ${assessment.taskResponses?.cognitiveSummary?.completedCount ?? 0} activities`
+                          ? `${assessment.taskResponses?.cognitiveSummary?.mode === 'STANDARDIZED' ? copy.standardized : copy.exploratory} · ${copy.activities(assessment.taskResponses?.cognitiveSummary?.completedCount ?? 0)}`
                           : assessment.id}
                       </p>
                     </div>
                     <p className="text-[13px] text-muted">{formatDate(assessment.date)}</p>
                     <div><AssessmentStatusPill reviewStatus={assessment.reviewStatus} status={assessment.status} /></div>
                     <p className="text-[13px] text-muted">
-                      {isCognitive ? 'Not compared' : change == null ? '—' : `${change >= 0 ? '+' : ''}${change.toFixed(1)} pts`}
+                      {isCognitive ? copy.notCompared : change == null ? '—' : `${change >= 0 ? '+' : ''}${change.toFixed(1)} pts`}
                     </p>
                     <Link to={isCognitive ? `/patient/cognitive/history/${assessment.id}` : `/patient/assessment/report?id=${assessment.id}`} className="inline-flex items-center gap-1 text-[13px] font-bold text-forest hover:underline">
                       <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-                      View
+                      {copy.view}
                     </Link>
                   </li>
                 );
@@ -336,8 +344,8 @@ export const AssessmentHistoryPage: React.FC = () => {
           </Card>
 
           <div className="flex flex-wrap gap-2">
-            <Link to="/patient/trends" className={secondaryButton}><TrendingUp className="h-4 w-4" aria-hidden="true" /> Longitudinal trends</Link>
-            <Link to="/patient/documents" className={secondaryButton}><FileText className="h-4 w-4" aria-hidden="true" /> Reports & documents</Link>
+            <Link to="/patient/trends" className={secondaryButton}><TrendingUp className="h-4 w-4" aria-hidden="true" /> {copy.trendsLink}</Link>
+            <Link to="/patient/documents" className={secondaryButton}><FileText className="h-4 w-4" aria-hidden="true" /> {copy.reportsLink}</Link>
           </div>
         </>
       )}
@@ -350,6 +358,7 @@ export const AssessmentHistoryPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const LongitudinalTrendsPage: React.FC = () => {
   const { assessments, baseline, longitudinal } = usePatientOverview();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.trends;
 
   const ordered = [...assessments].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -383,70 +392,70 @@ export const LongitudinalTrendsPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 32 · Longitudinal trends"
-        title="How things look over time"
-        description="Trends are shown only where at least three comparable, quality-checked observations exist. Descriptive only — no clinical threshold is applied."
-        actions={<Pill tone={canShowTrend ? 'forestSoft' : 'amber'} dot>{canShowTrend ? `${valid.length} comparable sessions` : 'More data needed'}</Pill>}
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
+        actions={<Pill tone={canShowTrend ? 'forestSoft' : 'amber'} dot>{canShowTrend ? copy.comparableSessions(valid.length) : copy.moreData}</Pill>}
       />
 
       {!canShowTrend ? (
         <EmptyState
           scene="emptyAssessment"
           icon={LineChart}
-          title="Not enough comparable sessions"
-          detail="At least three valid sessions with matching task version, language, and accessibility conditions are needed before a trend is shown."
-          action={<Link to="/patient/assessment/intro" className={primaryButton}>Complete a screening</Link>}
+          title={copy.emptyTitle}
+          detail={copy.emptyDetail}
+          action={<Link to="/patient/assessment/intro" className={primaryButton}>{copy.completeScreening}</Link>}
         />
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="pp-card p-4">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Sessions plotted</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{copy.plotted}</p>
               <p className="mt-1 text-[22px] font-semibold text-ink">{valid.length}</p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Direction</p>
-              <p className="mt-1 text-[16px] font-semibold capitalize text-ink">{trendDirection?.toLowerCase() || 'Building'}</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{copy.direction}</p>
+              <p className="mt-1 text-[16px] font-semibold capitalize text-ink">{trendDirection?.toLowerCase() || copy.building}</p>
             </div>
             <div className="pp-card p-4">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">Baseline</p>
-              <p className="mt-1 text-[16px] font-semibold text-ink">{baseline ? `${Math.round(baseline.overallScore)}` : 'Not established'}</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{copy.baseline}</p>
+              <p className="mt-1 text-[16px] font-semibold text-ink">{baseline ? `${Math.round(baseline.overallScore)}` : copy.notEstablished}</p>
             </div>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-2">
             <Card>
-              <SectionTitle title="Cognitive trend" detail="Exploratory composite across sessions." action={<Pill tone="mint">Composite</Pill>} />
+              <SectionTitle title={copy.cognitiveTitle} detail={copy.cognitiveDetail} action={<Pill tone="mint">{copy.composite}</Pill>} />
               <TrendLine points={cognitive} min={Math.min(...cognitive.map((p) => p.value), baseline?.overallScore ?? 100) - 3} max={Math.max(...cognitive.map((p) => p.value), baseline?.overallScore ?? 0) + 3} tone="#2f5e4e" />
               <p className="mt-2 text-[13px] leading-5 text-muted">
-                {baseline ? `Your baseline of ${Math.round(baseline.overallScore)} is shown for reference, not as a target.` : 'A baseline is not established.'}
+                {baseline ? copy.baselineNote(Math.round(baseline.overallScore)) : copy.noBaseline}
               </p>
             </Card>
             <Card>
-              <SectionTitle title="Ocular trend" detail="Fixation observation across sessions." action={<Eye className="h-4 w-4 text-slate-400" />} />
+              <SectionTitle title={copy.ocularTitle} detail={copy.ocularDetail} action={<Eye className="h-4 w-4 text-slate-400" />} />
               <TrendLine points={ocular} tone="#0D9488" />
-              <p className="mt-2 text-[13px] leading-5 text-muted">Eye-movement observations are descriptive; lighting and device differences can affect them.</p>
+              <p className="mt-2 text-[13px] leading-5 text-muted">{copy.ocularNote}</p>
             </Card>
             <Card>
-              <SectionTitle title="Vocal trend" detail="Pause observation across sessions." action={<Waves className="h-4 w-4 text-slate-400" />} />
+              <SectionTitle title={copy.vocalTitle} detail={copy.vocalDetail} action={<Waves className="h-4 w-4 text-slate-400" />} />
               <TrendLine points={vocal} tone="#7FA692" />
-              <p className="mt-2 text-[13px] leading-5 text-muted">Microphone placement and background noise can affect acoustic observations.</p>
+              <p className="mt-2 text-[13px] leading-5 text-muted">{copy.vocalNote}</p>
             </Card>
             <Card>
-              <SectionTitle title="Functional trend" detail="Trail sequencing time (lower is faster)." action={<Activity className="h-4 w-4 text-slate-400" />} />
+              <SectionTitle title={copy.functionalTitle} detail={copy.functionalDetail} action={<Activity className="h-4 w-4 text-slate-400" />} />
               <TrendLine points={functional} tone="#D97706" valueSuffix=" s" />
-              <p className="mt-2 text-[13px] leading-5 text-muted">A slower session can reflect fatigue, distraction, or device familiarity rather than a change in ability.</p>
+              <p className="mt-2 text-[13px] leading-5 text-muted">{copy.functionalNote}</p>
             </Card>
           </div>
 
           <Card>
-            <SectionTitle title="Quality indicators across sessions" detail="Trend validity depends on these conditions." />
+            <SectionTitle title={copy.qualityTitle} detail={copy.qualityDetail} />
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ['Comparable sessions', `${valid.length}`],
-                ['Sessions withheld', `${ordered.length - valid.length}`],
-                ['Quality-checked', 'Yes'],
-                ['Clinical thresholds', 'Not applied']
+                [copy.comparable, `${valid.length}`],
+                [copy.withheld, `${ordered.length - valid.length}`],
+                [copy.qualityChecked, copy.yes],
+                [copy.clinicalThresholds, copy.notApplied]
               ].map(([label, value]) => (
                 <div key={label} className="rounded-xl border border-line bg-warm/70 p-3">
                   <p className="text-[13px] text-muted">{label}</p>
@@ -456,7 +465,7 @@ export const LongitudinalTrendsPage: React.FC = () => {
             </div>
             <p className="mt-3 flex gap-1.5 text-[13px] leading-5 text-muted">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              These charts are not validated clinical trend lines and must not be used to infer diagnosis or treatment response.
+              {copy.chartsNote}
             </p>
           </Card>
         </>
@@ -470,16 +479,28 @@ export const LongitudinalTrendsPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 export const ChangeDetectionPage: React.FC = () => {
   const { changes, brainHealth } = usePatientOverview();
+  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.change;
+  const statusText = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.status;
+  const reasonCopy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).monitoring.reasons;
+  const common = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).common;
   const latest = changes[0];
-  const status = statusCopy(latest?.status);
+  const status = statusCopy(latest?.status, statusText);
   const previous = changes[1];
+  // Recorded next steps can be plain text or { action, timeline } objects.
+  const firstStep = (brainHealth?.nextSteps || [])[0] as unknown;
+  const suggestedStep = !firstStep
+    ? copy.suggestedFallback
+    : typeof firstStep === 'string'
+    ? firstStep
+    : [(firstStep as any).action, (firstStep as any).timeline].filter(Boolean).join(' · ') ||
+      copy.suggestedFallback;
 
   return (
     <div className="space-y-5">
       <PortalPageHeader
-        eyebrow="Screen 33 · Change detection details"
-        title="What changed, and how sure are we?"
-        description="This view explains a monitoring prompt in plain language. It is a review aid, not a clinical finding."
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        description={copy.description}
         actions={<Pill tone={status.tone} dot>{status.label}</Pill>}
       />
 
@@ -487,20 +508,20 @@ export const ChangeDetectionPage: React.FC = () => {
         <EmptyState
           scene="emptyAssessment"
           icon={Activity}
-          title="No change checks yet"
-          detail="After enough comparable assessments, NeuLens will summarise whether observations stayed within your recorded range."
+          title={copy.emptyTitle}
+          detail={copy.emptyDetail}
         />
       ) : (
         <>
-          <div className={`rounded-2xl border p-4 ${status.label === 'Review suggested' ? 'border-amber/60 bg-amber/10' : 'border-forest/40 bg-mint/50'}`}>
+          <div className={`rounded-2xl border p-4 ${status.key === 'review' ? 'border-amber/60 bg-amber/10' : 'border-forest/40 bg-mint/50'}`}>
             <div className="flex items-start gap-3">
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${status.label === 'Review suggested' ? 'bg-amber-100 text-amber-700 shadow-xs' : 'bg-forest text-white shadow-xs'}`}>
-                {status.label === 'Review suggested' ? <AlertTriangle className="h-5 w-5" aria-hidden="true" /> : <ShieldCheck className="h-5 w-5" aria-hidden="true" />}
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${status.key === 'review' ? 'bg-amber-100 text-amber-700 shadow-xs' : 'bg-forest text-white shadow-xs'}`}>
+                {status.key === 'review' ? <AlertTriangle className="h-5 w-5" aria-hidden="true" /> : <ShieldCheck className="h-5 w-5" aria-hidden="true" />}
               </span>
               <div>
                 <h2 className="text-[15px] font-semibold text-ink">{status.label}: {status.detail}</h2>
                 <p className="mt-1 text-[13px] leading-5 text-muted">
-                  Detected {formatDate(latest.detectedAt)}. A review prompt means the observations deserve a closer look with context — not that a condition is present.
+                  {copy.detected(formatDate(latest.detectedAt))}
                 </p>
               </div>
             </div>
@@ -508,20 +529,20 @@ export const ChangeDetectionPage: React.FC = () => {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_0.85fr]">
             <Card>
-              <SectionTitle title="What changed" detail="Contributing observations and review reasons." />
+              <SectionTitle title={copy.whatChangedTitle} detail={copy.whatChangedDetail} />
               <dl>
-                <InfoRow label="Cognitive change" value={latest.cognitiveChange == null ? 'Not available' : `${latest.cognitiveChange.toFixed(1)} points`} />
-                <InfoRow label="Outside recorded range" value={latest.outsideBaseline ? 'Yes' : 'No'} />
-                <InfoRow label="First detected" value={formatDate(latest.detectedAt)} />
-                <InfoRow label="Persisted across checks" value={previous && previous.status === latest.status ? 'Yes — same status at previous check' : 'Not yet established'} />
-                <InfoRow label="Contributed domains" value={(latest.reviewReasons || []).length ? `${(latest.reviewReasons || []).length} reason(s)` : 'None'} />
+                <InfoRow label={copy.cognitiveChange} value={latest.cognitiveChange == null ? copy.none : copy.points(latest.cognitiveChange.toFixed(1))} />
+                <InfoRow label={copy.outsideRange} value={latest.outsideBaseline ? common.yes : common.no} />
+                <InfoRow label={copy.firstDetected} value={formatDate(latest.detectedAt)} />
+                <InfoRow label={copy.persisted} value={previous && previous.status === latest.status ? copy.persistedValue : copy.notEstablishedValue} />
+                <InfoRow label={copy.contributedDomains} value={(latest.reviewReasons || []).length ? copy.reasonsCount((latest.reviewReasons || []).length) : copy.none} />
               </dl>
               {latest.reviewReasons?.length ? (
                 <ul className="mt-3 space-y-2">
                   {latest.reviewReasons.map((reason) => (
                     <li key={reason} className="flex gap-2 rounded-lg bg-warm/70 px-3 py-2 text-[13px] leading-5 text-muted">
                       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />
-                      {reasonLabel(reason)}
+                      {reasonLabel(reason, reasonCopy)}
                     </li>
                   ))}
                 </ul>
@@ -530,31 +551,31 @@ export const ChangeDetectionPage: React.FC = () => {
 
             <div className="space-y-4">
               <Card>
-                <SectionTitle title="Uncertainty & limitations" />
+                <SectionTitle title={copy.uncertaintyTitle} />
                 <ul className="space-y-2 text-[13px] leading-5 text-muted">
-                  <li className="flex gap-2"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />Prototype thresholds are not validated clinical thresholds.</li>
-                  <li className="flex gap-2"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />Sleep, stress, medication timing, or a noisy environment can influence a session.</li>
-                  <li className="flex gap-2"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />A single session outside range is not evidence of persistent change.</li>
+                  {copy.limitations.map((item) => (
+                    <li key={item} className="flex gap-2"><Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />{item}</li>
+                  ))}
                 </ul>
               </Card>
               <Card>
-                <SectionTitle title="Suggested next step" />
+                <SectionTitle title={copy.suggestedTitle} />
                 <p className="text-[13px] leading-5 text-muted">
-                  {brainHealth?.nextSteps?.[0] || 'Repeat the screening in a similar setting in about four weeks, and discuss any persistent concern with your clinician.'}
+                  {suggestedStep}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link to="/patient/care-plan" className={primaryButton}>Open care plan</Link>
-                  <Link to="/patient/appointments" className={secondaryButton}>Talk to my clinician</Link>
+                  <Link to="/patient/care-plan" className={primaryButton}>{copy.openPlan}</Link>
+                  <Link to="/patient/appointments" className={secondaryButton}>{copy.talkToClinician}</Link>
                 </div>
               </Card>
             </div>
           </div>
 
           <Card>
-            <SectionTitle title="Monitoring timeline" detail="Every change check on record." />
+            <SectionTitle title={copy.timelineTitle} detail={copy.timelineDetail} />
             <ol className="space-y-2.5">
               {changes.map((change) => {
-                const copy = statusCopy(change.status);
+                const row = statusCopy(change.status, statusText);
                 return (
                   <li key={change.id} className="flex flex-col gap-2 rounded-xl border border-line bg-warm/70 p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2.5">
@@ -562,12 +583,12 @@ export const ChangeDetectionPage: React.FC = () => {
                         {change.status === 'REVIEW' ? <AlertTriangle className="h-4 w-4" aria-hidden="true" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
                       </span>
                       <div>
-                        <p className="text-[13px] font-semibold text-ink">{copy.label}</p>
+                        <p className="text-[13px] font-semibold text-ink">{row.label}</p>
                         <p className="text-[13px] text-muted">{formatDate(change.detectedAt)}</p>
                       </div>
                     </div>
                     <span className="text-[13px] text-muted">
-                      {change.cognitiveChange == null ? 'No numeric change' : `${change.cognitiveChange >= 0 ? '+' : ''}${change.cognitiveChange.toFixed(1)} points`}
+                      {change.cognitiveChange == null ? copy.noNumericChange : `${change.cognitiveChange >= 0 ? '+' : ''}${copy.points(change.cognitiveChange.toFixed(1))}`}
                     </span>
                   </li>
                 );

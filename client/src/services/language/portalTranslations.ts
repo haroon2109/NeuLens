@@ -39,6 +39,27 @@ export interface PortalTranslation {
       saveFailed: string;
     };
   };
+  shell: {
+    navLabel: string;
+    expandSidebar: string;
+    collapseSidebar: string;
+    closeNav: string;
+    openNav: string;
+    unreadNotification: string;
+    patientFallback: string;
+    careTeam: string;
+    toBeConfirmed: string;
+    logoutDescription: string;
+    logoutConfirm: string;
+    logoutCancel: string;
+    shortcuts: Record<string, string>;
+    status: {
+      inProgress: string;
+      reviewed: string;
+      followUpSuggested: string;
+      awaitingReview: string;
+    };
+  };
   context: {
     overview: PortalPageTranslation;
     sleep: PortalPageTranslation;
@@ -140,6 +161,34 @@ const en: PortalTranslation = {
     errors: {
       required: 'Please review and accept each required consent item.',
       saveFailed: 'Your consent could not be saved. Please try again, or ask clinic staff for help.'
+    }
+  },
+  shell: {
+    navLabel: 'Patient portal navigation',
+    expandSidebar: 'Expand sidebar',
+    collapseSidebar: 'Collapse sidebar',
+    closeNav: 'Close navigation',
+    openNav: 'Open navigation',
+    unreadNotification: 'Unread notification',
+    patientFallback: 'Patient',
+    careTeam: 'Care team',
+    toBeConfirmed: 'To be confirmed',
+    logoutDescription:
+      'You will need your patient ID and the verification answer to sign in again. Any information you already saved stays in your record.',
+    logoutConfirm: 'Sign out',
+    logoutCancel: 'Stay signed in',
+    shortcuts: {
+      dashboard: 'Dashboard',
+      brainHealth: 'Brain health',
+      assessment: 'Start assessment',
+      trends: 'Longitudinal trends',
+      healthProfile: 'Health Profile & Context'
+    },
+    status: {
+      inProgress: 'In progress',
+      reviewed: 'Reviewed',
+      followUpSuggested: 'Follow-up suggested',
+      awaitingReview: 'Awaiting review'
     }
   },
   context: {
@@ -259,6 +308,34 @@ const ar: PortalTranslation = {
     errors: {
       required: 'يرجى مراجعة كل عنصر مطلوب من الموافقة والموافقة عليه.',
       saveFailed: 'تعذّر حفظ موافقتك. يرجى المحاولة مرة أخرى أو طلب المساعدة من موظفي العيادة.'
+    }
+  },
+  shell: {
+    navLabel: 'تنقّل بوابة المريض',
+    expandSidebar: 'توسيع الشريط الجانبي',
+    collapseSidebar: 'طيّ الشريط الجانبي',
+    closeNav: 'إغلاق التنقّل',
+    openNav: 'فتح التنقّل',
+    unreadNotification: 'إشعار غير مقروء',
+    patientFallback: 'مريض',
+    careTeam: 'فريق الرعاية',
+    toBeConfirmed: 'سيُحدَّد لاحقًا',
+    logoutDescription:
+      'ستحتاج إلى رقم المريض وإجابة التحقّق لتسجيل الدخول مرة أخرى. أي معلومات حفظتها تبقى في سجلك.',
+    logoutConfirm: 'تسجيل الخروج',
+    logoutCancel: 'البقاء مسجّلًا',
+    shortcuts: {
+      dashboard: 'لوحة التحكّم',
+      brainHealth: 'صحّة الدماغ',
+      assessment: 'بدء التقييم',
+      trends: 'الاتجاهات الطولية',
+      healthProfile: 'الملف الصحي والسياق'
+    },
+    status: {
+      inProgress: 'قيد التنفيذ',
+      reviewed: 'تمّت المراجعة',
+      followUpSuggested: 'تُقترح متابعة',
+      awaitingReview: 'بانتظار المراجعة'
     }
   },
   context: {

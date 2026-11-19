@@ -9,6 +9,8 @@ import {
   CalendarDays,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   FileText,
   Globe,
@@ -199,7 +201,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
     navigate('/patient/login', { replace: true });
   };
 
-  const nameParts = (user?.name || 'Patient').split(' ').filter(Boolean);
+  const nameParts = (user?.name || pt.shell.patientFallback).split(' ').filter(Boolean);
   const initials = nameParts.map((part) => part[0]).join('').slice(0, 2).toUpperCase();
 
   return (
@@ -221,7 +223,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
           </span>
           <span className="min-w-0">
             <span className="block truncate text-[14px] font-semibold text-ink">
-              {user?.name || 'Patient'}
+              {user?.name || pt.shell.patientFallback}
             </span>
             <span className="mt-0.5 block font-mono text-[13px] text-muted">
               {user?.patientId || '—'}
@@ -231,7 +233,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
       </div>
 
       {/* Navigation — sage-tinted section labels, forest active state */}
-      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4" aria-label="Patient portal navigation">
+      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4" aria-label={pt.shell.navLabel}>
         {navGroups.map((group) => (
           <div key={group.label} className="mb-4">
             <p className="px-3 pb-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-sage-deep">
@@ -254,7 +256,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
                     <Icon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
                     <span className="flex-1">{pt.nav.items[path] || label}</span>
                     {path === '/patient/notifications' && notifications.some((item) => !item.read) && (
-                      <span className="h-2 w-2 rounded-full bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]" aria-label="Unread notification" />
+                      <span className="h-2 w-2 rounded-full bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]" aria-label={pt.shell.unreadNotification} />
                     )}
                   </NavLink>
                 </li>
@@ -279,9 +281,9 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
       <ConfirmDialog
         open={isLogoutOpen}
         title={pt.signOut}
-        description="You will need your patient ID and the verification answer to sign in again. Any information you already saved stays in your record."
-        confirmLabel="Sign out"
-        cancelLabel="Stay signed in"
+        description={pt.shell.logoutDescription}
+        confirmLabel={pt.shell.logoutConfirm}
+        cancelLabel={pt.shell.logoutCancel}
         destructive
         onConfirm={confirmLogout}
         onCancel={() => setIsLogoutOpen(false)}
@@ -292,6 +294,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
 
 export const PatientPortalLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const { user } = useAuthStore();
   const { currentLanguage } = useLanguageStore();
@@ -311,8 +314,8 @@ export const PatientPortalLayout: React.FC = () => {
           rows.map((row) => ({
             id: row.id,
             title: row.title,
-            clinician: row.clinician || 'Care team',
-            location: row.location || 'To be confirmed',
+            clinician: row.clinician || pt.shell.careTeam,
+            location: row.location || pt.shell.toBeConfirmed,
             date: row.date,
             time: row.time,
             status: row.status,
@@ -328,15 +331,19 @@ export const PatientPortalLayout: React.FC = () => {
     };
   }, [user?.id, setAppointments]);
 
+  const activeItem = navGroups
+    .flatMap((group) => group.items)
+    .filter((item) =>
+      item.end
+        ? location.pathname === item.path
+        : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+    )
+    .sort((a, b) => b.path.length - a.path.length)[0];
+  const translatedNavItems = pt.nav.items as Record<string, string>;
   const activeLabel =
-    navGroups
-      .flatMap((group) => group.items)
-      .filter((item) =>
-        item.end
-          ? location.pathname === item.path
-          : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
-      )
-      .sort((a, b) => b.path.length - a.path.length)[0]?.label || pt.patientPortal;
+    (activeItem && translatedNavItems[activeItem.path]) ||
+    activeItem?.label ||
+    pt.patientPortal;
 
   // A suspended account keeps its record but loses portal access.
   if (user?.status === 'SUSPENDED' || user?.status === 'WITHDRAWN') {
@@ -349,7 +356,7 @@ export const PatientPortalLayout: React.FC = () => {
     textSizeClass[accessibility.textSize]
   ].filter(Boolean).join(' ');
 
-  const initials = (user?.name || 'P')
+  const initials = (user?.name || pt.shell.patientFallback)
     .split(' ')
     .filter(Boolean)
     .map((part) => part[0])
@@ -369,8 +376,39 @@ export const PatientPortalLayout: React.FC = () => {
       <RouteAnnouncer />
 
       {/* Sidebar — desktop */}
-      <aside className="fixed inset-y-0 start-0 z-40 hidden w-[258px] border-e border-line bg-white lg:block">
-        <SidebarContent />
+      <aside className={`fixed inset-y-0 start-0 z-40 hidden border-e border-line bg-white lg:block transition-all duration-300 ${sidebarCollapsed ? 'w-[64px]' : 'w-[258px]'}`}>
+        {/* Collapse / expand toggle */}
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed((v) => !v)}
+          aria-label={sidebarCollapsed ? pt.shell.expandSidebar : pt.shell.collapseSidebar}
+          className="absolute -end-3.5 top-[72px] z-50 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-white shadow-md text-sage-deep hover:bg-mint transition-colors"
+        >
+          {sidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </button>
+        <div className={`h-full overflow-hidden ${sidebarCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-200`}>
+          <SidebarContent />
+        </div>
+        {/* Collapsed icon-strip */}
+        {sidebarCollapsed && (
+          <div className="flex flex-col items-center gap-2 pt-5 px-2">
+            <Link to="/patient/dashboard" className="flex h-9 w-9 items-center justify-center rounded-lg text-body hover:bg-mint transition-colors" title={pt.shell.shortcuts.dashboard}>
+              <LayoutDashboard className="h-4 w-4" />
+            </Link>
+            <Link to="/patient/brain-health" className="flex h-9 w-9 items-center justify-center rounded-lg text-body hover:bg-mint transition-colors" title={pt.shell.shortcuts.brainHealth}>
+              <Brain className="h-4 w-4" />
+            </Link>
+            <Link to="/patient/assessment/intro" className="flex h-9 w-9 items-center justify-center rounded-lg text-body hover:bg-mint transition-colors" title={pt.shell.shortcuts.assessment}>
+              <Sparkles className="h-4 w-4" />
+            </Link>
+            <Link to="/patient/trends" className="flex h-9 w-9 items-center justify-center rounded-lg text-body hover:bg-mint transition-colors" title={pt.shell.shortcuts.trends}>
+              <TrendingUp className="h-4 w-4" />
+            </Link>
+            <Link to="/patient/health-profile" className="flex h-9 w-9 items-center justify-center rounded-lg text-body hover:bg-mint transition-colors" title={pt.shell.shortcuts.healthProfile}>
+              <HeartPulse className="h-4 w-4" />
+            </Link>
+          </div>
+        )}
       </aside>
 
       {/* Mobile overlay */}
@@ -378,7 +416,7 @@ export const PatientPortalLayout: React.FC = () => {
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            aria-label="Close navigation"
+            aria-label={pt.shell.closeNav}
             className="absolute inset-0 bg-ink/40"
             onClick={() => setMobileOpen(false)}
           />
@@ -389,7 +427,7 @@ export const PatientPortalLayout: React.FC = () => {
       )}
 
       {/* Top layer: header + main + footer */}
-      <div className="lg:ps-[258px]">
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ps-[64px]' : 'lg:ps-[258px]'}`}>
         <header className="sticky top-0 z-30 border-b border-line/80 bg-white/95 backdrop-blur">
           <div className="flex h-[64px] items-center gap-3 px-4 sm:px-6">
             {/* Mobile menu toggle */}
@@ -397,7 +435,7 @@ export const PatientPortalLayout: React.FC = () => {
               type="button"
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-body lg:hidden"
               onClick={() => setMobileOpen(true)}
-              aria-label="Open navigation"
+              aria-label={pt.shell.openNav}
               aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -437,7 +475,7 @@ export const PatientPortalLayout: React.FC = () => {
                 {initials}
               </span>
               <span className="hidden max-w-[120px] truncate text-[14px] font-semibold text-ink sm:block">
-                {user?.name || 'Patient'}
+                {user?.name || pt.shell.patientFallback}
               </span>
               <ChevronDown className="hidden h-3.5 w-3.5 text-sage-deep sm:block" aria-hidden="true" />
             </Link>

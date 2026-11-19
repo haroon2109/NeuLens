@@ -4,23 +4,23 @@ import { useAuthStore } from '../store/authStore';
 import { useFaceTrackingStore } from '../store/faceTrackingStore';
 import { NeuLensLogo } from '../components/NeuLensLogo';
 import { ClinicalIllustration } from '../components/ClinicalIllustration';
-import { 
-  LayoutDashboard, 
-  BrainCircuit, 
-  Users, 
-  ClipboardCheck, 
-  Activity, 
-  FileText, 
-  BarChart3, 
-  Settings, 
-  HelpCircle, 
-  LogOut, 
-  User, 
-  Search, 
-  Bell, 
-  Menu, 
-  X, 
-  Sparkles, 
+import {
+  LayoutDashboard,
+  BrainCircuit,
+  Users,
+  ClipboardCheck,
+  Activity,
+  FileText,
+  BarChart3,
+  Settings,
+  HelpCircle,
+  LogOut,
+  User,
+  Search,
+  Bell,
+  Menu,
+  X,
+  Sparkles,
   ShieldCheck,
   ChevronRight,
   HeartHandshake
@@ -62,7 +62,7 @@ export const DashboardLayout: React.FC = () => {
       : user?.name
         ? (user.name.startsWith('Dr.') ? user.name : `Dr. ${user.name}`)
         : 'Doctor';
-    
+
     if (p === '/dashboard' || p === '/dashboard/') {
       return {
         title: `Good morning, ${name}`,
@@ -130,7 +130,7 @@ export const DashboardLayout: React.FC = () => {
     <div className="flex min-h-screen bg-slate-50 text-slate-800">
       {/* Mobile Backdrop Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           onClick={() => setIsMobileMenuOpen(false)}
           className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm lg:hidden"
         />
@@ -143,141 +143,137 @@ export const DashboardLayout: React.FC = () => {
           flex flex-col justify-between p-4 transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
-          <div className="space-y-6">
-            {/* Logo Brand Header */}
-            <div className="flex items-center justify-between px-2 pt-2">
-              <Link to="/dashboard" className="flex items-center gap-3 group">
-                <NeuLensLogo height="h-8" className="group-hover:scale-105 transition-transform" />
-              </Link>
+        <div className="space-y-6">
+          {/* Logo Brand Header */}
+          <div className="flex items-center justify-between px-2 pt-2">
+            <Link to="/dashboard" className="flex items-center gap-3 group">
+              <NeuLensLogo height="h-8" className="group-hover:scale-105 transition-transform" />
+            </Link>
 
-              {/* Close button on mobile */}
-              <button 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Main Navigation Links */}
-            <nav className="space-y-1">
-              <span className="text-xs font-bold uppercase text-slate-400 tracking-wider px-3 pb-1 block">
-                Clinical Workflow
-              </span>
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path || 
-                  (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
-                
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
-                      isActive
-                        ? 'bg-sky-50 text-sky-700 font-semibold shadow-sm border border-sky-100'
-                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 border border-transparent'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-sky-600' : 'text-slate-400'}`} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Live Sensor Widget in Sidebar (Only shown during active screening session) */}
-            {isScreeningRoute && (
-              <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 text-xs">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                  <span className="font-bold text-xs uppercase text-sky-700 font-display tracking-wider">
-                    Sensor Telemetry
-                  </span>
-                  <span className="flex h-2 w-2 relative">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                      cameraStatus === 'active' ? 'bg-emerald-400' : 'bg-amber-400'
-                    }`} />
-                    <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                      cameraStatus === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
-                    }`} />
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Camera Feed:</span>
-                    <span className={`font-semibold capitalize ${cameraStatus === 'active' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                      {cameraStatus}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Ocular Fixation:</span>
-                    <span className="font-semibold text-slate-800">{metrics.stability}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Blinks Captured:</span>
-                    <span className="font-semibold text-slate-800">{metrics.blinkCount}</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Close button on mobile */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Bottom Navigation Links & User Profile */}
-          <div className="space-y-3 pt-4 border-t border-slate-100">
-            <div className="space-y-1">
-              {bottomNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname.startsWith(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all duration-200 text-xs font-medium ${
-                      isActive
-                        ? 'bg-sky-50 text-sky-700 font-semibold'
-                        : 'text-slate-500 hover:bg-slate-100/70 hover:text-slate-900'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 text-slate-400" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
+          {/* Main Navigation Links */}
+          <nav className="space-y-1">
+            <span className="text-xs font-bold uppercase text-slate-400 tracking-wider px-3 pb-1 block">
+              Clinical Workflow
+            </span>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path ||
+                (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
 
-            {/* User Profile Card */}
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold font-display text-xs flex items-center justify-center shrink-0 border border-sky-200">
-                  {user?.firstName
-                    ? `${user.firstName[0]}${user.lastName?.[0] || ''}`
-                    : user?.name
-                      ? user.name.slice(0, 2).toUpperCase()
-                      : 'DR'}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-800 truncate">
-                    {user
-                      ? `${user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.name || 'Doctor'}`
-                      : 'Doctor'}
-                  </p>
-                  <p className="text-xs text-slate-400 truncate">Clinician</p>
-                </div>
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${isActive
+                    ? 'bg-sky-50 text-sky-700 font-semibold shadow-sm border border-sky-100'
+                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 border border-transparent'
+                    }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-sky-600' : 'text-slate-400'}`} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Live Sensor Widget in Sidebar (Only shown during active screening session) */}
+          {isScreeningRoute && (
+            <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 text-xs">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                <span className="font-bold text-xs uppercase text-sky-700 font-display tracking-wider">
+                  Sensor Telemetry
+                </span>
+                <span className="flex h-2 w-2 relative">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cameraStatus === 'active' ? 'bg-emerald-400' : 'bg-amber-400'
+                    }`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${cameraStatus === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
+                    }`} />
+                </span>
               </div>
 
-              <button
-                onClick={handleLogout}
-                title="Sign Out"
-                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg transition-colors"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Camera Feed:</span>
+                  <span className={`font-semibold capitalize ${cameraStatus === 'active' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {cameraStatus}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Ocular Fixation:</span>
+                  <span className="font-semibold text-slate-800">{metrics.stability}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Blinks Captured:</span>
+                  <span className="font-semibold text-slate-800">{metrics.blinkCount}</span>
+                </div>
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Bottom Navigation Links & User Profile */}
+        <div className="space-y-3 pt-4 border-t border-slate-100">
+          <div className="space-y-1">
+            {bottomNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname.startsWith(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3.5 py-2 rounded-xl transition-all duration-200 text-xs font-medium ${isActive
+                    ? 'bg-sky-50 text-sky-700 font-semibold'
+                    : 'text-slate-500 hover:bg-slate-100/70 hover:text-slate-900'
+                    }`}
+                >
+                  <Icon className="w-4 h-4 text-slate-400" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </div>
-        </aside>
+
+          {/* User Profile Card */}
+          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold font-display text-xs flex items-center justify-center shrink-0 border border-sky-200">
+                {user?.firstName
+                  ? `${user.firstName[0]}${user.lastName?.[0] || ''}`
+                  : user?.name
+                    ? user.name.slice(0, 2).toUpperCase()
+                    : 'DR'}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-800 truncate">
+                  {user
+                    ? `${user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.name || 'Doctor'}`
+                    : 'Doctor'}
+                </p>
+                <p className="text-xs text-slate-400 truncate">Clinician</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              title="Sign Out"
+              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </aside>
 
       {/* Main Content Pane */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">

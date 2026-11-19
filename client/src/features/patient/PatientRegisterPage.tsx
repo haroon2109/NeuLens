@@ -17,10 +17,14 @@ import { patientApi } from '../../services/portalApi';
 import { useAuthStore } from '../../store/authStore';
 import { NeuLensLogo } from '../../components/NeuLensLogo';
 import { PortalIllustration } from '../../components/PortalIllustration';
+import { useLanguageStore } from '../../services/language/LanguageManager';
+import { getEntryCopy } from '../../services/language/entryCopy';
+import { PublicLanguageToggle } from '../../components/PublicLanguageToggle';
 
 export const PatientRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
+  const copy = getEntryCopy(useLanguageStore((state) => state.currentLanguage));
 
   const [formData, setFormData] = useState({
     name: '',
@@ -40,18 +44,18 @@ export const PatientRegisterPage: React.FC = () => {
     setErrorMsg('');
 
     if (!formData.name.trim()) {
-      setErrorMsg('Please enter your full name.');
+      setErrorMsg(copy.register.nameRequired);
       return;
     }
 
     const ageNum = parseInt(formData.age, 10);
     if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
-      setErrorMsg('Please enter a valid age between 1 and 120.');
+      setErrorMsg(copy.register.ageInvalid);
       return;
     }
 
     if (!/^\d{4,8}$/.test(formData.pin)) {
-      setErrorMsg('Please choose a PIN of 4 to 8 digits. You will need it to sign in.');
+      setErrorMsg(copy.register.pinInvalid);
       return;
     }
 
@@ -77,7 +81,8 @@ export const PatientRegisterPage: React.FC = () => {
       // explicit choice from there, not something registration forces.
       navigate('/patient/dashboard', { replace: true });
     } catch (err: any) {
-      setErrorMsg(err.message || 'Registration could not be completed. Please speak with clinic staff.');
+      const isArabic = useLanguageStore.getState().currentLanguage === 'ar';
+      setErrorMsg(isArabic ? copy.register.fallbackError : err.message || copy.register.fallbackError);
     } finally {
       setIsLoading(false);
     }
@@ -86,13 +91,16 @@ export const PatientRegisterPage: React.FC = () => {
   return (
     <div className="portal-login-page portal-registration-page">
       <header className="portal-login-header">
-        <Link to="/patient" className="portal-brand" aria-label="NeuLens patient portal home">
+        <Link to="/patient" className="portal-brand" aria-label={copy.register.homeLabel}>
           <NeuLensLogo height="h-9" />
         </Link>
-        <Link to="/patient" className="portal-back-link">
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to welcome</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <PublicLanguageToggle />
+          <Link to="/patient" className="portal-back-link">
+            <ArrowLeft className="h-4 w-4" />
+            <span>{copy.register.backToWelcome}</span>
+          </Link>
+        </div>
       </header>
 
       <main className="portal-login-main portal-registration-main">
@@ -103,20 +111,20 @@ export const PatientRegisterPage: React.FC = () => {
             <span className="portal-form-step-icon">
               <UserPlus className="h-4 w-4" />
             </span>
-            <span>New patient registration</span>
-            <span className="portal-form-step-count">Step 2 of 6</span>
+            <span>{copy.register.stepBadge}</span>
+            <span className="portal-form-step-count">{copy.register.stepCount}</span>
           </div>
 
           <div className="portal-form-heading">
-            <h1 id="registration-title">Create your profile</h1>
-            <p>Please fill in your basic information below. Your answers help us calibrate your activities.</p>
+            <h1 id="registration-title">{copy.register.title}</h1>
+            <p>{copy.register.subtitle}</p>
           </div>
 
           {errorMsg && (
             <div className="portal-error-alert" role="alert">
               <AlertCircle className="h-5 w-5 shrink-0" />
               <div>
-                <strong>Please check your information</strong>
+                <strong>{copy.register.errorHeading}</strong>
                 <span>{errorMsg}</span>
               </div>
             </div>
@@ -124,7 +132,7 @@ export const PatientRegisterPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="portal-login-form portal-registration-form">
             <div className="portal-field">
-              <label htmlFor="patient-name">Full name <span aria-hidden="true">*</span></label>
+              <label htmlFor="patient-name">{copy.register.fullName} <span aria-hidden="true">*</span></label>
               <div className="portal-input-wrap">
                 <UserRound className="portal-input-icon" />
                 <input
@@ -134,7 +142,7 @@ export const PatientRegisterPage: React.FC = () => {
                   autoComplete="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g. Eleanor Vance"
+                  placeholder={copy.register.namePlaceholder}
                   className="portal-input"
                 />
               </div>
@@ -142,7 +150,7 @@ export const PatientRegisterPage: React.FC = () => {
 
             <div className="portal-registration-grid">
               <div className="portal-field">
-                <label htmlFor="patient-age">Age in years <span aria-hidden="true">*</span></label>
+                <label htmlFor="patient-age">{copy.register.age} <span aria-hidden="true">*</span></label>
                 <div className="portal-input-wrap">
                   <CalendarDays className="portal-input-icon" />
                   <input
@@ -153,14 +161,14 @@ export const PatientRegisterPage: React.FC = () => {
                     max="120"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    placeholder="e.g. 62"
+                    placeholder={copy.register.agePlaceholder}
                     className="portal-input"
                   />
                 </div>
               </div>
 
               <div className="portal-field">
-                <label htmlFor="patient-gender">Gender <span aria-hidden="true">*</span></label>
+                <label htmlFor="patient-gender">{copy.register.gender} <span aria-hidden="true">*</span></label>
                 <div className="portal-input-wrap">
                   <UserRound className="portal-input-icon" />
                   <select
@@ -169,9 +177,11 @@ export const PatientRegisterPage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                     className="portal-input portal-input-select"
                   >
-                    <option value="FEMALE">Female</option>
-                    <option value="MALE">Male</option>
-                    <option value="OTHER">Other / Prefer not to say</option>
+                    {copy.register.genderOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -179,8 +189,8 @@ export const PatientRegisterPage: React.FC = () => {
 
             <div className="portal-field">
               <div className="portal-label-row">
-                <label htmlFor="patient-pin">Check-in PIN *</label>
-                <span className="portal-registration-field-note">For returning visits</span>
+                <label htmlFor="patient-pin">{copy.register.pinLabel}</label>
+                <span className="portal-registration-field-note">{copy.register.pinNote}</span>
               </div>
               <div className="portal-input-wrap">
                 <KeyRound className="portal-input-icon" />
@@ -192,18 +202,16 @@ export const PatientRegisterPage: React.FC = () => {
                   maxLength={8}
                   value={formData.pin}
                   onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
-                  placeholder="Choose a 4 to 8 digit PIN"
+                  placeholder={copy.register.pinPlaceholder}
                   className="portal-input"
                 />
               </div>
-              <p className="portal-field-hint">
-                Choose 4 to 8 digits. This PIN is required to sign in to your portal, so keep it private.
-              </p>
+              <p className="portal-field-hint">{copy.register.pinHint}</p>
             </div>
 
             <div className="portal-registration-grid">
               <div className="portal-field">
-                <label htmlFor="patient-handedness">Dominant hand</label>
+                <label htmlFor="patient-handedness">{copy.register.handedness}</label>
                 <div className="portal-input-wrap">
                   <Hand className="portal-input-icon" />
                   <select
@@ -212,15 +220,17 @@ export const PatientRegisterPage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, handedness: e.target.value })}
                     className="portal-input portal-input-select"
                   >
-                    <option value="RIGHT">Right-handed</option>
-                    <option value="LEFT">Left-handed</option>
-                    <option value="AMBIDEXTROUS">Ambidextrous (both hands)</option>
+                    {copy.register.handednessOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="portal-field">
-                <label htmlFor="patient-education">Education (years)</label>
+                <label htmlFor="patient-education">{copy.register.education}</label>
                 <div className="portal-input-wrap">
                   <GraduationCap className="portal-input-icon" />
                   <input
@@ -237,27 +247,27 @@ export const PatientRegisterPage: React.FC = () => {
             </div>
 
             <button type="submit" disabled={isLoading} className="portal-submit-button">
-              <span>{isLoading ? 'Creating your profile…' : 'Create my profile'}</span>
+              <span>{isLoading ? copy.register.submitting : copy.register.submit}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
           <p className="portal-login-switch">
-            Already have a profile? <Link to="/patient/login">Sign in</Link>
+            {copy.register.alreadyHave} <Link to="/patient/login">{copy.register.signIn}</Link>
           </p>
 
           <div className="portal-secure-note">
             <ShieldCheck className="h-4 w-4 shrink-0" />
-            Your information is kept strictly confidential under hospital healthcare protocols.
+            {copy.register.secureNote}
           </div>
         </section>
       </main>
 
       <footer className="portal-login-footer">
-        <span>Basic details help personalize your screening activities.</span>
+        <span>{copy.register.footerNote}</span>
         <span className="portal-registration-footer-note">
           <Sparkles className="h-3.5 w-3.5" />
-          A few minutes is all it takes to get started
+          {copy.register.footerTime}
         </span>
       </footer>
     </div>
