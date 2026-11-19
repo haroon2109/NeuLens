@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../config/db';
 import { summarizePatientChanges } from '../services/changeMonitor';
@@ -890,7 +891,7 @@ export class HospitalDataStore {
           action: carePlan.action,
           followUpDate: carePlan.followUpDate,
           notes: carePlan.notes,
-          plan: (carePlan.plan ?? undefined) as Prisma.InputJsonValue | undefined,
+          plan: (carePlan.plan ?? undefined) as InputJsonValue | undefined,
           savedBy: carePlan.savedBy,
           savedAt: new Date(carePlan.savedAt),
         },
@@ -898,7 +899,7 @@ export class HospitalDataStore {
           action: carePlan.action,
           followUpDate: carePlan.followUpDate,
           notes: carePlan.notes,
-          plan: (carePlan.plan ?? undefined) as Prisma.InputJsonValue | undefined,
+          plan: (carePlan.plan ?? undefined) as InputJsonValue | undefined,
           savedBy: carePlan.savedBy,
           savedAt: new Date(carePlan.savedAt),
           version: (previous?.version ?? 1) + 1,
@@ -923,7 +924,7 @@ export class HospitalDataStore {
           taskResponses: {
             ...taskResponses,
             clinicianCarePlan: carePlan
-          } as Prisma.InputJsonValue
+          } as InputJsonValue
         },
         include: { eyeMetrics: true, voiceMetrics: true, faceMetrics: true, report: true }
       });
@@ -976,7 +977,7 @@ export class HospitalDataStore {
         data: {
           userId: data.userId,
           version: data.version,
-          scopes: data.scopes as Prisma.InputJsonValue,
+          scopes: data.scopes as InputJsonValue,
           granted: true,
           actorRole: data.actorRole || 'PATIENT',
           ipAddress: data.ipAddress ?? null,
@@ -1313,7 +1314,7 @@ export class HospitalDataStore {
           reviewState: overallScore === null ? 'NOT_INTERPRETABLE' : 'NOT_REVIEWED',
           status: 'COMPLETED',
           reviewStatus: 'PENDING_REVIEW',
-          taskResponses: data.taskResponses as Prisma.InputJsonValue,
+          taskResponses: data.taskResponses as InputJsonValue,
           report: {
             create: {
               recommendation:
