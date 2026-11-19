@@ -1,4 +1,5 @@
 import { SupportedLanguage } from './types';
+import type { ConsentKey } from '../../store/patientPortalStore';
 
 export interface PortalNavTranslation {
   groups: Record<string, string>;
@@ -25,6 +26,18 @@ export interface PortalTranslation {
     requiredItemsMarked: string;
     acceptAndContinue: string;
     back: string;
+    /** Every consent item a patient must be able to read before accepting. */
+    items: Record<ConsentKey, { label: string; detail: string }>;
+    requiredSuffix: string;
+    optionalSuffix: string;
+    dataHandlingTitle: string;
+    dataHandling: string[];
+    clinicalNoteTitle: string;
+    clinicalNoteBody: string;
+    errors: {
+      required: string;
+      saveFailed: string;
+    };
   };
   context: {
     overview: PortalPageTranslation;
@@ -86,7 +99,48 @@ const en: PortalTranslation = {
     description: 'We explain exactly what is collected and how it is used. Required items keep the screening safe and clinically meaningful; optional sharing is your choice.',
     requiredItemsMarked: 'Required items are marked *',
     acceptAndContinue: 'Accept and continue',
-    back: 'Back'
+    back: 'Back',
+    items: {
+      dataCollection: {
+        label: 'Assessment responses and observations',
+        detail: 'Task responses, timing, and derived observations from each screening session.'
+      },
+      cameraMic: {
+        label: 'Camera and microphone use',
+        detail: 'Camera supports eye and facial movement activities; microphone supports voice activities. Processing happens during the session.'
+      },
+      processing: {
+        label: 'Secure processing and storage',
+        detail: 'Derived observations are stored with your patient record for longitudinal comparison and clinician review.'
+      },
+      clinicianAccess: {
+        label: 'Access by my care team',
+        detail: 'Verified clinicians involved in your care can review screening observations and add notes.'
+      },
+      optionalSharing: {
+        label: 'Optional research and data sharing',
+        detail: 'Allow de-identified data to support service improvement and research. You can change this at any time.'
+      },
+      withdrawalAcknowledged: {
+        label: 'I understand I can withdraw consent',
+        detail: 'You can update permissions or request deletion in Privacy & Data Settings. Withdrawal does not affect care already provided.'
+      }
+    },
+    requiredSuffix: ' *',
+    optionalSuffix: ' (optional)',
+    dataHandlingTitle: 'How data is handled',
+    dataHandling: [
+      'Raw video and audio are not included in your portal reports.',
+      'Only derived observations and task responses are stored.',
+      'Access is limited to verified clinicians in your care team.',
+      'You can withdraw optional permissions from Privacy & Data Settings.'
+    ],
+    clinicalNoteTitle: 'A note on clinical use',
+    clinicalNoteBody: 'NeuLens is a screening support tool. Observations are exploratory and require professional interpretation.',
+    errors: {
+      required: 'Please review and accept each required consent item.',
+      saveFailed: 'Your consent could not be saved. Please try again, or ask clinic staff for help.'
+    }
   },
   context: {
     overview: {
@@ -164,7 +218,48 @@ const ar: PortalTranslation = {
     description: 'نشرح بالضبط ما يُجمع وكيف يُستخدم. العناصر المطلوبة تحافظ على أمان الفحص وأهميته السريرية؛ المشاركة الاختيارية هي اختيارك.',
     requiredItemsMarked: 'العناصر المطلوبة معلّمة بـ *',
     acceptAndContinue: 'قبول ومتابعة',
-    back: 'رجوع'
+    back: 'رجوع',
+    items: {
+      dataCollection: {
+        label: 'إجابات التقييم والملاحظات المستخلصة',
+        detail: 'إجابات المهام وتوقيتها والملاحظات المستخلصة من كل جلسة فحص.'
+      },
+      cameraMic: {
+        label: 'استخدام الكاميرا والميكروفون',
+        detail: 'تساعد الكاميرا في أنشطة حركة العين والوجه، ويساعد الميكروفون في أنشطة الصوت. تتم المعالجة أثناء الجلسة.'
+      },
+      processing: {
+        label: 'المعالجة والتخزين الآمنان',
+        detail: 'تُخزَّن الملاحظات المستخلصة مع سجلك الطبي للمقارنة على المدى الطويل ومراجعة الطبيب.'
+      },
+      clinicianAccess: {
+        label: 'وصول فريق رعايتي إلى النتائج',
+        detail: 'يمكن للأطباء الموثّقين المشاركين في رعايتك مراجعة ملاحظات الفحص وإضافة ملاحظاتهم.'
+      },
+      optionalSharing: {
+        label: 'المشاركة في البحث ومشاركة البيانات (اختياري)',
+        detail: 'السماح بمشاركة بيانات مجهولة الهوية لدعم تحسين الخدمة والبحث. يمكنك تغيير ذلك في أي وقت.'
+      },
+      withdrawalAcknowledged: {
+        label: 'أفهم أنه يمكنني سحب موافقتي',
+        detail: 'يمكنك تحديث الأذونات أو طلب الحذف من إعدادات الخصوصية والبيانات. ولا يؤثر سحب الموافقة على الرعاية التي تلقّيتها بالفعل.'
+      }
+    },
+    requiredSuffix: ' *',
+    optionalSuffix: ' (اختياري)',
+    dataHandlingTitle: 'كيف تُعالَج البيانات',
+    dataHandling: [
+      'لا تُضمَّن التسجيلات الصوتية والمرئية الخام في تقارير بوابتك.',
+      'تُخزَّن الملاحظات المستخلصة وإجابات المهام فقط.',
+      'يقتصر الوصول على الأطباء الموثّقين في فريق رعايتك.',
+      'يمكنك سحب الأذونات الاختيارية من إعدادات الخصوصية والبيانات.'
+    ],
+    clinicalNoteTitle: 'ملاحظة حول الاستخدام السريري',
+    clinicalNoteBody: 'نيولنز أداة لدعم الفحص. الملاحظات استكشافية وتتطلب تفسيرًا مهنيًا من مختص.',
+    errors: {
+      required: 'يرجى مراجعة كل عنصر مطلوب من الموافقة والموافقة عليه.',
+      saveFailed: 'تعذّر حفظ موافقتك. يرجى المحاولة مرة أخرى أو طلب المساعدة من موظفي العيادة.'
+    }
   },
   context: {
     overview: {

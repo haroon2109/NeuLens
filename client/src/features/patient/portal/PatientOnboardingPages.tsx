@@ -28,6 +28,9 @@ import { usePatientPortalStore, type ConsentKey } from '../../../store/patientPo
 import { patientPortalApi } from '../../../services/patientPortalApi';
 import { useLanguageStore } from '../../../services/language/LanguageManager';
 import { getPortalTranslation } from '../../../services/language/portalTranslations';
+import { getLanguageInfo } from '../../../services/language/translations';
+import type { SupportedLanguage } from '../../../services/language/types';
+import { useVoiceAssistantStore } from '../../../services/voice/VoiceInstructionEngine';
 import { Card, Pill, Toggle, formatDate, primaryButton, secondaryButton } from './ui';
 
 const steps = [
@@ -52,7 +55,8 @@ const OnboardingShell: React.FC<{
   description: string;
   children: React.ReactNode;
   backTo?: string;
-}> = ({ step, eyebrow, title, description, children, backTo }) => (
+  backLabel?: string;
+}> = ({ step, eyebrow, title, description, children, backTo, backLabel = 'Back' }) => (
   <div className="min-h-screen bg-warm text-ink">
     <header className="border-b border-line bg-white">
       <div className="mx-auto flex h-[68px] max-w-5xl items-center justify-between px-4 sm:px-6">
@@ -65,7 +69,7 @@ const OnboardingShell: React.FC<{
             className="pp-btn pp-btn-ghost pp-btn-sm inline-flex items-center gap-1.5 rounded-full"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back
+            {backLabel}
           </Link>
         )}
       </div>
@@ -142,7 +146,7 @@ export const PatientWelcomePage: React.FC = () => {
             {[
               { icon: ClipboardCheck, title: 'A short five-part screening', detail: 'Memory, attention, eye movement, voice, and facial movement activities.' },
               { icon: Timer, title: 'About 10–15 minutes', detail: 'Take breaks, pause, or stop at any point. There is no time pressure.' },
-              { icon: Languages, title: 'In your preferred language', detail: 'Written and spoken guidance in six Indian languages.' },
+              { icon: Languages, title: 'In your preferred language', detail: 'Written and spoken guidance in Arabic and English, with accessible multi-sensory support.' },
               { icon: Stethoscope, title: 'Reviewed by a clinician', detail: 'Observations are shared with your care team for professional review.' }
             ].map(({ icon: Icon, title, detail }) => (
               <li key={title} className="flex items-start gap-3">
@@ -207,6 +211,7 @@ export const PersonalInfoPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { personal, setPersonal } = usePatientPortalStore();
+  const { setLanguage } = useLanguageStore();
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -274,7 +279,13 @@ export const PersonalInfoPage: React.FC = () => {
             id="onboarding-language"
             className={fieldClass}
             value={personal.language}
-            onChange={(event) => setPersonal({ language: event.target.value })}
+            onChange={(event) => {
+              const language = event.target.value as SupportedLanguage;
+              // Keep the profile field and the spoken-guidance language in step:
+              // this choice must actually reach the voice engine, not just be stored.
+              setPersonal({ language });
+              setLanguage(language);
+            }}
           >
             <option value="en">English</option>
             <option value="ar">العربية (Arabic)</option>
@@ -510,49 +521,23 @@ export const HealthBackgroundPage: React.FC = () => {
 // ---------------------------------------------------------------------------
 // Screen 18 — Consent & Privacy
 // ---------------------------------------------------------------------------
-const consentRows: Array<{ key: ConsentKey; label: string; detail: string; required: boolean }> = [
-  {
-    key: 'dataCollection',
-    label: 'Assessment responses and observations',
-    detail: 'Task responses, timing, and derived observations from each screening session.',
-    required: true
-  },
-  {
-    key: 'cameraMic',
-    label: 'Camera and microphone use',
-    detail: 'Camera supports eye and facial movement activities; microphone supports voice activities. Processing happens during the session.',
-    required: true
-  },
-  {
-    key: 'processing',
-    label: 'Secure processing and storage',
-    detail: 'Derived observations are stored with your patient record for longitudinal comparison and clinician review.',
-    required: true
-  },
-  {
-    key: 'clinicianAccess',
-    label: 'Access by my care team',
-    detail: 'Verified clinicians involved in your care can review screening observations and add notes.',
-    required: true
-  },
-  {
-    key: 'optionalSharing',
-    label: 'Optional research and data sharing',
-    detail: 'Allow de-identified data to support service improvement and research. You can change this at any time.',
-    required: false
-  },
-  {
-    key: 'withdrawalAcknowledged',
-    label: 'I understand I can withdraw consent',
-    detail: 'You can update permissions or request deletion in Privacy & Data Settings. Withdrawal does not affect care already provided.',
-    required: true
-  }
+// Item wording is translated in portalTranslations so the consent text can be
+// read in the language the patient chose; only the required/optional status
+// (a clinical and legal decision) stays here.
+const consentRows: Array<{ key: ConsentKey; required: boolean }> = [
+  { key: 'dataCollection', required: true },
+  { key: 'cameraMic', required: true },
+  { key: 'processing', required: true },
+  { key: 'clinicianAccess', required: true },
+  { key: 'optionalSharing', required: false },
+  { key: 'withdrawalAcknowledged', required: true }
 ];
 
 export const ConsentPrivacyPage: React.FC = () => {
   const navigate = useNavigate();
   const { consent, setConsent, signConsent } = usePatientPortalStore();
-  const pt = getPortalTranslation(useLanguageStore().currentLanguage);
+  const { currentLanguage } = useLanguageStore();
+  const pt = getPortalTranslation(currentLanguage);
   const [error, setError] = useState('');
 
   const requiredComplete = consentRows
@@ -561,7 +546,7 @@ export const ConsentPrivacyPage: React.FC = () => {
 
   const handleContinue = async () => {
     if (!requiredComplete) {
-      setError('Please review and accept each required consent item.');
+      setError(pt.consent.errors.required);
       return;
     }
     setError('');
@@ -578,9 +563,12 @@ export const ConsentPrivacyPage: React.FC = () => {
         withdrawalAcknowledged: consent.withdrawalAcknowledged
       });
     } catch (err: any) {
+      // Server messages are English-only, so an Arabic reader is shown the
+      // translated message rather than text they cannot read.
       setError(
-        err.message ||
-          'Your consent could not be saved. Please try again, or ask clinic staff for help.'
+        currentLanguage === 'ar'
+          ? pt.consent.errors.saveFailed
+          : err.message || pt.consent.errors.saveFailed
       );
       return;
     }
@@ -596,6 +584,7 @@ export const ConsentPrivacyPage: React.FC = () => {
       title={pt.consent.title}
       description={pt.consent.description}
       backTo="/patient/onboarding/health-background"
+      backLabel={pt.consent.back}
     >
       {error && (
         <p className="mb-4 rounded-xl border border-rose/60 bg-rose/10 px-3.5 py-2.5 text-[14px] font-semibold text-rose-900" role="alert">
@@ -605,15 +594,18 @@ export const ConsentPrivacyPage: React.FC = () => {
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-2.5">
-          {consentRows.map((row) => (
-            <Toggle
-              key={row.key}
-              label={`${row.label}${row.required ? ' *' : ' (optional)'}`}
-              detail={row.detail}
-              checked={consent[row.key]}
-              onChange={(value) => setConsent(row.key, value)}
-            />
-          ))}
+          {consentRows.map((row) => {
+            const copy = pt.consent.items[row.key];
+            return (
+              <Toggle
+                key={row.key}
+                label={`${copy.label}${row.required ? pt.consent.requiredSuffix : pt.consent.optionalSuffix}`}
+                detail={copy.detail}
+                checked={consent[row.key]}
+                onChange={(value) => setConsent(row.key, value)}
+              />
+            );
+          })}
         </div>
 
         <div className="space-y-3">
@@ -628,22 +620,24 @@ export const ConsentPrivacyPage: React.FC = () => {
           <Card className="bg-warm/70">
             <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">
               <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-              How data is handled
+              {pt.consent.dataHandlingTitle}
             </p>
             <ul className="mt-3 space-y-2.5 text-[13px] leading-5 text-muted">
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Raw video and audio are not included in your portal reports.</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Only derived observations and task responses are stored.</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />Access is limited to verified clinicians in your care team.</li>
-              <li className="flex gap-2"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />You can withdraw optional permissions from Privacy &amp; Data Settings.</li>
+              {pt.consent.dataHandling.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden="true" />
+                  {item}
+                </li>
+              ))}
             </ul>
           </Card>
           <div className="rounded-xl border border-mint bg-mint/50 p-3.5">
             <p className="flex items-center gap-1.5 text-[13px] font-bold text-forest">
               <Info className="h-3.5 w-3.5" aria-hidden="true" />
-              A note on clinical use
+              {pt.consent.clinicalNoteTitle}
             </p>
             <p className="mt-1.5 text-[13px] leading-5 text-forest/80">
-              NeuLens is a screening support tool. Observations are exploratory and require professional interpretation.
+              {pt.consent.clinicalNoteBody}
             </p>
           </div>
         </div>
@@ -652,7 +646,7 @@ export const ConsentPrivacyPage: React.FC = () => {
       <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-line pt-5 sm:flex-row sm:flex-wrap sm:items-center">
         <Link to="/patient/onboarding/health-background" className={secondaryButton}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back
+          {pt.consent.back}
         </Link>
         <div className="flex w-full flex-col items-end gap-2 sm:w-auto">
           {!requiredComplete && <span className="text-[13px] font-medium text-muted">{pt.consent.requiredItemsMarked}</span>}
@@ -672,7 +666,19 @@ export const ConsentPrivacyPage: React.FC = () => {
 export const AccessibilitySetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { accessibility, setAccessibility, completeOnboarding } = usePatientPortalStore();
+  const { currentLanguage, setLanguage } = useLanguageStore();
+  const { speak, stopSpeaking } = useVoiceAssistantStore();
   const [testing, setTesting] = useState<'camera' | 'mic' | null>(null);
+
+  const changeLanguage = (value: string) => {
+    const language = value as SupportedLanguage;
+    setAccessibility({ language });
+    setLanguage(language);
+  };
+
+  const previewVoice = () => {
+    speak(getLanguageInfo(currentLanguage).sampleGreeting);
+  };
 
   const runTest = (kind: 'camera' | 'mic') => {
     setTesting(kind);
@@ -683,6 +689,7 @@ export const AccessibilitySetupPage: React.FC = () => {
   };
 
   const finish = () => {
+    stopSpeaking();
     completeOnboarding();
     navigate('/patient/dashboard', { replace: true });
   };
@@ -705,8 +712,8 @@ export const AccessibilitySetupPage: React.FC = () => {
             <select
               id="access-language"
               className={fieldClass}
-              value={accessibility.language}
-              onChange={(event) => setAccessibility({ language: event.target.value })}
+              value={currentLanguage}
+              onChange={(event) => changeLanguage(event.target.value)}
             >
               <option value="en">English</option>
               <option value="ar">العربية (Arabic)</option>
@@ -716,6 +723,17 @@ export const AccessibilitySetupPage: React.FC = () => {
               <option value="kn">Kannada</option>
               <option value="ml">Malayalam</option>
             </select>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="text-[13px] leading-5 text-muted">Spoken guidance uses this language.</p>
+              <button
+                type="button"
+                onClick={previewVoice}
+                className="inline-flex items-center gap-1.5 text-[13px] font-bold text-forest hover:underline"
+              >
+                <AudioLines className="h-3.5 w-3.5" aria-hidden="true" />
+                Hear a sample
+              </button>
+            </div>
           </div>
 
           <div>

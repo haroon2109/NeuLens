@@ -7,9 +7,11 @@ import {
   Bell,
   Brain,
   CalendarDays,
+  Check,
   ChevronDown,
   ClipboardList,
   FileText,
+  Globe,
   HeartPulse,
   HelpCircle,
   LayoutDashboard,
@@ -32,6 +34,9 @@ import { usePatientPortalStore } from '../../../store/patientPortalStore';
 import { patientPortalApi } from '../../../services/patientPortalApi';
 import { useLanguageStore } from '../../../services/language/LanguageManager';
 import { getPortalTranslation } from '../../../services/language/portalTranslations';
+import { SUPPORTED_LANGUAGES, getLanguageInfo } from '../../../services/language/translations';
+import type { SupportedLanguage } from '../../../services/language/types';
+import { useVoiceAssistantStore } from '../../../services/voice/VoiceInstructionEngine';
 import { deploymentConfig } from '../../../config/deployment';
 
 type NavItem = { path: string; label: string; icon: LucideIcon; end?: boolean };
@@ -99,6 +104,84 @@ const textSizeClass: Record<string, string> = {
   normal: '',
   large: 'pp-text-lg',
   xlarge: 'pp-text-xl'
+};
+
+/**
+ * Switches the language used for spoken guidance (and the language-aware
+ * portal copy) from anywhere in the portal. Choosing a language immediately
+ * plays a short sample, so the patient hears the new voice before starting.
+ */
+const VoiceLanguageSwitcher: React.FC = () => {
+  const { currentLanguage, setLanguage, getTranslation } = useLanguageStore();
+  const { speak } = useVoiceAssistantStore();
+  const [open, setOpen] = useState(false);
+  const t = getTranslation();
+  const current = getLanguageInfo(currentLanguage);
+
+  const choose = (lang: SupportedLanguage) => {
+    setLanguage(lang);
+    setOpen(false);
+    speak(getLanguageInfo(lang).sampleGreeting);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${t.assistant.languageBtn}: ${current.nativeName}`}
+        title={t.assistant.languageBtn}
+        className="flex h-9 items-center gap-1.5 rounded-lg border border-line px-2 text-body transition-colors hover:bg-mint"
+      >
+        <Globe className="h-4 w-4" aria-hidden="true" />
+        <span className="hidden text-[13px] font-semibold sm:inline">{current.nativeName}</span>
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            className="fixed inset-0 z-10 cursor-default"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            role="listbox"
+            aria-label={t.assistant.languageBtn}
+            className="absolute end-0 z-20 mt-1.5 w-56 overflow-hidden rounded-xl border border-line bg-white p-1 shadow-xl"
+          >
+            <p className="px-2.5 pb-1 pt-1.5 text-[12px] font-bold uppercase tracking-[0.1em] text-sage-deep">
+              {t.assistant.languageBtn}
+            </p>
+            {SUPPORTED_LANGUAGES.map((lang) => {
+              const selected = lang.id === currentLanguage;
+              return (
+                <button
+                  key={lang.id}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => choose(lang.id)}
+                  className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-start transition-colors ${
+                    selected ? 'bg-mint text-forest' : 'text-body hover:bg-warm'
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className={`block text-[14px] ${selected ? 'font-semibold' : ''}`}>{lang.nativeName}</span>
+                    <span className="block text-[12px] text-muted">{lang.name}</span>
+                  </span>
+                  {selected && <Check className="h-4 w-4 shrink-0 text-forest" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
 
 const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => {
@@ -327,6 +410,9 @@ export const PatientPortalLayout: React.FC = () => {
               </p>
               <p className="truncate text-[14px] font-semibold text-ink">{activeLabel}</p>
             </div>
+
+            {/* Voice-guidance language */}
+            <VoiceLanguageSwitcher />
 
             {/* Notifications */}
             <Link

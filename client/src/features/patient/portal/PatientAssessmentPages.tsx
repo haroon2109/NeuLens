@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity,
@@ -34,6 +34,8 @@ import type { LucideIcon } from 'lucide-react';
 import type { PatientAssessmentRecord } from '../../../services/patientPortalApi';
 import { usePatientPortalStore } from '../../../store/patientPortalStore';
 import { usePatientOverview } from './usePatientOverview';
+import { useLanguageStore } from '../../../services/language/LanguageManager';
+import { useVoiceAssistantStore } from '../../../services/voice/VoiceInstructionEngine';
 import { HealthcareScene } from '../../../components/illustrations/HealthcareScene';
 import { MotionReveal } from '../../../components/motion/Reveal';
 import { AssessmentProgress, AssessmentShell, QuietDetails } from './AssessmentFlow';
@@ -150,6 +152,20 @@ const sessionSteps: Array<{ icon: LucideIcon; title: string; detail: string; min
 ];
 
 export const AssessmentIntroductionPage: React.FC = () => {
+  const { getTranslation } = useLanguageStore();
+  const t = getTranslation();
+  const { speak, stopSpeaking } = useVoiceAssistantStore();
+
+  // Re-read the introduction whenever the language changes, so switching the
+  // voice-guidance language mid-screen is heard immediately instead of only
+  // taking effect on the next visit.
+  useEffect(() => {
+    speak(t.intro.spokenIntro);
+    return () => {
+      stopSpeaking();
+    };
+  }, [t.intro.spokenIntro, speak, stopSpeaking]);
+
   return (
     <div className="space-y-5">
       <PortalPageHeader
@@ -227,7 +243,8 @@ export const AssessmentIntroductionPage: React.FC = () => {
               Accessibility
             </p>
             <p className="mt-1 text-[13px] leading-5 text-forest/80">
-              Your language, text size, contrast, and audio preferences are already applied. You can change them from Account Settings.
+              Your language, text size, contrast, and audio preferences are already applied. Change the spoken language any time with the
+              language button at the top of the page; the guidance restarts in the language you choose.
             </p>
           </div>
         </Card>
