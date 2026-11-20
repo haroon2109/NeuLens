@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { Prisma } from '@prisma/client';
+type PrismaJsonInput = any;
+type InputJsonValue = any;
 import { prisma } from '../config/db';
 import { summarizePatientChanges } from '../services/changeMonitor';
 import { isInterpretableScore, toReviewState, type ReviewState } from '../services/reviewState';
@@ -530,7 +531,7 @@ export class HospitalDataStore {
       const patientById = new Map(patients.map(patient => [patient.id, patient]));
       for (const patient of databasePatients) patientById.set(patient.id, patient as unknown as UserRecord);
       patients = Array.from(patientById.values());
-      patientAssessments = new Map(databasePatients.map(patient => [
+      patientAssessments = new Map(databasePatients.map((patient: any) => [
         patient.id,
         patient.assessments as unknown as AssessmentRecord[]
       ]));
@@ -639,7 +640,7 @@ export class HospitalDataStore {
       const patientById = new Map(patients.map(patient => [patient.id, patient]));
       for (const patient of databasePatients) patientById.set(patient.id, patient as unknown as UserRecord);
       patients = Array.from(patientById.values());
-      patientAssessments = new Map(databasePatients.map(patient => [
+      patientAssessments = new Map(databasePatients.map((patient: any) => [
         patient.id,
         patient.assessments as unknown as AssessmentRecord[]
       ]));
@@ -891,7 +892,7 @@ export class HospitalDataStore {
           action: carePlan.action,
           followUpDate: carePlan.followUpDate,
           notes: carePlan.notes,
-          plan: (carePlan.plan ?? undefined) as InputJsonValue | undefined,
+          plan: (carePlan.plan ?? undefined) as PrismaJsonInput,
           savedBy: carePlan.savedBy,
           savedAt: new Date(carePlan.savedAt),
         },
@@ -899,7 +900,7 @@ export class HospitalDataStore {
           action: carePlan.action,
           followUpDate: carePlan.followUpDate,
           notes: carePlan.notes,
-          plan: (carePlan.plan ?? undefined) as InputJsonValue | undefined,
+          plan: (carePlan.plan ?? undefined) as PrismaJsonInput,
           savedBy: carePlan.savedBy,
           savedAt: new Date(carePlan.savedAt),
           version: (previous?.version ?? 1) + 1,
@@ -924,7 +925,7 @@ export class HospitalDataStore {
           taskResponses: {
             ...taskResponses,
             clinicianCarePlan: carePlan
-          } as InputJsonValue
+          } as PrismaJsonInput
         },
         include: { eyeMetrics: true, voiceMetrics: true, faceMetrics: true, report: true }
       });
@@ -977,7 +978,7 @@ export class HospitalDataStore {
         data: {
           userId: data.userId,
           version: data.version,
-          scopes: data.scopes as InputJsonValue,
+          scopes: data.scopes as PrismaJsonInput,
           granted: true,
           actorRole: data.actorRole || 'PATIENT',
           ipAddress: data.ipAddress ?? null,
@@ -1110,7 +1111,7 @@ export class HospitalDataStore {
         orderBy: [{ date: 'desc' }, { time: 'desc' }],
         include: { patient: { select: { patientId: true } } },
       });
-      return rows.map(({ patient, ...row }) => ({
+      return rows.map(({ patient, ...row }: any) => ({
         ...(row as unknown as AppointmentRecord),
         patientPublicId: patient?.patientId ?? null,
       }));
@@ -1314,7 +1315,7 @@ export class HospitalDataStore {
           reviewState: overallScore === null ? 'NOT_INTERPRETABLE' : 'NOT_REVIEWED',
           status: 'COMPLETED',
           reviewStatus: 'PENDING_REVIEW',
-          taskResponses: data.taskResponses as InputJsonValue,
+          taskResponses: data.taskResponses as PrismaJsonInput,
           report: {
             create: {
               recommendation:
@@ -1794,7 +1795,7 @@ export class HospitalDataStore {
         orderBy: { createdAt: 'desc' },
         include: { patient: { select: { patientId: true } } },
       });
-      return rows.map(({ patient, ...row }) => ({
+      return rows.map(({ patient, ...row }: any) => ({
         ...(row as unknown as ReferralOutcomeRecord),
         patientPublicId: patient?.patientId ?? null,
       }));

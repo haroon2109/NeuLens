@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/app.js",
     "migrate:deploy": "ts-node --project tsconfig.json src/scripts/migrate-deploy.ts",
     "test": "tsc && NODE_ENV=test node --test dist/tests",
@@ -13,6 +13,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "clinician:create": "npm run build && node dist/scripts/createClinician.js",
+    "prebuild": "npx prisma generate",
     "postbuild": "npx prisma generate",
     "healthcheck": "bash healthcheck.sh",
     "predeploy": "npm run build && npm run prisma:generate && npm run migrate:deploy",
