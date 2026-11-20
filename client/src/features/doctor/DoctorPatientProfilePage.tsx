@@ -949,10 +949,12 @@ export const DoctorPatientProfilePage: React.FC = () => {
                       >
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-xs font-bold text-slate-800">
-                            {new Date(a.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
+                            {new Date(a.date).toLocaleString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
                               month: 'short',
                               day: 'numeric',
-                              year: 'numeric'
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
                             })}
                           </span>
                           <span className="font-mono text-xs font-semibold text-medical-700">
@@ -977,7 +979,7 @@ export const DoctorPatientProfilePage: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-bold text-ink font-display">
-                        Session Telemetry ({new Date(currentAssessment.date).toLocaleDateString()})
+                        Session Telemetry ({new Date(currentAssessment.date).toLocaleString()})
                       </h3>
                       <p className="text-xs text-muted">
                         Task responses captured during this administration
@@ -1254,10 +1256,12 @@ export const DoctorPatientProfilePage: React.FC = () => {
                           REP-{a.id.slice(-6).toUpperCase()}
                         </span>
                         <span className="text-xs font-semibold text-muted">
-                          Session Date: {new Date(a.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
+                          Session Date: {new Date(a.date).toLocaleString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
                             month: 'long',
                             day: 'numeric',
-                            year: 'numeric'
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
                           })}
                         </span>
                         {getReviewBadge(a.reviewStatus)}

@@ -125,33 +125,17 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
 
   const submitAssessment = useCallback(async () => {
     const state = useScreeningStore.getState();
-    const compScore = state.scores.compositeScore;
 
-    // A session that did not produce a complete, interpretable score is not
-    // submitted. The previous behaviour fell back to 84 and labelled the result
-    // LOW risk; that presented a comfortable number for a battery that was not
-    // actually completed.
-    if (typeof compScore !== 'number' || !Number.isFinite(compScore)) {
+    // A session with no recorded activity has nothing to store. Anything else is
+    // submitted exactly as measured: if a domain is missing, the server records
+    // the session as NOT_INTERPRETABLE instead of inventing a score — but the
+    // session still belongs in the patient's history and the clinician's queue.
+    // (The previous guard dropped the whole session whenever the composite was
+    // null, so completed screenings silently disappeared.)
+    if (Object.keys(state.rawResponses || {}).length === 0) {
       setIsSavingAssessment(false);
-      // Name the activities that produced nothing, so the participant knows what
-      // to retry instead of being told vaguely that something was incomplete.
-      const activityLabels: Record<string, string> = {
-        game1: 'moving circle',
-        game2: 'card matching',
-        game3: 'spoken repeat',
-        game4: 'facial movement',
-        game5: 'connecting numbers',
-        pianoSequence: 'sequence memory',
-        game6: 'sequence memory'
-      };
-      const missing = Object.entries(activityLabels)
-        .filter(([key]) => typeof state.rawResponses[key]?.score !== 'number')
-        .map(([, label]) => label);
-      const uniqueMissing = Array.from(new Set(missing));
       setSubmissionError(
-        `No score can be calculated because these activities produced no measurement: ${
-          uniqueMissing.length ? uniqueMissing.join(', ') : 'the full battery'
-        }. Nothing has been submitted. A missed activity is recorded as not measured rather than filled in, so the assessment has to be repeated to be interpretable.`
+        'No activity was recorded in this session, so there is nothing to submit. Please start the screening again.'
       );
       return;
     }
@@ -1042,7 +1026,9 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
         speak(t.contextual.taskCompleted);
         const score = Math.max(0, Math.min(100, 100 - trailErrors * 12));
         saveResponse('game5', { score, errors: trailErrors });
-        setStep('submitting');
+        // The fixed-observation sequencing task is part of the scored battery,
+        // so it must run before submission.
+        setStep('piano-sequence');
       }
     } else {
       // A wrong selection is an error, not the end of the activity. Keep the
@@ -1067,7 +1053,9 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
       notMeasured: isTimeout ? 'TIME_LIMIT' : 'SKIPPED',
       errors: trailErrors,
     });
-    setStep('submitting');
+    // Skipping the trail activity does not skip the sequencing task: it is a
+    // separate scored measurement, and submission happens after it.
+    setStep('piano-sequence');
   };
 
   // Keyboard equivalent for the trail-making activity: pressing the number of the

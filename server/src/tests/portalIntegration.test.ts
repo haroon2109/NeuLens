@@ -7,6 +7,7 @@ import { DoctorController } from '../controllers/doctor.controller';
 import { summarizePatientChanges } from '../services/changeMonitor';
 import { doctorCarePlanSchema, patientSubmitAssessmentSchema } from '../validation/schemas';
 import { extractFhirContext } from '../services/fhirContext';
+import { submitAssessmentComplete } from '../controllers/assessmentcomplete.controller';
 
 const createAssessment = (
   id: string,
@@ -428,6 +429,54 @@ describe('Neulens Dual-Portal Integration Tests (Patient & Doctor)', () => {
       assert.strictEqual(submitted.overallScore, 86.0);
       assert.strictEqual(submitted.status, 'COMPLETED');
       assert.strictEqual(submitted.reviewStatus, 'PENDING_REVIEW');
+    });
+
+    it('attributes a clinician-administered screening to the patient, not the clinician', async () => {
+      const { user: patient, patientId } = await HospitalDataStore.createPatient({
+        name: 'Clinician Screened Patient',
+        age: 77,
+        dob: '1949',
+        pin: '7777',
+        gender: 'FEMALE',
+        language: 'en',
+        educationYears: 12,
+        handedness: 'RIGHT'
+      });
+
+      const captured: { status?: number; body?: any } = {};
+      const req: any = {
+        body: {
+          patientId,
+          language: 'en',
+          taskResponses: {
+            game1: { score: 80 },
+            game2: { score: 90 },
+            game3: { score: 75 },
+            game4: { score: 85 },
+            game5: { score: 88 },
+            pianoSequence: { score: 95 }
+          }
+        },
+        user: { id: 'clinician-test', email: 'clinician@example.org', role: 'CLINICIAN' },
+        headers: {},
+        ip: '127.0.0.1',
+        socket: { remoteAddress: '127.0.0.1' }
+      };
+      const res: any = {
+        status(code: number) { captured.status = code; return res; },
+        json(body: unknown) { captured.body = body; return res; }
+      };
+
+      await submitAssessmentComplete(req, res, (err?: unknown) => {
+        throw err instanceof Error ? err : new Error('unexpected error');
+      });
+
+      assert.strictEqual(captured.status, 201);
+      assert.strictEqual(captured.body.assessment.userId, patient.id);
+      assert.strictEqual(typeof captured.body.assessment.overallScore, 'number');
+
+      const file = await HospitalDataStore.getPatientDetail(patientId);
+      assert.ok(file?.assessments.some((entry) => entry.id === captured.body.assessment.id));
     });
   });
 

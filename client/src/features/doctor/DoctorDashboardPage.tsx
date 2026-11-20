@@ -485,7 +485,7 @@ export const DoctorDashboardPage: React.FC = () => {
 
                     {/* Date */}
                     <td className="py-4 px-6 text-muted font-medium">
-                      {new Date(item.date).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
+                      {new Date(item.date).toLocaleString(document.documentElement.lang === 'ar' ? 'ar-AE' : (document.documentElement.lang || 'en-US'), {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',

@@ -104,6 +104,6 @@ Before submitting or certifying changes:
 
 - [ ] Client builds with zero TypeScript errors (`vite build`).
 - [ ] Server builds with zero TypeScript errors (`tsc`).
-- [ ] Patient Haroon (`CV-2026-HAROON` / PIN `246810`) loads longitudinal history in `/patient/dashboard`.
+- [ ] Patient Haroon (`CV-2026-HAROON` / PIN `246810`) starts with no screening history in `/patient/dashboard`; history appears only after he completes a screening.
 - [ ] Clinician Dr. Mohamed (`doctor.demo@neulens.ai`) accesses Haroon's record in `/doctor/patients/CV-2026-HAROON`.
-- [ ] Completed patient assessments immediately appear in the doctor's review queue.
+- [ ] A completed demo-patient screening immediately appears in the doctor's directory, dashboard and review queue with its recording date and time.

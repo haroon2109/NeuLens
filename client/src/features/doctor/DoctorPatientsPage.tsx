@@ -297,7 +297,12 @@ export const DoctorPatientsPage: React.FC = () => {
                       </div>
                       {p.latestAssessmentDate && (
                         <div className="text-xs text-muted mt-1">
-                          Last: {new Date(p.latestAssessmentDate).toLocaleDateString()}
+                          Last: {new Date(p.latestAssessmentDate).toLocaleString(undefined, {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </div>
                       )}
                     </td>

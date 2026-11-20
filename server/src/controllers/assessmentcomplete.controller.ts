@@ -16,6 +16,7 @@ export const submitAssessmentComplete = async (req: AuthenticatedRequest, res: R
     // field. Missing measurements stay null rather than becoming placeholders.
     const validated = patientSubmitAssessmentSchema.parse(req.body);
     const {
+      patientId,
       language,
       languageAcknowledged,
       reactionTime,
@@ -30,6 +31,27 @@ export const submitAssessmentComplete = async (req: AuthenticatedRequest, res: R
       taskResponses: submittedResponses,
       recommendation
     } = validated;
+
+    // Who the session belongs to. A patient submits their own session; a
+    // clinician administering the battery must name the patient, and the record
+    // is written to that patient's file rather than the clinician's account.
+    let subjectUserId = req.user.id;
+    let subjectPatientId = req.user.patientId;
+    if (req.user.role === 'PATIENT') {
+      if (patientId && patientId.toUpperCase() !== (req.user.patientId || '').toUpperCase()) {
+        return res.status(403).json({ error: 'A patient can only submit their own screening.' });
+      }
+    } else {
+      if (!patientId) {
+        return res.status(400).json({ error: 'patientId is required when a clinician administers a screening.' });
+      }
+      const subject = await HospitalDataStore.findUserByPatientId(patientId);
+      if (!subject || subject.role !== 'PATIENT') {
+        return res.status(404).json({ error: 'Patient record not found.' });
+      }
+      subjectUserId = subject.id;
+      subjectPatientId = subject.patientId || undefined;
+    }
 
     const taskResponses: Record<string, any> = { ...(submittedResponses || {}) };
 
@@ -77,7 +99,7 @@ export const submitAssessmentComplete = async (req: AuthenticatedRequest, res: R
     try {
       const externalContext = await importExternalContext(
         taskResponses.externalContextConsent?.granted === true,
-        req.user.patientId || req.user.id
+        subjectPatientId || subjectUserId
       );
       if (externalContext) taskResponses.externalContext = externalContext;
     } catch (error) {
@@ -109,12 +131,12 @@ export const submitAssessmentComplete = async (req: AuthenticatedRequest, res: R
 
     // 1. Persist assessment (creates assessment record; review state is derived
     //    from what was actually recorded, never supplied by the browser).
-    const savedAssessment = await HospitalDataStore.submitAssessment(req.user.id, assessmentData);
+    const savedAssessment = await HospitalDataStore.submitAssessment(subjectUserId, assessmentData);
 
     // 2. Run deterministic NeuLens workflow:
     //    Safety & Accessibility -> History/Baseline -> Longitudinal Intelligence (change/evidence/uncertainty)
     //    -> Clinical Documentation (source-linked draft) -> Follow-up Coordination (clinician-owned actions).
-    const result = await runAssessmentCompletionWorkflow(req.user.id, savedAssessment, taskResponses);
+    const result = await runAssessmentCompletionWorkflow(subjectUserId, savedAssessment, taskResponses);
 
     // 3. Persist the administrative review state that the deterministic rules produced.
     const changeStatus = result.platform?.meaningfulChange?.status ?? null;

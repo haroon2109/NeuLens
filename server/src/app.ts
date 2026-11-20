@@ -10,7 +10,7 @@ import apiRouter from './routes/index';
 import { errorHandler } from './middleware/errorHandler';
 import { createRateLimiter } from './middleware/rateLimit';
 import { describeJwtSecretProblem, verifyJwtSecret } from './config/jwt';
-import { seedDemoAccess } from './services/demoAccess';
+import { persistDemoAccounts, seedDemoAccess } from './services/demoAccess';
 import {
   httpLogger,
   requestIp,
@@ -278,29 +278,36 @@ app.use('*', (req, res) => {
 
 // Start listening if not in test suite environment
 if (process.env.NODE_ENV !== 'test') {
-  // Adds fictional, verified jury accounts. Off unless explicitly opted in:
-  // - local / non-production default on (convenient jury testing)
-  // - production default off unless DEMO_ACCESS_ENABLED=true
-  seedDemoAccess();
+  const start = async () => {
+    // Adds fictional, verified jury accounts. Off unless explicitly opted in:
+    // - local / non-production default on (convenient jury testing)
+    // - production default off unless DEMO_ACCESS_ENABLED=true
+    seedDemoAccess();
+    // The sign-in rows must exist in PostgreSQL before a demo screening is
+    // submitted; the assessment is written by the normal submission flow only.
+    await persistDemoAccounts();
 
-  app.listen(PORT, HOST, async () => {
-    console.log(`[Neulens Server]: Running on http://${HOST}:${PORT}`);
-    if (process.env.DATABASE_URL) {
-      try {
-        await prisma.$connect();
-        console.log('[Neulens Database]: PostgreSQL connection established successfully.');
-      } catch (dbErr) {
-        console.error(
-          '[Neulens Database Warning]: Could not connect to PostgreSQL database.',
-          dbErr instanceof Error ? dbErr.message : dbErr
+    app.listen(PORT, HOST, async () => {
+      console.log(`[Neulens Server]: Running on http://${HOST}:${PORT}`);
+      if (process.env.DATABASE_URL) {
+        try {
+          await prisma.$connect();
+          console.log('[Neulens Database]: PostgreSQL connection established successfully.');
+        } catch (dbErr) {
+          console.error(
+            '[Neulens Database Warning]: Could not connect to PostgreSQL database.',
+            dbErr instanceof Error ? dbErr.message : dbErr
+          );
+        }
+      } else if (process.env.NODE_ENV === 'production') {
+        console.warn(
+          '[Neulens Security Warning]: DATABASE_URL is not set in production. Persistent patient records will not be saved.'
         );
       }
-    } else if (process.env.NODE_ENV === 'production') {
-      console.warn(
-        '[Neulens Security Warning]: DATABASE_URL is not set in production. Persistent patient records will not be saved.'
-      );
-    }
-  });
+    });
+  };
+
+  void start();
 }
 
 export default app;
