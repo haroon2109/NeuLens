@@ -14,9 +14,10 @@ export const DEMO_CLINICIAN_USER_ID = 'demo-clinician-mohamed';
  * Demo access is on by default for local, prototype, and jury use.
  */
 export function demoAccessEnabled(): boolean {
-  const flag = process.env.DEMO_ACCESS_ENABLED;
+  const flag = (process.env.DEMO_ACCESS_ENABLED || '').toLowerCase().trim();
+  // Enabled by default for local, prototype, and jury review.
+  // Set DEMO_ACCESS_ENABLED=false only on a strict clinical production instance.
   if (flag === 'false') return false;
-  if (process.env.NODE_ENV === 'production') return flag === 'true';
   return true;
 }
 

@@ -30,18 +30,19 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
   const { setLanguage, currentLanguage } = useLanguageStore();
   const copy = getEntryCopy(currentLanguage);
   const [busy, setBusy] = useState<DemoRole | null>(null);
-  const [available, setAvailable] = useState(false);
+  const [available, setAvailable] = useState(true);
 
   useEffect(() => {
     let active = true;
     authApi
       .demoStatus()
       .then((status) => {
-        if (active) setAvailable(Boolean(status.enabled));
+        if (active && status && typeof status.enabled === 'boolean') {
+          setAvailable(status.enabled);
+        }
       })
       .catch(() => {
-        // Do not advertise demo credentials when the server cannot confirm them.
-        if (active) setAvailable(false);
+        // Keep default true for prototype/jury unless explicitly disabled by server
       });
     return () => {
       active = false;
