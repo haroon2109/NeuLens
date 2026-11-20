@@ -64,7 +64,7 @@ export const DemoAccessPanel: React.FC<DemoAccessPanelProps> = ({
         if (response.user.language) {
           setLanguage(response.user.language as SupportedLanguage);
         }
-        navigate('/patient/welcome', { replace: true });
+        navigate('/patient/dashboard', { replace: true });
         return;
       }
 

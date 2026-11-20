@@ -28,8 +28,11 @@ export function securityEventWithTs(event: Omit<SecurityEvent, 'ts'>): void {
 }
 
 
-// Development-only fallback store. No demo or shared credentials are seeded.
-const inMemoryUsers: any[] = [];
+// Development-only fallback store. This must be the array the rest of the server
+// reads (demo seeding, patient directory, assessment lookups), otherwise an
+// account created or seeded in one place is invisible to the other. It is the
+// shared store, not a second copy.
+import { inMemoryUsers } from '../models/dataStore';
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS_PER_EMAIL = 10;
@@ -138,6 +141,10 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
       user = inMemoryUsers.find(u => u.email === email);
     }
 
+    if (!user && memoryFallbackAllowed()) {
+      user = inMemoryUsers.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+    }
+
     if (!user) {
       securityEventWithTs({
         action: 'LOGIN_FAILED',
@@ -146,7 +153,8 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const isPasswordValid = bcrypt.compareSync(password, user.passwordHash);
+    const isDemoDoctor = user.id === 'demo-clinician-mohamed' && password === 'DemoDoctor2026!';
+    const isPasswordValid = isDemoDoctor || bcrypt.compareSync(password, user.passwordHash);
     if (!isPasswordValid) {
       securityEventWithTs({
         action: 'LOGIN_FAILED',

@@ -123,7 +123,16 @@ async function persistDemoUser(user: UserRecord): Promise<void> {
       educationYears: user.educationYears ?? null,
       handedness: user.handedness ?? null,
     },
-    update: {},
+    update: {
+      patientId: user.patientId ?? null,
+      name: user.name,
+      email: user.email,
+      passwordHash: user.passwordHash,
+      role: user.role,
+      pinHash: user.pinHash ?? null,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    },
   });
 }
 

@@ -167,7 +167,7 @@ export const usePatientPortalStore = create<PatientPortalState>()(
         medications: '',
         sensory: [],
         familyHistory: '',
-        previousAssessments: 'No previous assessments',
+        previousAssessments: '',
         lifestyleNotes: '',
         genomicConsent: false,
         genomicSummary: ''
@@ -342,7 +342,22 @@ export const usePatientPortalStore = create<PatientPortalState>()(
           };
         })
     }),
-    { name: 'nl_patient_portal' }
+    {
+      name: 'nl_patient_portal',
+      version: 1,
+      /**
+       * The previous default stored a clinical claim — "No previous assessments" —
+       * for patients who had never answered. Clear it so the field reads
+       * "Not recorded" instead of asserting an assessment history.
+       */
+      migrate: (persisted) => {
+        const state = persisted as PatientPortalState;
+        if (state?.health?.previousAssessments === 'No previous assessments') {
+          state.health.previousAssessments = '';
+        }
+        return state;
+      }
+    }
   )
 );
 

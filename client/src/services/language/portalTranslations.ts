@@ -89,7 +89,6 @@ const en: PortalTranslation = {
     items: {
       '/patient/dashboard': 'Dashboard',
       '/patient/brain-health': 'Brain health',
-      '/patient/timeline': 'Brain Health Timeline',
       '/patient/assessment/intro': 'Start assessment',
       '/patient/cognitive': 'Cognitive assessment',
       '/patient/cognitive/library': 'Task library',
@@ -107,7 +106,6 @@ const en: PortalTranslation = {
       '/patient/prevention-plan': 'Personalized Prevention Plan',
       '/patient/appointments': 'Follow-up & Appointments',
       '/patient/care-plan': 'My care plan',
-      '/patient/notifications': 'Notifications',
       '/patient/profile': 'My profile',
       '/patient/settings': 'Account settings',
       '/patient/privacy': 'Privacy & data',
@@ -236,7 +234,6 @@ const ar: PortalTranslation = {
     items: {
       '/patient/dashboard': 'لوحة التحكم',
       '/patient/brain-health': 'صحة الدماغ',
-      '/patient/timeline': 'الجدول الزمني لصحة الدماغ',
       '/patient/assessment/intro': 'بدء التقييم',
       '/patient/cognitive': 'التقييم المعرفي',
       '/patient/cognitive/library': 'مكتبة المهام',
@@ -254,7 +251,6 @@ const ar: PortalTranslation = {
       '/patient/prevention-plan': 'خطة الوقاية شخصية',
       '/patient/appointments': 'المتابعة والمواعيد',
       '/patient/care-plan': 'خطة رعايتي',
-      '/patient/notifications': 'الإشعارات',
       '/patient/profile': 'ملفي',
       '/patient/settings': 'إعدادات الحساب',
       '/patient/privacy': 'الخصوصية والبيانات',

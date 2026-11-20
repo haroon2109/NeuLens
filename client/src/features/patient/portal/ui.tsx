@@ -121,19 +121,19 @@ export const PortalPageHeader: FC<{
   actions?: ReactNode;
   icon?: LucideIcon;
 }> = ({ eyebrow, title, description, actions, icon: Icon }) => (
-  <header className="flex flex-col gap-4 border-b border-line/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
+  <header className="flex flex-col gap-5 border-b border-line/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
     <div className="min-w-0">
       {eyebrow && (
-        <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+        <div className="pp-eyebrow">
           {Icon && <Icon className="h-3.5 w-3.5 text-sage-deep" aria-hidden="true" />}
           {eyebrow}
         </div>
       )}
-      <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-[-0.035em] text-ink sm:text-[30px]">
+      <h1 className="mt-3 text-[28px] font-semibold leading-[1.1] tracking-[-0.042em] text-ink sm:text-[34px]">
         {title}
       </h1>
       {description && (
-        <p className="mt-2 max-w-2xl text-[14px] leading-6 text-body">{description}</p>
+        <p className="mt-3 max-w-2xl text-[15px] leading-[1.7] text-body">{description}</p>
       )}
     </div>
     {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
@@ -149,7 +149,7 @@ export const Card: FC<{ children: ReactNode; className?: string; padded?: boolea
   className = '',
   padded = true
 }) => (
-  <section className={`min-w-0 rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(27,51,43,0.03),0_24px_60px_-58px_rgba(27,51,43,0.45)] ${padded ? 'p-5' : ''} ${className}`}>
+  <section className={`min-w-0 rounded-[1.25rem] border border-line bg-white shadow-[0_1px_2px_rgba(27,51,43,0.03),0_24px_60px_-58px_rgba(27,51,43,0.45)] ${padded ? 'p-5 sm:p-6' : ''} ${className}`}>
     {children}
   </section>
 );
@@ -159,10 +159,10 @@ export const SectionTitle: FC<{ title: string; detail?: string; action?: ReactNo
   detail,
   action
 }) => (
-  <div className="mb-4 flex items-start justify-between gap-4">
-    <div>
-      <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-      {detail && <p className="mt-1 text-[14px] leading-5 text-muted">{detail}</p>}
+  <div className="mb-5 flex items-start justify-between gap-4">
+    <div className="min-w-0">
+      <h2 className="text-[17px] font-semibold leading-[1.3] tracking-[-0.024em] text-ink">{title}</h2>
+      {detail && <p className="mt-1.5 text-[14px] leading-[1.6] text-muted">{detail}</p>}
     </div>
     {action}
   </div>
@@ -184,23 +184,23 @@ export const StatCard: FC<{
       ? resolvedTone
       : 'forestSoft';
   return (
-    <div className="rounded-2xl border border-line bg-white p-4">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
-        <span className={`flex h-8 w-8 items-center justify-center rounded-lg border ${toneClasses[chipTone]}`}>
+    <div className="rounded-[1.25rem] border border-line bg-white p-5">
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-[11.5px] font-bold uppercase leading-5 tracking-[0.12em] text-sage-deep">{label}</span>
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${toneClasses[chipTone]}`}>
           <Icon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
         </span>
       </div>
-      <p className="mt-3 text-[21px] font-semibold tracking-[-0.03em] text-ink">{value}</p>
-      {detail && <p className="mt-1 text-[13px] leading-5 text-muted">{detail}</p>}
+      <p className="mt-3 text-[26px] font-semibold leading-none tracking-[-0.04em] text-ink">{value}</p>
+      {detail && <p className="mt-2 text-[13px] leading-[1.55] text-muted">{detail}</p>}
     </div>
   );
 };
 
 export const InfoRow: FC<{ label: string; value: ReactNode }> = ({ label, value }) => (
-  <div className="flex items-start justify-between gap-4 border-b border-line py-2.5 last:border-0">
-    <dt className="text-[14px] text-muted">{label}</dt>
-    <dd className="max-w-[60%] text-right text-[14px] font-semibold text-ink">{value}</dd>
+  <div className="flex items-start justify-between gap-4 border-b border-line py-3 last:border-0">
+    <dt className="text-[14px] leading-6 text-muted">{label}</dt>
+    <dd className="max-w-[60%] text-right text-[15px] font-semibold leading-6 text-ink">{value}</dd>
   </div>
 );
 
@@ -211,16 +211,16 @@ export const EmptyState: FC<{
   action?: ReactNode;
   scene?: SceneKind;
 }> = ({ icon: Icon, title, detail, action, scene }) => (
-  <div className="rounded-2xl border border-dashed border-line bg-warm/70 px-6 py-10 text-center">
+  <div className="rounded-[1.25rem] border border-dashed border-line bg-warm/70 px-6 py-8 text-center">
     {scene ? (
-      <HealthcareScene kind={scene} className="mx-auto mb-1 w-full max-w-[240px]" />
+      <HealthcareScene kind={scene} className="mx-auto mb-2 w-full max-w-[150px]" />
     ) : (
       <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-mint text-forest shadow-xs">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
     )}
-    <p className="mt-3 text-[14px] font-semibold text-ink">{title}</p>
-    <p className="mx-auto mt-1 max-w-md text-[14px] leading-5 text-muted">{detail}</p>
+    <p className="mt-3 text-[15px] font-semibold text-ink">{title}</p>
+    <p className="mx-auto mt-1.5 max-w-md text-[14px] leading-[1.6] text-muted">{detail}</p>
     {action && <div className="mt-4 flex justify-center">{action}</div>}
   </div>
 );
@@ -341,10 +341,11 @@ export const TrendLine: FC<{
   );
 };
 
-export const ScoreDial: FC<{ value: number | null; label: string; tone?: string }> = ({
+export const ScoreDial: FC<{ value: number | null; label: string; tone?: string; size?: number }> = ({
   value,
   label,
-  tone = '#2f5e4e'
+  tone = '#2f5e4e',
+  size = 116
 }) => {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
@@ -353,7 +354,7 @@ export const ScoreDial: FC<{ value: number | null; label: string; tone?: string 
   const offset = hasValue ? circumference - (clamped / 100) * circumference : circumference;
 
   return (
-    <div className="relative flex h-[116px] w-[116px] shrink-0 items-center justify-center">
+    <div className="relative flex shrink-0 items-center justify-center" style={{ height: size, width: size }}>
       <svg viewBox="0 0 100 100" className="-rotate-90 h-full w-full" aria-hidden="true">
         <circle cx="50" cy="50" r={radius} fill="none" stroke="#e2e7df" strokeWidth="7" />
         <circle
@@ -369,7 +370,9 @@ export const ScoreDial: FC<{ value: number | null; label: string; tone?: string 
         />
       </svg>
       <div className="absolute text-center">
-        <span className="block text-[22px] font-semibold leading-none text-ink">{hasValue ? Math.round(clamped) : '—'}</span>
+        <span className="block font-semibold leading-none text-ink" style={{ fontSize: Math.round(size * 0.2) }}>
+          {hasValue ? Math.round(clamped) : '—'}
+        </span>
         <span className="mt-1 block text-[12px] font-semibold uppercase tracking-[0.08em] text-sage-deep">{label}</span>
       </div>
     </div>

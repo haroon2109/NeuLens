@@ -21,6 +21,7 @@ import { usePatientPortalStore, treatmentTeam } from '../../../store/patientPort
 import { usePatientOverview } from './usePatientOverview';
 import { useLanguageStore } from '../../../services/language/LanguageManager';
 import { getPortalPagesCopy } from '../../../services/language/portalPagesCopy';
+import { isComparableSession } from '../../../services/sessionComparability';
 import { ErrorState, LoadingState, MonitoringResultState } from '../../../components/systemStates';
 import {
   AssessmentStatusPill,
@@ -133,8 +134,8 @@ export const BrainHealthOverviewPage: React.FC = () => {
       />
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <Card className="flex flex-col items-center justify-center text-center">
-          <ScoreDial value={brainHealth?.profileScore ?? baseline?.overallScore ?? null} label={copy.dialLabel} tone="#2f5e4e" />
+        <Card className="flex flex-col items-center justify-center self-start py-8 text-center">
+          <ScoreDial value={brainHealth?.profileScore ?? baseline?.overallScore ?? null} label={copy.dialLabel} tone="#2f5e4e" size={168} />
           <div className="mt-3">
             <Pill tone={status.tone} dot>{status.label}</Pill>
           </div>
@@ -367,7 +368,7 @@ export const LongitudinalTrendsPage: React.FC = () => {
   // Cognitive sessions use a separate composite and mode; they are never merged
   // into the legacy five-part screening trend line.
   const valid = ordered.filter(
-    (item) => !item.taskResponses?.cognitiveSummary && item.taskResponses?.quality?.comparable !== false
+    (item) => !item.taskResponses?.cognitiveSummary && isComparableSession(item)
   );
   const canShowTrend = valid.length >= 3;
 

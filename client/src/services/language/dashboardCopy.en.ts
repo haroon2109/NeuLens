@@ -49,7 +49,7 @@ export const en: DashboardCopy = {
   timeline: {
     title: 'Brain health timeline (summary)',
     detail: 'Recent recorded sessions over time.',
-    open: 'Open timeline',
+    open: 'Open brain health',
     itemNote: 'Personal comparison over time · clinician review context',
     emptyTitle: 'No timeline yet',
     emptyDetail: 'Completed screenings will appear on your brain health timeline.',

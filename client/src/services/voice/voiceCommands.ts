@@ -35,10 +35,6 @@ const ROUTES: Array<PhraseSet & { route: string }> = [
     phrases: ['brain health', 'my brain health', 'brain score', 'my brain score', 'صحة الدماغ', 'صحة المخ', 'درجة الدماغ', 'مؤشر الدماغ']
   },
   {
-    route: '/patient/timeline',
-    phrases: ['timeline', 'my timeline', 'line of time', 'الخط الزمني', 'الجدول الزمني', 'مسار صحتي']
-  },
-  {
     route: '/patient/assessment/intro',
     phrases: ['start assessment', 'take assessment', 'begin assessment', 'new assessment', 'start the assessment', 'ابدأ التقييم', 'ابدأ الاختبار', 'قيّم نفسي', 'ابدأ الفحص']
   },
@@ -105,10 +101,6 @@ const ROUTES: Array<PhraseSet & { route: string }> = [
   {
     route: '/patient/care-plan',
     phrases: ['care plan', 'my care plan', 'خطة الرعاية', 'خطة العلاج', 'خطة رعايتي']
-  },
-  {
-    route: '/patient/notifications',
-    phrases: ['notifications', 'messages', 'alerts', 'التنبيهات', 'الإشعارات', 'الرسائل']
   },
   {
     route: '/patient/profile',

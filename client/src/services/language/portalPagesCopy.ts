@@ -221,6 +221,8 @@ export interface PortalPagesCopy {
       genomicNote: string;
       previousTitle: string;
       noPrevious: string;
+      /** Label for the patient's explicit "No previous assessments" answer. */
+      noPreviousReported: string;
       selfReported: string;
       previousNote: string;
       dataLabels: string;

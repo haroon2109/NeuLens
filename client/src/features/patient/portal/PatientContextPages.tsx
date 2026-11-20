@@ -664,9 +664,9 @@ export const ClinicalFamilyHistoryPage: React.FC = () => {
             <SectionTitle title={copy.previousTitle} />
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs text-muted">
-                {!health.previousAssessments || health.previousAssessments === 'No previous assessments'
-                  ? copy.noPrevious
-                  : health.previousAssessments}
+                {health.previousAssessments === 'No previous assessments'
+                  ? copy.noPreviousReported
+                  : health.previousAssessments || copy.noPrevious}
               </span>
               <Pill tone="slate">{copy.selfReported}</Pill>
             </div>

@@ -138,7 +138,7 @@ const SidebarContent: React.FC<{
       {navGroups.map((group) => (
         <div key={group.label} className="mb-4">
           {!collapsed && (
-            <p className="px-3 pb-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+            <p className="px-3 pb-2 pt-1 text-[11.5px] font-bold uppercase leading-5 tracking-[0.14em] text-sage-deep">
               {group.label}
             </p>
           )}
@@ -157,11 +157,11 @@ const SidebarContent: React.FC<{
                     /* Without this a screen reader cannot tell which section is
                        open; the colour change is invisible to it. */
                     aria-current={isActive ? 'page' : undefined}
-                    className={`flex items-center rounded-lg text-[14px] font-medium transition-colors ${
-                      collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2'
+                    className={`flex items-center rounded-xl text-[14.5px] leading-5 font-medium transition-colors ${
+                      collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2.5'
                     } ${
                       isActive
-                        ? 'bg-mint font-semibold text-forest'
+                        ? 'bg-mint font-semibold text-forest shadow-[inset_2.5px_0_0_rgb(var(--nl-forest-rgb))]'
                         : 'text-body hover:bg-warm hover:text-ink'
                     }`}
                   >
@@ -378,7 +378,7 @@ export const DoctorLayout: React.FC = () => {
       {/* Sidebar — desktop */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 hidden border-r border-line bg-white transition-[width] duration-200 lg:block ${
-          isCollapsed ? 'w-[76px]' : 'w-[272px]'
+          isCollapsed ? 'w-[76px]' : 'w-[280px]'
         }`}
       >
         <SidebarContent
@@ -408,7 +408,7 @@ export const DoctorLayout: React.FC = () => {
         </div>
       )}
 
-      <div className={`transition-[padding] duration-200 ${isCollapsed ? 'lg:pl-[76px]' : 'lg:pl-[272px]'}`}>
+      <div className={`flex min-h-screen flex-col transition-[padding] duration-200 ${isCollapsed ? 'lg:pl-[76px]' : 'lg:pl-[280px]'}`}>
         {/* Top header */}
         <header className="sticky top-0 z-30 border-b border-line/80 bg-white/95 backdrop-blur">
           <div className="flex min-h-[68px] items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
@@ -423,11 +423,11 @@ export const DoctorLayout: React.FC = () => {
             </button>
 
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-deep">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
                 <Stethoscope className="h-3 w-3" aria-hidden="true" />
                 Neurology &amp; Cognitive Health
               </p>
-              <p className="truncate text-[14px] font-semibold text-ink">{activeLabel}</p>
+              <p className="truncate text-[15px] font-semibold leading-tight text-ink">{activeLabel}</p>
             </div>
 
             <form onSubmit={handleSearchSubmit} className="hidden items-center md:flex" role="search">
@@ -439,7 +439,7 @@ export const DoctorLayout: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   aria-label="Search patients"
-                  className="h-9 w-56 rounded-lg border border-line bg-warm/60 pl-8 pr-3 text-[14px] text-ink placeholder:text-muted transition focus:border-forest focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest/15"
+                  className="h-10 w-60 rounded-xl border border-line bg-warm/60 pl-9 pr-3 text-[14px] text-ink placeholder:text-muted transition focus:border-forest focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest/15"
                 />
               </div>
             </form>
@@ -465,7 +465,7 @@ export const DoctorLayout: React.FC = () => {
         <main
           id="doctor-main"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[1360px] px-4 py-6 focus:outline-none sm:px-6 sm:py-8 lg:px-8"
+          className="mx-auto w-full max-w-[1360px] flex-1 px-4 py-7 focus:outline-none sm:px-6 sm:py-9 lg:px-8"
         >
           <Outlet />
         </main>

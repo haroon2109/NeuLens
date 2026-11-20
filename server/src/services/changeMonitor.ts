@@ -1,5 +1,6 @@
 import type { AssessmentRecord } from '../models/dataStore';
 import { isInterpretableScore } from './reviewState';
+import { deriveSessionQuality } from './sessionQuality';
 
 export const FUNCTIONAL_ACTIVITY_IDS = [
   'appointments',
@@ -197,10 +198,13 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
   const currentCheckIn = checkIns[0];
   const previousCheckIn = checkIns[1];
   const currentCheckInIsLatest = currentCheckIn && currentCheckIn.assessment.id === latest?.id;
+  // A session also has to carry comparable measurement quality: a scored session
+  // whose recording failed the quality gate must not be compared with a good one.
   const comparableHistory = currentCheckInIsLatest
     ? checkIns.slice(1).filter(
         entry => areComparable(currentCheckIn.checkIn, entry.checkIn)
           && isInterpretableScore(entry.assessment.overallScore)
+          && deriveSessionQuality(entry.assessment.taskResponses).comparable
       )
     : [];
   const baselineAssessments = comparableHistory.slice(0, 3);
@@ -220,7 +224,14 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
   const previousComparableScore = previousComparable && isInterpretableScore(previousComparable.overallScore)
     ? previousComparable.overallScore
     : null;
-  const cognitiveChange = latestScoredScore !== null && previousComparableScore !== null
+  // The latest session can only take part in a comparison if it passed the same
+  // quality gate as the sessions it would be compared against.
+  const currentComparable = Boolean(
+    currentCheckInIsLatest && latestScoredScore !== null && latest
+      && deriveSessionQuality(latest.taskResponses).comparable
+  );
+
+  const cognitiveChange = currentComparable && latestScoredScore !== null && previousComparableScore !== null
     ? Number((latestScoredScore - previousComparableScore).toFixed(1))
     : null;
 
@@ -235,7 +246,7 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
   // comparable scores contribute, because a pair spanning a year of genuine
   // change would inflate the error estimate as much as a pair spanning a week.
   const seriesScores: number[] = [];
-  if (currentCheckInIsLatest && latestScoredScore !== null) seriesScores.push(latestScoredScore);
+  if (currentComparable && latestScoredScore !== null) seriesScores.push(latestScoredScore);
   for (const entry of comparableHistory) {
     if (isInterpretableScore(entry.assessment.overallScore)) {
       seriesScores.push(entry.assessment.overallScore);
@@ -250,7 +261,7 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
     reliability.reliableChangeThreshold !== null &&
     referenceScore !== null &&
     latestScoredScore !== null &&
-    currentCheckInIsLatest &&
+    currentComparable &&
     referenceScore - latestScoredScore >= reliability.reliableChangeThreshold
   );
   const worsenedActivityIds: FunctionalActivityId[] = [];
@@ -295,8 +306,8 @@ export function summarizePatientChanges(assessments: AssessmentRecord[]): Patien
       change: cognitiveChange,
       referenceScore,
       baselineRange,
-      // Only scored sessions count as comparable assessments.
-      comparableAssessments: comparableHistory.length + (currentCheckInIsLatest && latestScoredScore !== null ? 1 : 0),
+      // Only scored sessions that passed the quality gate count as comparable.
+      comparableAssessments: comparableHistory.length + (currentComparable ? 1 : 0),
       declineBeyondReliableChange,
       reliability
     },

@@ -189,7 +189,6 @@ export const PatientDashboardPage: React.FC = () => {
               </div>
             ) : (
               <EmptyState
-                scene="emptyAppointments"
                 icon={CalendarDays}
                 title={copy.followUp.emptyTitle}
                 detail={copy.followUp.emptyDetail}
@@ -207,7 +206,7 @@ export const PatientDashboardPage: React.FC = () => {
               title={copy.timeline.title}
               detail={copy.timeline.detail}
               action={
-                <Link to="/patient/timeline" className="text-[13px] font-bold text-forest hover:underline">
+                <Link to="/patient/brain-health" className="text-[13px] font-bold text-forest hover:underline">
                   {copy.timeline.open}
                 </Link>
               }
@@ -226,7 +225,6 @@ export const PatientDashboardPage: React.FC = () => {
               </ol>
             ) : (
               <EmptyState
-                scene="emptyAssessment"
                 icon={TrendingUp}
                 title={copy.timeline.emptyTitle}
                 detail={copy.timeline.emptyDetail}
@@ -327,7 +325,6 @@ export const PatientDashboardPage: React.FC = () => {
             </div>
           ) : (
             <EmptyState
-              scene="emptyAssessment"
               icon={Brain}
               title={copy.baseline.emptyTitle}
               detail={copy.baseline.emptyDetail}
@@ -369,7 +366,7 @@ export const PatientDashboardPage: React.FC = () => {
               ))}
             </ol>
           ) : (
-            <EmptyState scene="emptyAssessment" icon={ClipboardList} title={copy.recent.emptyTitle} detail={copy.recent.emptyDetail} />
+            <EmptyState icon={ClipboardList} title={copy.recent.emptyTitle} detail={copy.recent.emptyDetail} />
           )}
         </Card>
       </div>
@@ -438,7 +435,9 @@ export const PatientDashboardPage: React.FC = () => {
           </Link>
         </Card>
 
-        <Card className="rounded-2xl border border-line bg-forest text-white shadow-[0_24px_70px_-48px_rgba(27,51,43,0.28),0_2px_8px_rgba(27,51,43,0.035)]">
+        {/* Deliberately not <Card>: Card's own bg-white would win over bg-forest
+            here and render this panel's white text invisibly on white. */}
+        <section className="min-w-0 rounded-[1.25rem] bg-forest p-5 text-white shadow-[0_24px_70px_-48px_rgba(27,51,43,0.28),0_2px_8px_rgba(27,51,43,0.035)] sm:p-6">
           <Pill tone="mint">{copy.disclaimer.pill}</Pill>
           <h2 className="mt-3 text-[16px] font-semibold tracking-[-0.02em] text-white">{copy.disclaimer.title}</h2>
           <p className="mt-2 text-[13px] leading-5 text-white/80">{copy.disclaimer.body}</p>
@@ -449,7 +448,7 @@ export const PatientDashboardPage: React.FC = () => {
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             {copy.disclaimer.link}
           </Link>
-        </Card>
+        </section>
       </div>
       <BrainHealthPathway
         pathway={pathway}

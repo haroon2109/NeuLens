@@ -72,6 +72,7 @@ describe('Acoustic perturbation stays out of cognitive evidence', () => {
         overallScore: 80,
         voiceMetrics: { speechRate: 4.2, pauseScore: 70, jitter: 0.9, shimmer: 9 },
         taskResponses: {
+          quality: { comparable: true, completion: 'FULL', interruptions: 0, reasons: [] },
           functionalCheckIn: {
             completedAt: '2026-02-01T00:00:00.000Z',
             activities: { appointments: 0, medication: 1, finances: 0, household: 0 },
@@ -86,6 +87,7 @@ describe('Acoustic perturbation stays out of cognitive evidence', () => {
         overallScore: 80,
         voiceMetrics: { speechRate: 4.2, pauseScore: 70, jitter: 0.1, shimmer: 0.5 },
         taskResponses: {
+          quality: { comparable: true, completion: 'FULL', interruptions: 0, reasons: [] },
           functionalCheckIn: {
             completedAt: '2026-01-01T00:00:00.000Z',
             activities: { appointments: 0, medication: 1, finances: 0, household: 0 },

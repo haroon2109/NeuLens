@@ -51,6 +51,52 @@ import { BrainHealthPathway } from '../../components/BrainHealthPathway';
 import { PianoSequenceTask } from './PianoSequenceTask';
 import { AdaptivePracticeGames } from './AdaptivePracticeGames';
 
+/**
+ * Activities that feed the composite score. A session missing any of them is a
+ * partial session and cannot be compared with a complete one.
+ */
+const COMPOSITE_TASKS = ['game1', 'game2', 'game4', 'game5', 'pianoSequence'] as const;
+
+/**
+ * The server gates within-person change interpretation on `taskResponses.quality`.
+ * This session measures ocular, facial and acoustic quality, so the gate has to be
+ * reported from those measurements: without it every session is treated as
+ * unverified, no baseline can be established and the longitudinal record never
+ * advances.
+ *
+ * Comparability is conservative — a session is comparable only when every composite
+ * activity produced a score and every recorded signal was good enough to use.
+ */
+const buildSessionQuality = (rawResponses: Record<string, any>) => {
+  const reasons: string[] = [];
+  const scored = COMPOSITE_TASKS.filter((task) => typeof rawResponses?.[task]?.score === 'number');
+  // 'FULL' / 'PARTIAL' is the vocabulary the report and clinician views already read.
+  const completion = scored.length === COMPOSITE_TASKS.length ? 'FULL' : 'PARTIAL';
+  if (completion === 'PARTIAL') reasons.push('INCOMPLETE_SESSION');
+
+  // Absent signal quality is not good signal quality: only an explicit pass counts.
+  const ocular = rawResponses?.game1?.ocularSummary?.quality;
+  if (ocular?.comparable !== true) reasons.push('OCULAR_QUALITY_INSUFFICIENT');
+
+  const facial = rawResponses?.game4?.behaviourSummary?.quality;
+  if (facial?.comparable !== true) reasons.push('FACIAL_QUALITY_INSUFFICIENT');
+
+  // Voice is supplementary, so it only withholds comparability when it was
+  // recorded and was too poor to use.
+  const voice = rawResponses?.game3?.voiceSummary?.quality;
+  if (voice?.comparable === false || voice?.level === 'poor') reasons.push('VOICE_QUALITY_INSUFFICIENT');
+
+  return {
+    comparable: reasons.length === 0,
+    completion,
+    // Not measured in the browser; recorded as 0 so the gate reads the same value
+    // the server would otherwise assume for a missing field, without inventing one.
+    interruptions: 0,
+    reasons,
+    recordedAt: new Date().toISOString()
+  };
+};
+
 export interface ScreeningPageProps {
   patientMode?: boolean;
   targetPatientId?: string;
@@ -167,7 +213,12 @@ export const ScreeningPage: React.FC<ScreeningPageProps> = ({ patientMode = fals
         shimmer: metrics?.speech.shimmer ?? null,
         symmetry: metrics?.face.stability ?? null,
         tremorScore: smileIntensity != null ? 100 - smileIntensity : null,
-        taskResponses: state.rawResponses,
+        // Comparability metadata travels with the session so the server can gate
+        // change interpretation on what was actually measured.
+        taskResponses: {
+          ...state.rawResponses,
+          quality: buildSessionQuality(state.rawResponses)
+        },
         recommendation: 'Hospital cognitive screening completed. Attending physician review pending.'
       });
 

@@ -4,7 +4,6 @@ import { RouteAnnouncer } from '../../../components/a11y/RouteAnnouncer';
 import { ConfirmDialog } from '../../../components/systemStates';
 import {
   Activity,
-  Bell,
   Brain,
   CalendarDays,
   Check,
@@ -21,14 +20,11 @@ import {
   Menu,
   Mic,
   MicOff,
-  Moon,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  Stethoscope,
   TrendingUp,
   UserRound,
-  Users,
   X,
   type LucideIcon
 } from 'lucide-react';
@@ -49,51 +45,43 @@ import { deploymentConfig } from '../../../config/deployment';
 type NavItem = { path: string; label: string; icon: LucideIcon; end?: boolean };
 type NavGroup = { label: string; items: NavItem[] };
 
+/**
+ * A short, task-focused menu. The portal used to expose 28 destinations, several
+ * of which were three different views of the same longitudinal data, or screens a
+ * patient only needs at a specific moment (the daily check-in, the practice task
+ * library). Those routes still exist and are linked from the pages that use them —
+ * they are simply not part of the everyday menu.
+ */
 const navGroups: NavGroup[] = [
   {
     label: 'Home',
     items: [
       { path: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { path: '/patient/brain-health', label: 'Brain health', icon: Brain },
-      { path: '/patient/timeline', label: 'Brain Health Timeline', icon: TrendingUp }
+      { path: '/patient/history', label: 'History', icon: ClipboardList }
     ]
   },
   {
     label: 'Assessment',
     items: [
       { path: '/patient/assessment/intro', label: 'Start assessment', icon: Sparkles },
-      { path: '/patient/cognitive', label: 'Cognitive assessment', icon: Brain, end: true },
-      { path: '/patient/cognitive/library', label: 'Task library', icon: ClipboardList },
-      { path: '/patient/history', label: 'History', icon: ClipboardList },
-      { path: '/patient/daily-function', label: 'Daily Function Questionnaire', icon: ClipboardList },
-      { path: '/patient/documents', label: 'Reports & documents', icon: FileText }
+      { path: '/patient/daily-function', label: 'Daily check-in', icon: ClipboardList }
     ]
   },
   {
     label: 'Monitoring',
     items: [
       { path: '/patient/trends', label: 'Longitudinal trends', icon: TrendingUp },
-      { path: '/patient/change-detection', label: 'Change detection', icon: Activity }
-    ]
-  },
-  {
-    label: 'Health context',
-    items: [
-      { path: '/patient/health-profile', label: 'Health Profile & Context', icon: HeartPulse },
-      { path: '/patient/context', label: 'Context overview', icon: HeartPulse, end: true },
-      { path: '/patient/context/assessment-conditions', label: 'Assessment conditions', icon: Activity },
-      { path: '/patient/context/sleep', label: 'Sleep & lifestyle', icon: Moon },
-      { path: '/patient/context/wellbeing', label: 'Mental wellbeing', icon: Users },
-      { path: '/patient/context/clinical', label: 'Clinical & family', icon: Stethoscope }
+      { path: '/patient/change-detection', label: 'What changed', icon: Activity },
+      { path: '/patient/health-profile', label: 'Health profile & context', icon: HeartPulse },
+      { path: '/patient/documents', label: 'Reports & documents', icon: FileText }
     ]
   },
   {
     label: 'Care',
     items: [
-      { path: '/patient/prevention-plan', label: 'Personalized Prevention Plan', icon: ShieldCheck },
-      { path: '/patient/appointments', label: 'Follow-up & Appointments', icon: CalendarDays },
       { path: '/patient/care-plan', label: 'My care plan', icon: ShieldCheck },
-      { path: '/patient/notifications', label: 'Notifications', icon: Bell }
+      { path: '/patient/appointments', label: 'Follow-up & appointments', icon: CalendarDays }
     ]
   },
   {
@@ -221,7 +209,6 @@ const VoiceHandsFreeToggle: React.FC = () => {
 const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const { notifications } = usePatientPortalStore();
   const { currentLanguage } = useLanguageStore();
   const pt = getPortalTranslation(currentLanguage);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
@@ -248,9 +235,9 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
       </Link>
 
       {/* User card — mint surface, matching NeuLens identity */}
-      <div className="mx-4 mb-4 rounded-xl border border-line p-3 bg-mint">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[14px] font-bold text-forest shadow-xs">
+      <div className="mx-4 mb-5 rounded-2xl border border-line p-3.5 bg-mint/70">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[14px] font-bold text-forest shadow-xs">
             {initials}
           </span>
           <span className="min-w-0">
@@ -268,7 +255,7 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
       <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-4" aria-label={pt.shell.navLabel}>
         {navGroups.map((group) => (
           <div key={group.label} className="mb-4">
-            <p className="px-3 pb-1.5 text-[12px] font-bold uppercase tracking-[0.14em] text-sage-deep">
+            <p className="px-3 pb-2 pt-1 text-[11.5px] font-bold uppercase leading-5 tracking-[0.14em] text-sage-deep">
               {pt.nav.groups[group.label] || group.label}
             </p>
             <ul className="space-y-0.5">
@@ -279,17 +266,14 @@ const SidebarContent: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) =
                     end={end}
                     onClick={onNavigate}
                     className={({ isActive }) =>
-                      `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors ${isActive
-                        ? 'bg-mint text-forest font-semibold'
-                        : 'text-body hover:bg-white/60 hover:text-ink'
+                      `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14.5px] leading-5 font-medium transition-colors ${isActive
+                        ? 'bg-mint text-forest font-semibold shadow-[inset_2.5px_0_0_rgb(var(--nl-forest-rgb))]'
+                        : 'text-body hover:bg-white hover:text-ink'
                       }`
                     }
                   >
                     <Icon className="h-4 w-4 stroke-[1.8]" aria-hidden="true" />
                     <span className="flex-1">{pt.nav.items[path] || label}</span>
-                    {path === '/patient/notifications' && notifications.some((item) => !item.read) && (
-                      <span className="h-2 w-2 rounded-full bg-forest shadow-[0_0_6px_rgba(47,94,78,0.5)]" aria-label={pt.shell.unreadNotification} />
-                    )}
                   </NavLink>
                 </li>
               ))}
@@ -331,8 +315,7 @@ export const PatientPortalLayout: React.FC = () => {
   const { user } = useAuthStore();
   const { currentLanguage } = useLanguageStore();
   const pt = getPortalTranslation(currentLanguage);
-  const { accessibility, notifications, setAppointments } = usePatientPortalStore();
-  const unread = notifications.filter((item) => !item.read).length;
+  const { accessibility, setAppointments } = usePatientPortalStore();
 
   // Appointments live on the server; the store copy is a display cache.
   useEffect(() => {
@@ -408,7 +391,7 @@ export const PatientPortalLayout: React.FC = () => {
       <RouteAnnouncer />
 
       {/* Sidebar — desktop */}
-      <aside className={`fixed inset-y-0 start-0 z-40 hidden border-e border-line bg-white lg:block transition-all duration-300 ${sidebarCollapsed ? 'w-[64px]' : 'w-[258px]'}`}>
+      <aside className={`fixed inset-y-0 start-0 z-40 hidden border-e border-line bg-white lg:block transition-all duration-300 ${sidebarCollapsed ? 'w-[68px]' : 'w-[272px]'}`}>
         {/* Collapse / expand toggle */}
         <button
           type="button"
@@ -459,9 +442,9 @@ export const PatientPortalLayout: React.FC = () => {
       )}
 
       {/* Top layer: header + main + footer */}
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ps-[64px]' : 'lg:ps-[258px]'}`}>
+      <div className={`flex min-h-screen flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:ps-[68px]' : 'lg:ps-[272px]'}`}>
         <header className="sticky top-0 z-30 border-b border-line/80 bg-white/95 backdrop-blur">
-          <div className="flex h-[64px] items-center gap-3 px-4 sm:px-6">
+          <div className="flex h-[68px] items-center gap-3 px-4 sm:px-6">
             {/* Mobile menu toggle */}
             <button
               type="button"
@@ -475,10 +458,10 @@ export const PatientPortalLayout: React.FC = () => {
 
             {/* Breadcrumb-ish label */}
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-deep">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sage-deep">
                 {pt.patientPortal}
               </p>
-              <p className="truncate text-[14px] font-semibold text-ink">{activeLabel}</p>
+              <p className="truncate text-[15px] font-semibold leading-tight text-ink">{activeLabel}</p>
             </div>
 
             {/* Hands-free voice listening */}
@@ -486,20 +469,6 @@ export const PatientPortalLayout: React.FC = () => {
 
             {/* Voice-guidance language */}
             <VoiceLanguageSwitcher />
-
-            {/* Notifications */}
-            <Link
-              to="/patient/notifications"
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-line text-body transition-colors hover:bg-mint"
-              aria-label={`${pt.notifications}${unread ? `, ${unread} ${pt.notificationsUnread}` : ''}`}
-            >
-              <Bell className="h-4 w-4" aria-hidden="true" />
-              {unread > 0 && (
-                <span className="absolute -end-1 -top-1 flex h-4 min-w-[18px] items-center justify-center rounded-full bg-forest px-1 text-[12px] font-bold text-white">
-                  {unread > 9 ? '9+' : unread}
-                </span>
-              )}
-            </Link>
 
             {/* Profile menu */}
             <Link
@@ -520,7 +489,7 @@ export const PatientPortalLayout: React.FC = () => {
         <main
           id="patient-main"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[1180px] px-4 py-6 focus:outline-none sm:px-6 sm:py-8"
+          className="mx-auto w-full max-w-[1240px] flex-1 px-4 py-7 focus:outline-none sm:px-6 sm:py-9 lg:px-8"
         >
           <Outlet />
         </main>
@@ -530,7 +499,7 @@ export const PatientPortalLayout: React.FC = () => {
 
         {/* Footer */}
         <footer className="border-t border-line bg-white">
-          <div className="mx-auto flex max-w-[1180px] flex-col gap-1.5 px-4 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="mx-auto flex max-w-[1240px] flex-col gap-1.5 px-4 py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
             <span>{deploymentConfig.isConfigured ? `${deploymentConfig.clinicName} · ` : ''}{pt.footerLine1}</span>
             <span>{pt.footerLine2}</span>
           </div>

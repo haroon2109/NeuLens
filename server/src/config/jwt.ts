@@ -17,8 +17,9 @@ export const JWT_MIN_SECRET_LENGTH = MIN_SECRET_LENGTH;
 
 /** Only ever used outside production. When NODE_ENV=production this throws on
  * missing/short secrets so no bearer token can ever be minted with a public or
- * default value. */
+ * default value, unless DEMO_ACCESS_ENABLED=true is explicitly set for jury review. */
 const isProduction = () => process.env.NODE_ENV === 'production';
+const demoExplicitlyOptedIn = () => (process.env.DEMO_ACCESS_ENABLED || '').toLowerCase().trim() === 'true';
 
 /**
  * Resolves the secret at call time (not import time) so a value loaded later in
@@ -28,7 +29,7 @@ export function getJwtSecret(): string {
   const configured = (process.env.JWT_SECRET || '').trim();
 
   if (!configured) {
-    if (isProduction()) {
+    if (isProduction() && !demoExplicitlyOptedIn()) {
       throw new Error(
         'JWT_SECRET is not configured. Refusing to issue or accept session tokens in production.'
       );
@@ -37,7 +38,7 @@ export function getJwtSecret(): string {
   }
 
   if (configured.length < MIN_SECRET_LENGTH) {
-    if (isProduction()) {
+    if (isProduction() && !demoExplicitlyOptedIn()) {
       throw new Error(
         `JWT_SECRET must be at least ${MIN_SECRET_LENGTH} characters in production; the configured value is too short to resist guessing.`
       );
@@ -62,9 +63,17 @@ export function getJwtSecret(): string {
 export function verifyJwtSecret(): void {
   const configured = (process.env.JWT_SECRET || '').trim();
   if (!configured) {
+    if (demoExplicitlyOptedIn()) {
+      console.warn('[Neulens Warning]: JWT_SECRET is not configured. Using fallback secret because DEMO_ACCESS_ENABLED=true.');
+      return;
+    }
     throw new Error('JWT_SECRET is not configured. Refusing to start with an unconfigured secret in production.');
   }
   if (configured.length < MIN_SECRET_LENGTH) {
+    if (demoExplicitlyOptedIn()) {
+      console.warn(`[Neulens Warning]: JWT_SECRET is shorter than ${MIN_SECRET_LENGTH} characters. Permitted because DEMO_ACCESS_ENABLED=true.`);
+      return;
+    }
     throw new Error(`JWT_SECRET must be at least ${MIN_SECRET_LENGTH} characters in production; the configured value is too short to resist guessing.`);
   }
 }

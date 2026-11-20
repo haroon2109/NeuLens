@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import type { LogEntry, LogLevel } from '../services/logger';
 import { logger, requestIp } from '../services/logger';
+import { demoAccessEnabled } from '../services/demoRecords';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -62,17 +63,17 @@ export const errorHandler = (
       status: statusCode,
     },
   };
-  if (!isProduction) {
+  if (!isProduction || demoAccessEnabled()) {
     ctx['stack'] = err.stack;
   }
   logger(ctx);
-  
-
+  console.error(`[Neulens Error Handler Caught]: status=${statusCode} path=${req.originalUrl ?? req.url}`, err);
 
   // Never echo internal failure details (driver messages, paths, stack hints)
-  // to clients in production. 4xx messages are intentional and safe to return.
+  // to clients in strict production. During jury review / demo access, preserve
+  // diagnostic details so failures are actionable.
   const isServerError = statusCode >= 500;
-  const clientMessage = isProduction && isServerError ? 'Internal server error' : message;
+  const clientMessage = isProduction && isServerError && !demoAccessEnabled() ? 'Internal server error' : message;
 
   res.status(statusCode).json({
     error: clientMessage,

@@ -17,6 +17,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { HealthcareScene } from '../../../components/illustrations/HealthcareScene';
+import { isComparableSession } from '../../../services/sessionComparability';
 import { MotionReveal } from '../../../components/motion/Reveal';
 import type { DoctorAssessment } from './useDoctorPatient';
 import {
@@ -218,7 +219,7 @@ export const DoctorAssessmentReviewPage: React.FC = () => {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricTile label="Comparable sessions" value={String(changeSummary?.cognitive.comparableAssessments ?? ordered.filter((item) => item.taskResponses?.quality?.comparable !== false).length)} detail="Used for baseline comparison" />
+            <MetricTile label="Comparable sessions" value={String(changeSummary?.cognitive.comparableAssessments ?? ordered.filter((item) => isComparableSession(item)).length)} detail="Used for baseline comparison" />
             <MetricTile label="Observed baseline" value={changeSummary?.cognitive.baselineRange ? `${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Not yet available'} detail="Within-person observed range" />
             <MetricTile label="Previous score" value={previous ? formatScore(previous.overallScore) : 'No prior session'} detail={previous ? formatDate(previous.date) : 'Establishing history'} />
             <MetricTile label="Overall change cue" value={changeSummary?.status === 'REVIEW' ? 'Review suggested' : changeSummary?.status === 'NO_CHANGE' ? 'No current cue' : 'Insufficient data'} detail="Not a diagnostic conclusion" />
@@ -407,7 +408,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
     const range = changeSummary?.cognitive.baselineRange;
     if (!range) return 0;
     return chronological.slice(-3).filter((assessment) => {
-      if (assessment.taskResponses?.quality?.comparable === false) return false;
+      if (!isComparableSession(assessment)) return false;
       const score = getNumeric(assessment.overallScore);
       return score !== null && (score < range.minimum || score > range.maximum);
     }).length;
@@ -446,7 +447,7 @@ export const DoctorLongitudinalPage: React.FC = () => {
           </Notice>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricTile label="Sessions on file" value={String(assessments.length)} detail={`${chronological.filter((item) => item.taskResponses?.quality?.comparable !== false).length} comparable`} />
+            <MetricTile label="Sessions on file" value={String(assessments.length)} detail={`${chronological.filter((item) => isComparableSession(item)).length} comparable`} />
             <MetricTile label="Baseline status" value={changeSummary?.cognitive.baselineRange ? 'Established' : 'Building'} detail={changeSummary?.cognitive.baselineRange ? `Observed ${changeSummary.cognitive.baselineRange.minimum}–${changeSummary.cognitive.baselineRange.maximum}` : 'Needs more valid sessions'} />
             <MetricTile label="Latest overall" value={formatScore(chronological[chronological.length - 1].overallScore)} detail={formatDate(chronological[chronological.length - 1].date)} />
             <MetricTile label="Persistence" value={changeSummary?.status === 'REVIEW' ? `${sessionsOutsideObservedRange} of last 3` : 'No current cue'} detail="Sessions outside the observed spread (descriptive)" />

@@ -270,6 +270,7 @@ export const enPortalPages: PortalPagesCopy = {
         'Genomic context is shown to a qualified clinician for discussion only. It is never used to score this screening or to infer a diagnosis.',
       previousTitle: 'Previous cognitive assessments',
       noPrevious: 'Not recorded',
+      noPreviousReported: 'No previous assessments',
       selfReported: 'Self-reported',
       previousNote:
         'Previous assessment details should be confirmed with the clinician or service that performed them.',

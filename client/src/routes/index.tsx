@@ -66,7 +66,6 @@ const ChangeDetectionPage = lazyPage(() => import('../features/patient/portal/Pa
 
 const PatientHealthProfilePage = lazyPage(() => import('../features/patient/portal/PatientRequestedScreens'), 'PatientHealthProfilePage');
 const DailyFunctionQuestionnairePage = lazyPage(() => import('../features/patient/portal/PatientRequestedScreens'), 'DailyFunctionQuestionnairePage');
-const BrainHealthTimelinePage = lazyPage(() => import('../features/patient/portal/PatientRequestedScreens'), 'BrainHealthTimelinePage');
 const PersonalizedPreventionPlanPage = lazyPage(() => import('../features/patient/portal/PatientRequestedScreens'), 'PersonalizedPreventionPlanPage');
 
 const HealthContextOverviewPage = lazyPage(() => import('../features/patient/portal/PatientContextPages'), 'HealthContextOverviewPage');
@@ -76,7 +75,6 @@ const ClinicalFamilyHistoryPage = lazyPage(() => import('../features/patient/por
 
 const AppointmentsPage = lazyPage(() => import('../features/patient/portal/PatientCarePages'), 'AppointmentsPage');
 const CarePlanPage = lazyPage(() => import('../features/patient/portal/PatientCarePages'), 'CarePlanPage');
-const NotificationsPage = lazyPage(() => import('../features/patient/portal/PatientCarePages'), 'NotificationsPage');
 const DocumentsPage = lazyPage(() => import('../features/patient/portal/PatientCarePages'), 'DocumentsPage');
 
 const MyProfilePage = lazyPage(() => import('../features/patient/portal/PatientAccountPages'), 'MyProfilePage');
@@ -298,7 +296,6 @@ export const router = createBrowserRouter([
           { path: 'history', element: <AssessmentHistoryPage /> },
           { path: 'trends', element: <LongitudinalTrendsPage /> },
           { path: 'change-detection', element: <ChangeDetectionPage /> },
-          { path: 'timeline', element: <BrainHealthTimelinePage /> },
           { path: 'daily-function', element: <DailyFunctionQuestionnairePage /> },
           { path: 'health-profile', element: <PatientHealthProfilePage /> },
           { path: 'prevention-plan', element: <PersonalizedPreventionPlanPage /> },
@@ -310,7 +307,6 @@ export const router = createBrowserRouter([
 
           { path: 'appointments', element: <AppointmentsPage /> },
           { path: 'care-plan', element: <CarePlanPage /> },
-          { path: 'notifications', element: <NotificationsPage /> },
           { path: 'documents', element: <DocumentsPage /> },
 
           { path: 'profile', element: <MyProfilePage /> },

@@ -17,6 +17,7 @@ import {
   Users
 } from 'lucide-react';
 import { doctorApi } from '../../../services/portalApi';
+import { isComparableSession } from '../../../services/sessionComparability';
 import { useAuthStore } from '../../../store/authStore';
 import { useDoctorPortalStore } from '../../../store/doctorPortalStore';
 import { useDoctorPatient } from './useDoctorPatient';
@@ -572,7 +573,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
   const nextAppointment = appointments
     .filter((appointment) => appointment.patientId === patientKey && appointment.status === 'UPCOMING')
     .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))[0];
-  const comparables = sortedAssessments.filter((assessment) => assessment.taskResponses?.quality?.comparable !== false);
+  const comparables = sortedAssessments.filter((assessment) => isComparableSession(assessment));
   const baselineStatus =
     comparables.length >= 3 ? 'Established' : comparables.length > 0 ? `Building · ${comparables.length} of 3` : 'Not established';
   const acknowledgement = changeAcknowledgements.find((item) => item.patientId === patientKey);
@@ -728,7 +729,7 @@ export const DoctorPatientOverviewPage: React.FC = () => {
                         </div>
                       </div>
                       <p className="mt-0.5 text-xs text-muted">
-                        {assessment.assessmentType || 'Full screening'} · {assessment.taskResponses?.quality?.comparable === false ? 'Limited comparability' : 'Comparable'}
+                        {assessment.assessmentType || 'Full screening'} · {isComparableSession(assessment) ? 'Comparable' : 'Limited comparability'}
                       </p>
                     </div>
                   </li>

@@ -195,6 +195,7 @@ export class PatientController {
         assignedAssessment
       });
     } catch (err) {
+      console.error('[Patient Login Error]:', err);
       next(err);
     }
   }

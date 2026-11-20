@@ -24,6 +24,9 @@ const createAssessment = (
   reviewStatus: 'PENDING_REVIEW',
   taskResponses: activities
     ? {
+        // These fixtures model complete screenings, so they carry the quality
+        // metadata the browser now reports. Without it a session is not comparable.
+        quality: { comparable: true, completion: 'FULL', interruptions: 0, reasons: [] },
         functionalCheckIn: {
           completedAt: date,
           activities,

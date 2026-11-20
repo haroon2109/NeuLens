@@ -36,6 +36,7 @@ import { usePatientPortalStore } from '../../../store/patientPortalStore';
 import { usePatientOverview } from './usePatientOverview';
 import { useLanguageStore } from '../../../services/language/LanguageManager';
 import { getAssessmentCopy, type StageKey } from '../../../services/language/assessmentCopy';
+import { isComparableSession } from '../../../services/sessionComparability';
 import { useVoiceAssistantStore } from '../../../services/voice/VoiceInstructionEngine';
 import { HealthcareScene } from '../../../components/illustrations/HealthcareScene';
 import { MotionReveal } from '../../../components/motion/Reveal';
@@ -55,21 +56,27 @@ import {
   secondaryButton
 } from './ui';
 
+/**
+ * Session quality as recorded. A session that never recorded quality must not be
+ * presented as good, complete or clear to the patient, so absent values stay
+ * null and render as "Not recorded" — the same rule the clinician views apply.
+ */
 const getQuality = (assessment: PatientAssessmentRecord | null) => {
   const stored = assessment?.taskResponses?.quality || {};
   return {
-    audio: stored.audio || 'ADEQUATE',
-    video: stored.video || 'ADEQUATE',
-    completion: stored.completion || 'FULL',
-    comprehension: stored.comprehension || 'CLEAR',
-    interruptions: typeof stored.interruptions === 'number' ? stored.interruptions : 0,
-    comparable: stored.comparable !== false
+    audio: stored.audio ?? null,
+    video: stored.video ?? null,
+    completion: stored.completion ?? null,
+    comprehension: stored.comprehension ?? null,
+    interruptions: typeof stored.interruptions === 'number' ? stored.interruptions : null,
+    // Same rule the server applies: recorded and comparable, not merely not-false.
+    comparable: isComparableSession(assessment)
   };
 };
 
 type AssessmentCopy = ReturnType<typeof getAssessmentCopy>;
 
-const qualityLabel = (value: string, labels: AssessmentCopy['qualityLabels']) => {
+const qualityLabel = (value: string | null, labels: AssessmentCopy['qualityLabels']) => {
   if (value === 'GOOD') return labels.good;
   if (value === 'ADEQUATE') return labels.adequate;
   if (value === 'POOR') return labels.limited;

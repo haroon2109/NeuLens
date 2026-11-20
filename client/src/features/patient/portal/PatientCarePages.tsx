@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Bell,
   BookOpen,
   CalendarDays,
   Check,
-  CheckCircle2,
   Clock3,
   Download,
   FileText,
@@ -18,7 +16,7 @@ import {
   Stethoscope,
   Video
 } from 'lucide-react';
-import { treatmentTeam, usePatientPortalStore, type PortalNotification } from '../../../store/patientPortalStore';
+import { treatmentTeam, usePatientPortalStore } from '../../../store/patientPortalStore';
 import { patientPortalApi } from '../../../services/patientPortalApi';
 import { useLanguageStore } from '../../../services/language/LanguageManager';
 import { getPortalPagesCopy } from '../../../services/language/portalPagesCopy';
@@ -343,88 +341,6 @@ export const CarePlanPage: React.FC = () => {
           ))}
         </div>
       </Card>
-    </div>
-  );
-};
-
-// ---------------------------------------------------------------------------
-// Screen 40 — Notifications
-// ---------------------------------------------------------------------------
-const categoryIcon = (category: PortalNotification['category']) => {
-  if (category === 'APPOINTMENT') return CalendarDays;
-  if (category === 'REVIEW') return Stethoscope;
-  if (category === 'CARE_PLAN') return ShieldCheck;
-  if (category === 'ACCOUNT') return Bell;
-  return FileText;
-};
-
-export const NotificationsPage: React.FC = () => {
-  const { notifications, markNotificationRead, markAllNotificationsRead } = usePatientPortalStore();
-  const [filter, setFilter] = useState<'ALL' | 'UNREAD'>('ALL');
-  const copy = getPortalPagesCopy(useLanguageStore((state) => state.currentLanguage)).carePages.notifications;
-  const shown = filter === 'UNREAD' ? notifications.filter((item) => !item.read) : notifications;
-  const unread = notifications.filter((item) => !item.read).length;
-
-  return (
-    <div className="space-y-5">
-      <PortalPageHeader
-        eyebrow={copy.eyebrow}
-        title={copy.title}
-        description={copy.description}
-        actions={
-          <button type="button" className={secondaryButton} onClick={markAllNotificationsRead} disabled={unread === 0}>
-            <CheckCircle2 className="h-4 w-4" /> {copy.markAllRead}
-          </button>
-        }
-      />
-
-      <div className="flex gap-1.5">
-        {(['ALL', 'UNREAD'] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setFilter(value)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-              filter === value ? 'bg-blue-700 text-white' : 'border border-line bg-white text-body hover:bg-warm'
-            }`}
-          >
-            {value === 'ALL' ? copy.all : copy.unread(unread)}
-          </button>
-        ))}
-      </div>
-
-      {shown.length === 0 ? (
-        <EmptyState scene="emptyNotifications" icon={Bell} title={copy.emptyTitle} detail={copy.emptyDetail} />
-      ) : (
-        <Card className="p-0">
-          <ul className="divide-y divide-slate-100">
-            {shown.map((item) => {
-              const Icon = categoryIcon(item.category);
-              return (
-                <li key={item.id} className={`flex gap-3 p-4 ${item.read ? '' : 'bg-blue-50/30'}`}>
-                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.read ? 'bg-slate-100 text-muted' : 'bg-blue-100 text-blue-700'}`}>
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-[14px] font-semibold text-ink">{item.title}</p>                      {!item.read && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label={copy.unreadLabel} />}
-                    </div>
-                    <p className="mt-0.5 text-xs leading-5 text-muted">{item.detail}</p>
-                    <div className="mt-1.5 flex items-center gap-3">
-                      <span className="text-xs font-medium uppercase tracking-[0.06em] text-muted">{formatDateTime(item.date)}</span>
-                      {!item.read && (
-                        <button type="button" onClick={() => markNotificationRead(item.id)} className="text-xs font-bold text-blue-700 hover:underline">
-                          {copy.markRead}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-      )}
     </div>
   );
 };
