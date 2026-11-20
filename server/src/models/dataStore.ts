@@ -5,6 +5,7 @@ type PrismaJsonInput = any;
 type InputJsonValue = any;
 import { prisma } from '../config/db';
 import { summarizePatientChanges } from '../services/changeMonitor';
+import { deriveSessionQuality } from '../services/sessionQuality';
 import { isInterpretableScore, toReviewState, type ReviewState } from '../services/reviewState';
 import { isDemoAssessment, isDemoUserId, demoAccessEnabled } from '../services/demoRecords';
 
@@ -230,9 +231,12 @@ export const inMemoryConsents: ConsentRecord[] = [];
 export const inMemoryCarePlans: CarePlanRecord[] = [];
 export const inMemoryAppointments: AppointmentRecord[] = [];
 
-/** Memory fallback is a development aid; production must fail loudly instead. */
+/** Memory fallback is allowed outside strict production, or when demo access is active or explicitly opted in. */
 export function memoryFallbackAllowed(): boolean {
-  return process.env.NODE_ENV !== 'production' || process.env.ALLOW_IN_MEMORY_FALLBACK === 'true';
+  if (process.env.ALLOW_IN_MEMORY_FALLBACK === 'false') return false;
+  if (process.env.ALLOW_IN_MEMORY_FALLBACK === 'true') return true;
+  if (demoAccessEnabled()) return true;
+  return process.env.NODE_ENV !== 'production';
 }
 
 /**
@@ -1689,11 +1693,52 @@ export class HospitalDataStore {
   // NEW METHODS — Ensure Baseline & Link
   // --------------------------------------------------------------------------
 
+  /** The session a baseline was established from, when it can still be found. */
+  private static async getBaselineSourceAssessment(baselineId: string): Promise<AssessmentRecord | null> {
+    try {
+      const row = await prisma.assessment.findFirst({ where: { baselineId } });
+      if (row) return row as unknown as AssessmentRecord;
+    } catch (e) {
+      if (!memoryFallbackAllowed()) throw e;
+      console.warn('Prisma DB error fetching baseline source assessment. Falling back to memory:', e);
+    }
+    return inMemoryAssessments.find(a => a.baselineId === baselineId) ?? null;
+  }
+
+  private static async deactivateBaseline(baselineId: string): Promise<void> {
+    try {
+      await prisma.baseline.update({ where: { id: baselineId }, data: { isActive: false } });
+    } catch (e) {
+      if (!memoryFallbackAllowed()) throw e;
+      console.warn('Prisma DB error deactivating baseline. Falling back to memory:', e);
+    }
+    const mem = inMemoryBaselines.find(b => b.id === baselineId);
+    if (mem) mem.isActive = false;
+  }
+
   public static async ensureBaselineAndLink(userId: string, assessment: AssessmentRecord): Promise<{ baseline: BaselineRecord | null; created: boolean }> {
+    // A baseline anchors every later within-person comparison, so only a
+    // comparable, quality-checked session may establish one. Otherwise a bad
+    // first session silently becomes the reference the patient is measured
+    // against.
+    const sessionComparable = deriveSessionQuality(assessment.taskResponses).comparable;
+
     const existing = await this.getActiveBaseline(userId);
     if (existing) {
-      await this.linkAssessmentToBaseline(assessment.id, existing.id);
-      return { baseline: existing, created: false };
+      // A baseline that predates quality reporting can never be verified as
+      // comparable. The first comparable session replaces it instead of being
+      // compared against an unverifiable reference.
+      const source = await this.getBaselineSourceAssessment(existing.id);
+      const sourceComparable = source
+        ? deriveSessionQuality(source.taskResponses).comparable
+        : null;
+
+      if (sessionComparable && sourceComparable !== true) {
+        await this.deactivateBaseline(existing.id);
+      } else {
+        await this.linkAssessmentToBaseline(assessment.id, existing.id);
+        return { baseline: existing, created: false };
+      }
     }
 
     // A baseline can only be formed from a session that produced an interpretable
@@ -1702,7 +1747,7 @@ export class HospitalDataStore {
     const recordedActivities = assessment.taskResponses?.functionalCheckIn?.activities as
       | Record<string, number>
       | undefined;
-    if (!isInterpretableScore(assessment.overallScore) || !recordedActivities) {
+    if (!sessionComparable || !isInterpretableScore(assessment.overallScore) || !recordedActivities) {
       return { baseline: null, created: false };
     }
 
