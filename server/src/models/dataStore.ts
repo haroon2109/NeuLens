@@ -501,7 +501,7 @@ export class HospitalDataStore {
       return { user: created as unknown as UserRecord, patientId: patientId! };
     } catch (e) {
       console.error('[HospitalDataStore]: Database write failed on createPatient:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist patient record to PostgreSQL. Operation aborted for clinical safety.');
       }
       // Fallback in-memory in dev or explicit demo fallback mode
@@ -1287,7 +1287,7 @@ export class HospitalDataStore {
       return created as unknown as AssessmentRecord;
     } catch (e) {
       console.error('[HospitalDataStore]: Database write failed on submitAssessment:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist assessment results to PostgreSQL. Operation aborted for clinical safety.');
       }
       inMemoryAssessments.unshift(newRecord);
@@ -1352,7 +1352,7 @@ export class HospitalDataStore {
       return created as unknown as AssessmentRecord;
     } catch (e) {
       console.error('[HospitalDataStore]: Database write failed on createCognitiveAssessment:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist cognitive assessment. Operation aborted for clinical safety.');
       }
       inMemoryAssessments.unshift(newRecord);
@@ -1406,7 +1406,7 @@ export class HospitalDataStore {
       return created as unknown as BaselineRecord;
     } catch (e) {
       console.error('[HospitalDataStore]: DB write failed on createBaseline:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist baseline.');
       }
       inMemoryBaselines.unshift(newRecord);
@@ -1489,7 +1489,7 @@ export class HospitalDataStore {
       return created as unknown as LongitudinalRecordRecord;
     } catch (e) {
       console.error('[HospitalDataStore]: DB write failed on createLongitudinalRecord:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist longitudinal record.');
       }
       inMemoryLongitudinalRecords.unshift(newRecord);
@@ -1551,7 +1551,7 @@ export class HospitalDataStore {
       return created as unknown as ChangeDetectionRecord;
     } catch (e) {
       console.error('[HospitalDataStore]: DB write failed on createChangeDetection:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist change detection.');
       }
       inMemoryChangeDetections.unshift(newRecord);
@@ -1612,7 +1612,7 @@ export class HospitalDataStore {
       return created as unknown as ContextInputRecord;
     } catch (e) {
       console.error('[HospitalDataStore]: DB write failed on createContextInput:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist context input.');
       }
       inMemoryContextInputs.unshift(newRecord);
@@ -1682,7 +1682,7 @@ export class HospitalDataStore {
       return created as unknown as BrainHealthProfileRecord;
     } catch (e) {
       console.error('[HospitalDataStore]: DB write failed on createBrainHealthProfile:', e instanceof Error ? e.message : e);
-      if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      if (!memoryFallbackAllowed()) {
         throw new Error('Database storage failure: Unable to persist brain health profile.');
       }
       inMemoryBrainHealthProfiles.unshift(newRecord);

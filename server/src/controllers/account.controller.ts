@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { HospitalDataStore } from '../models/dataStore';
+import { demoAccessEnabled } from '../services/demoRecords';
 import {
   accountSignupSchema,
   accountLoginSchema,
@@ -171,9 +172,9 @@ const challengeResponse = (challenge: OtpChallenge, emailed = false) => ({
   challengeId: challenge.id,
   expiresInSeconds: Math.floor(OTP_TTL_MS / 1000),
   emailSent: emailed,
-  // Never expose the code in production. Outside production it is only a
-  // fallback for when a real email was not configured/delivered.
-  devOtp: !emailed && process.env.NODE_ENV !== 'production' ? challenge.code : undefined,
+  // Never expose the code in strict production. During jury review / demo access,
+  // provide it when email delivery was not configured so sign-up remains testable.
+  devOtp: !emailed && (process.env.NODE_ENV !== 'production' || demoAccessEnabled()) ? challenge.code : undefined,
 });
 
 const consumeChallenge = (challengeId: string, code: string, purpose: OtpChallenge['purpose']) => {
